@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Linux Dev OS</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -120,11 +120,6 @@
     position: absolute;
     top: 28px; left: 0; right: 0; bottom: 44px;
     padding: 20px;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 8px;
     z-index: 1;
   }
   .desktop-icon {
@@ -375,6 +370,74 @@
     font-size: 13px;
   }
 
+  /* ===== START MENU ===== */
+  #start-menu {
+    position: absolute;
+    left: 8px;
+    bottom: 52px;
+    width: 260px;
+    background: rgba(56,56,56,0.98);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+    backdrop-filter: blur(14px);
+    padding: 10px;
+    z-index: 12000;
+    display: none;
+  }
+  #start-menu.active { display: block; }
+  .start-menu-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 6px 10px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    color: var(--text);
+    font-weight: 700;
+  }
+  .start-menu-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+  .start-menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .start-menu-item:hover {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.08);
+  }
+  .start-menu-item .emoji { width: 20px; text-align: center; }
+  .start-menu-section {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .start-menu-mini {
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+  .start-menu-mini .btn {
+    flex: 1 1 48%;
+  }
+
   .hint-box {
     background: rgba(239,183,62,0.1);
     border: 1px solid rgba(239,183,62,0.3);
@@ -426,6 +489,42 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
   .window.opening { animation: slideIn 0.2s ease; }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 768px) {
+    body { touch-action: none; }
+    #desktop { padding: 10px; }
+    .desktop-icon { width: 72px; padding: 6px 2px; }
+    .desktop-icon .icon { width: 44px; height: 44px; font-size: 20px; }
+    .desktop-icon .label { font-size: 11px; }
+    .window { min-width: 300px; min-height: 200px; }
+    .window-content { padding: 8px; font-size: 14px; }
+    .term-output { min-height: 160px; max-height: 220px; font-size: 14px; }
+    .term-input { font-size: 16px; }
+    .taskbar-btn { padding: 8px 10px; font-size: 12px; }
+    .btn { padding: 8px 16px; font-size: 14px; }
+    .btn-small { padding: 6px 12px; font-size: 12px; }
+    .diff-btn { min-width: 180px; padding: 10px 20px; }
+    .title-logo { font-size: 36px; }
+  }
+
+  /* ===== ICON DRAG ===== */
+  #desktop { position: relative; }
+  .desktop-icon {
+    position: absolute;
+    cursor: grab;
+    transition: transform 0.1s, box-shadow 0.2s, background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  .desktop-icon:active { cursor: grabbing; }
+  .desktop-icon.dragging {
+    z-index: 1000;
+    transform: scale(1.1);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    background: rgba(255,255,255,0.15);
+  }
+
 </style>
 </head>
 <body>
@@ -475,35 +574,35 @@
 
 <!-- Desktop Icons -->
 <div id="desktop">
-  <div class="desktop-icon" onclick="openWindow('terminal')">
+  <div class="desktop-icon" id="icon-terminal" style="left:20px;top:20px" onclick="openWindow('terminal')">
     <div class="icon" style="background:linear-gradient(135deg,#333,#1a1a1a);">🖥️</div>
     <div class="label">Терминал</div>
   </div>
-  <div class="desktop-icon" onclick="openWindow('browser')">
+  <div class="desktop-icon" id="icon-browser" style="left:20px;top:110px" onclick="openWindow('browser')">
     <div class="icon" style="background:linear-gradient(135deg,#4285f4,#34a853);">🌐</div>
     <div class="label">Googie</div>
   </div>
-  <div class="desktop-icon" onclick="openWindow('mail')">
+  <div class="desktop-icon" id="icon-mail" style="left:20px;top:200px" onclick="openWindow('mail')">
     <div class="icon" style="background:linear-gradient(135deg,#ea4335,#fbbc05);">📧</div>
     <div class="label">Почта</div>
   </div>
-  <div class="desktop-icon" onclick="openWindow('projects')">
+  <div class="desktop-icon" id="icon-projects" style="left:20px;top:290px" onclick="openWindow('projects')">
     <div class="icon" style="background:linear-gradient(135deg,#9c27b0,#673ab7);">📁</div>
     <div class="label">Проекты</div>
   </div>
-  <div class="desktop-icon" onclick="openWindow('store')">
+  <div class="desktop-icon" id="icon-store" style="left:120px;top:20px" onclick="openWindow('store')">
     <div class="icon" style="background:linear-gradient(135deg,#ff9800,#f44336);">🛒</div>
     <div class="label">Магазин</div>
   </div>
-  <div class="desktop-icon" onclick="openWindow('darknet')">
+  <div class="desktop-icon" id="icon-darknet" style="left:120px;top:110px" onclick="openWindow('darknet')">
     <div class="icon" style="background:linear-gradient(135deg,#111,#333);">💀</div>
     <div class="label">DarkNet</div>
   </div>
-  <div class="desktop-icon" onclick="openWindow('antivirus')">
+  <div class="desktop-icon" id="icon-antivirus" style="left:120px;top:200px" onclick="openWindow('antivirus')">
     <div class="icon" style="background:linear-gradient(135deg,#1976d2,#0d47a1);">🛡️</div>
     <div class="label">Антивирус</div>
   </div>
-  <div class="desktop-icon" onclick="openWindow('settings')">
+  <div class="desktop-icon" id="icon-settings" style="left:120px;top:290px" onclick="openWindow('settings')">
     <div class="icon" style="background:linear-gradient(135deg,#607d8b,#455a64);">⚙️</div>
     <div class="label">Настройки</div>
   </div>
@@ -511,10 +610,34 @@
 
 <!-- Taskbar -->
 <div id="taskbar">
-  <button class="taskbar-btn" onclick="toggleMenu()" style="background:var(--accent); font-weight:bold;">🐧</button>
+  <button id="start-btn" class="taskbar-btn" onclick="toggleMenu()" style="background:var(--accent); font-weight:bold;">🐧</button>
   <div id="taskbar-apps" style="display:flex; gap:4px;"></div>
   <div style="margin-left:auto; display:flex; gap:8px; align-items:center; font-size:12px; color:var(--text-dim);">
     <span id="tb-hint" style="color:var(--warning);"></span>
+  </div>
+</div>
+
+<div id="start-menu" aria-hidden="true">
+  <div class="start-menu-title">
+    <span>🐧 Linux Dev OS</span>
+    <span class="start-menu-sub">Меню</span>
+  </div>
+
+  <button class="start-menu-item" onclick="menuOpen('terminal')"><span class="emoji">🖥️</span>Терминал</button>
+  <button class="start-menu-item" onclick="menuOpen('browser')"><span class="emoji">🌐</span>Googie Browser</button>
+  <button class="start-menu-item" onclick="menuOpen('mail')"><span class="emoji">📧</span>Почта</button>
+  <button class="start-menu-item" onclick="menuOpen('projects')"><span class="emoji">📁</span>Проекты</button>
+  <button class="start-menu-item" onclick="menuOpen('store')"><span class="emoji">🛒</span>Магазин</button>
+  <button class="start-menu-item" onclick="menuOpen('darknet')"><span class="emoji">💀</span>DarkNet</button>
+  <button class="start-menu-item" onclick="menuOpen('antivirus')"><span class="emoji">🛡️</span>Антивирус</button>
+  <button class="start-menu-item" onclick="menuOpen('settings')"><span class="emoji">⚙️</span>Настройки</button>
+
+  <div class="start-menu-section">
+    <div class="start-menu-mini">
+      <button class="btn btn-secondary" onclick="saveGame(); hideMenu();">💾 Сохранить</button>
+      <button class="btn btn-secondary" onclick="loadGame(); hideMenu();">📂 Загрузить</button>
+      <button class="btn btn-red" onclick="if(confirm('Перезапустить игру?')) location.reload();">🔄 Рестарт</button>
+    </div>
   </div>
 </div>
 
@@ -807,6 +930,51 @@ function focusWindow(name) {
   win.classList.add('focused');
   if (name === 'terminal') setTimeout(() => document.getElementById('term-in').focus(), 50);
 }
+
+
+function showMenu() {
+  const menu = document.getElementById('start-menu');
+  if (!menu) return;
+  menu.classList.add('active');
+  menu.setAttribute('aria-hidden', 'false');
+  const btn = document.getElementById('start-btn');
+  if (btn) btn.classList.add('open');
+}
+
+function hideMenu() {
+  const menu = document.getElementById('start-menu');
+  if (!menu) return;
+  menu.classList.remove('active');
+  menu.setAttribute('aria-hidden', 'true');
+  const btn = document.getElementById('start-btn');
+  if (btn) btn.classList.remove('open');
+}
+
+function toggleMenu() {
+  const menu = document.getElementById('start-menu');
+  if (!menu) return;
+  if (menu.classList.contains('active')) hideMenu();
+  else showMenu();
+}
+
+function menuOpen(name) {
+  openWindow(name);
+  focusWindow(name);
+  hideMenu();
+}
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('start-menu');
+  const btn = document.getElementById('start-btn');
+  if (!menu || !btn) return;
+  if (menu.classList.contains('active') && !menu.contains(e.target) && !btn.contains(e.target)) {
+    hideMenu();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideMenu();
+});
 
 function updateTaskbar() {
   const bar = document.getElementById('taskbar-apps');
@@ -1564,6 +1732,143 @@ function initGame() {
     setTimeout(() => document.getElementById('term-in').focus(), 100);
   });
 }
+
+
+// ===== DESKTOP ICON DRAG & DROP =====
+(function() {
+  let dragEl = null;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+  let startMouseX = 0;
+  let startMouseY = 0;
+  let hasDragged = false;
+  const SAVE_KEY = 'linuxdev_icons_v4';
+
+  const desktop = () => document.getElementById('desktop');
+
+  function getPoint(e) {
+    return e.touches ? e.touches[0] : e;
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(value, max));
+  }
+
+  function loadPositions() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+      Object.entries(saved).forEach(([id, pos]) => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (typeof pos.x === 'number') el.style.left = pos.x + 'px';
+          if (typeof pos.y === 'number') el.style.top = pos.y + 'px';
+        }
+      });
+    } catch (e) {}
+  }
+
+  function savePositions() {
+    const pos = {};
+    document.querySelectorAll('.desktop-icon').forEach(el => {
+      pos[el.id] = {
+        x: parseFloat(el.style.left) || 0,
+        y: parseFloat(el.style.top) || 0
+      };
+    });
+    localStorage.setItem(SAVE_KEY, JSON.stringify(pos));
+  }
+
+  function onDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+
+    const el = e.currentTarget;
+    const p = getPoint(e);
+    const rect = el.getBoundingClientRect();
+
+    dragEl = el;
+    dragOffsetX = p.clientX - rect.left;
+    dragOffsetY = p.clientY - rect.top;
+    startMouseX = p.clientX;
+    startMouseY = p.clientY;
+    hasDragged = false;
+
+    e.preventDefault();
+  }
+
+  function onMove(e) {
+    if (!dragEl) return;
+
+    const p = getPoint(e);
+    const movedX = Math.abs(p.clientX - startMouseX);
+    const movedY = Math.abs(p.clientY - startMouseY);
+
+    if (movedX > 3 || movedY > 3) {
+      hasDragged = true;
+      dragEl.classList.add('dragging');
+    }
+    if (!hasDragged) return;
+
+    const desk = desktop();
+    const deskRect = desk.getBoundingClientRect();
+    const maxX = desk.clientWidth - dragEl.offsetWidth;
+    const maxY = desk.clientHeight - dragEl.offsetHeight;
+
+    let nx = p.clientX - deskRect.left - dragOffsetX;
+    let ny = p.clientY - deskRect.top - dragOffsetY;
+
+    nx = clamp(nx, 0, maxX);
+    ny = clamp(ny, 0, maxY);
+
+    // Snap to a neat grid without breaking vertical movement.
+    nx = Math.round(nx / 10) * 10;
+    ny = Math.round(ny / 10) * 10;
+
+    dragEl.style.left = nx + 'px';
+    dragEl.style.top = ny + 'px';
+
+    e.preventDefault();
+  }
+
+  function onUp() {
+    if (!dragEl) return;
+
+    const el = dragEl;
+    el.classList.remove('dragging');
+
+    if (hasDragged) {
+      savePositions();
+      const cancelClick = ev => {
+        ev.stopPropagation();
+        ev.preventDefault();
+      };
+      el.addEventListener('click', cancelClick, { capture: true, once: true });
+    }
+
+    dragEl = null;
+    hasDragged = false;
+  }
+
+  function setup() {
+    loadPositions();
+
+    document.querySelectorAll('.desktop-icon').forEach(el => {
+      el.addEventListener('mousedown', onDown);
+      el.addEventListener('touchstart', onDown, { passive: false });
+    });
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchend', onUp);
+    document.addEventListener('touchcancel', onUp);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup);
+  } else {
+    setup();
+  }
+})();
 </script>
 </body>
 </html>
