@@ -525,6 +525,186 @@
     background: rgba(255,255,255,0.15);
   }
 
+
+@keyframes fadeShutdown {
+  from { opacity:0; }
+  to { opacity:1; }
+}
+
+@keyframes notifyIn {
+  from { opacity:0; transform:translateX(30px); }
+  to { opacity:1; transform:translateX(0); }
+}
+
+
+  /* ===== BROWSER ===== */
+  .browser-tabs {
+    display: flex;
+    align-items: flex-end;
+    background: #2a2a3a;
+    padding: 4px 4px 0;
+    gap: 2px;
+    overflow-x: auto;
+    min-height: 32px;
+  }
+  .browser-tabs::-webkit-scrollbar { height: 4px; }
+  .browser-tabs::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+  .browser-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #3a3a4a;
+    border-radius: 8px 8px 0 0;
+    font-size: 12px;
+    color: #aaa;
+    cursor: pointer;
+    max-width: 160px;
+    min-width: 80px;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .browser-tab:hover { background: #4a4a5a; }
+  .browser-tab.active {
+    background: #f5f5f5;
+    color: #333;
+    font-weight: 500;
+  }
+  .browser-tab .tab-favicon { font-size: 10px; }
+  .browser-tab .tab-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .browser-tab .tab-close {
+    width: 14px; height: 14px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    font-size: 12px;
+    color: #888;
+    cursor: pointer;
+  }
+  .browser-tab .tab-close:hover { background: #ff4444; color: white; }
+  .browser-tab-new {
+    padding: 6px 12px;
+    background: transparent;
+    color: #888;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+  }
+  .browser-tab-new:hover { background: #3a3a4a; color: white; }
+
+  .browser-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    background: #f0f0f0;
+    border-bottom: 1px solid #ddd;
+  }
+  .browser-btn {
+    width: 28px; height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #555;
+    transition: background 0.15s;
+  }
+  .browser-btn:hover { background: #ddd; }
+  .browser-btn:disabled { opacity: 0.3; cursor: default; }
+  #browser-url {
+    flex: 1;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 16px;
+    padding: 5px 12px;
+    font-size: 13px;
+    color: #333;
+    outline: none;
+  }
+  #browser-url:focus { border-color: #4285f4; box-shadow: 0 0 0 2px rgba(66,133,244,0.2); }
+  #browser-ssl { color: #38b44a; }
+  #browser-ssl.insecure { color: #df382c; }
+
+  .browser-bookmarks {
+    display: flex;
+    gap: 12px;
+    padding: 4px 12px;
+    background: #f8f8f8;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 12px;
+    overflow-x: auto;
+  }
+  .browser-bookmarks::-webkit-scrollbar { height: 3px; }
+  .bookmark {
+    color: #444;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .bookmark:hover { background: #e0e0e0; text-decoration: underline; }
+
+  .browser-page {
+    flex: 1;
+    background: #f5f5f5;
+    color: #333;
+    padding: 12px;
+    overflow-y: auto;
+    font-size: 13px;
+  }
+  .browser-page h1 { color: #333; font-size: 22px; margin-bottom: 8px; }
+  .browser-page h2 { color: #444; font-size: 18px; margin: 16px 0 8px; }
+  .browser-page h3 { color: #555; font-size: 15px; margin: 12px 0 6px; }
+  .browser-page p { color: #555; line-height: 1.5; margin-bottom: 8px; }
+  .browser-page a { color: #4285f4; text-decoration: none; cursor: pointer; }
+  .browser-page a:hover { text-decoration: underline; }
+  .browser-page .site-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .browser-page .site-logo {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .browser-page .card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    transition: box-shadow 0.15s;
+  }
+  .browser-page .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .browser-page .news-item {
+    border-left: 3px solid #4285f4;
+    padding-left: 10px;
+    margin-bottom: 10px;
+  }
+  .browser-page .news-time { color: #888; font-size: 11px; }
+  .browser-page .price-up { color: #38b44a; }
+  .browser-page .price-down { color: #df382c; }
+  .browser-page table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .browser-page th, .browser-page td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .browser-page th { color: #888; font-weight: 500; }
+
 </style>
 </head>
 <body>
@@ -556,6 +736,24 @@
   </div>
 </div>
 
+
+<!-- ==================== BOOT SCREEN ==================== -->
+<div id="boot-screen" style="position:fixed;inset:0;background:#000;color:#33ff33;font-family:monospace;z-index:999998;display:flex;flex-direction:column;padding:20px;">
+  <div id="boot-log" style="white-space:pre-line;flex:1;"></div>
+  <div style="color:#888;font-size:14px;">
+    F2 = Recovery Mode
+  </div>
+</div>
+
+<!-- ==================== RECOVERY MODE ==================== -->
+<div id="recovery-screen" style="position:fixed;inset:0;background:#050505;color:#ffcc00;font-family:monospace;z-index:999999;display:none;padding:20px;">
+  <h2>Recovery Mode</h2>
+  <p>1. Restore system</p>
+  <p>2. Reset FBI level</p>
+  <p>3. Boot normally</p>
+  <button onclick="exitRecovery()" style="margin-top:20px;padding:10px 20px;">▶ Boot</button>
+</div>
+
 <!-- ==================== DESKTOP LAYER ==================== -->
 <div id="desktop-layer">
 
@@ -568,7 +766,7 @@
   <div class="right">
     <span id="top-diff" style="color:var(--warning); font-size:12px;">🟡 Средний</span>
     <span id="top-fbi" style="color:var(--danger); font-size:12px;">🚔 FBI: 0%</span>
-    <span id="top-time" style="font-weight:bold;">09:00</span>
+    <span id="wifi-status" style="color:#66ffcc;font-size:12px;">📶 Online</span><span id="top-time" style="font-weight:bold;">09:00</span>
   </div>
 </div>
 
@@ -663,21 +861,43 @@
 </div>
 
 <!-- Browser (Googie) -->
-<div class="window" id="win-browser" style="width:720px; height:500px; top:50px; left:200px;">
+<div class="window" id="win-browser" style="width:760px; height:540px; top:40px; left:180px;">
   <div class="window-titlebar" onmousedown="startDrag(event,'win-browser')">
     <span class="window-title">🌐 Googie Browser</span>
     <button class="window-btn btn-min" onclick="minWindow('browser')">−</button>
     <button class="window-btn btn-close" onclick="closeWindow('browser')">×</button>
   </div>
-  <div class="window-content">
-    <div class="browser-toolbar">
-      <span>🔒</span>
-      <input type="text" value="googie.com/freelance" readonly>
-      <button class="btn btn-small" onclick="renderBrowser()">🔄</button>
+  <div class="window-content" style="padding:0; display:flex; flex-direction:column;">
+    <!-- Tabs -->
+    <div class="browser-tabs" id="browser-tabs">
+      <div class="browser-tab active" data-tab="0" onclick="switchTab(0)">
+        <span class="tab-favicon">🔒</span>
+        <span class="tab-title">Freelance</span>
+        <span class="tab-close" onclick="event.stopPropagation(); closeTab(0)">×</span>
+      </div>
+      <div class="browser-tab-new" onclick="newTab()">+</div>
     </div>
+    <!-- Toolbar -->
+    <div class="browser-toolbar">
+      <button class="browser-btn" onclick="browserBack()" title="Назад">←</button>
+      <button class="browser-btn" onclick="browserForward()" title="Вперёд">→</button>
+      <button class="browser-btn" onclick="browserRefresh()" title="Обновить">↻</button>
+      <button class="browser-btn" onclick="browserHome()" title="Домой">🏠</button>
+      <span id="browser-ssl" style="font-size:14px;">🔒</span>
+      <input type="text" id="browser-url" value="googie.com/freelance" onkeydown="if(event.key==='Enter'){navigateTo(this.value);}">
+      <button class="browser-btn" onclick="toggleBookmarks()" title="Закладки">⭐</button>
+      <button class="browser-btn" onclick="browserRefresh()" title="Обновить">🔄</button>
+    </div>
+    <!-- Bookmarks bar -->
+    <div class="browser-bookmarks" id="browser-bookmarks">
+      <span class="bookmark" onclick="navigateTo('googie.com/freelance')">💼 Freelance</span>
+      <span class="bookmark" onclick="navigateTo('darkwiki.net')">📚 DarkWiki</span>
+      <span class="bookmark" onclick="navigateTo('hackernews.com')">📰 News</span>
+      <span class="bookmark" onclick="navigateTo('cryptobank.com')">🏦 Bank</span>
+      <span class="bookmark" onclick="navigateTo('blackmarket.ru')">💀 BlackMarket</span>
+    </div>
+    <!-- Page content -->
     <div class="browser-page" id="browser-page">
-      <h2 style="color:#ea4335; margin-bottom:6px;">Googie Freelance</h2>
-      <p style="color:#666; margin-bottom:12px; font-size:13px;">Биржа заказов. Выбирайте и начинайте прямо здесь!</p>
       <div id="browser-content"></div>
     </div>
   </div>
@@ -846,6 +1066,7 @@ function createState() {
     sound: false,
     gameOver: false,
     eventTimer: 0,
+    gameMinutes: 0,
     wins: { terminal:false, browser:false, mail:false, projects:false, store:false, darknet:false, antivirus:false, settings:false },
     diff: selectedDiff,
     antivirusStock: 0, // сколько антивирусов написано и готово к продаже
@@ -863,6 +1084,7 @@ const langs = {
 // ===================== TITLE SCREEN =====================
 function startGame() {
   state = createState();
+  recoveryRequested = false;
   document.getElementById('title-screen').classList.add('hidden');
   document.getElementById('desktop-layer').classList.add('active');
   document.getElementById('top-diff').textContent = diffCfg.label;
@@ -1102,6 +1324,7 @@ function execCmd(input) {
     case 'status': cmdStatus(); break;
     case 'clear': termOut.innerHTML = ''; break;
     case 'exit': location.reload(); break;
+    case 'poweroff': shutdownSystem(); break;
     case 'develop': cmdDevelop(rest); break;
     case 'upload': cmdUpload(args[1]); break;
     case 'cancel': cmdCancel(); break;
@@ -1120,9 +1343,217 @@ function execCmd(input) {
     case 'save': saveGame(); break;
     case 'load': loadGame(); break;
     case 'sell': cmdSellAntivirus(args[1]); break;
+    case 'easteregg': cmdEasterEgg(); break;
+    case 'cowsay': cmdCowsay(rest); break;
+    case 'sl': cmdSL(); break;
+    case 'fortune': cmdFortune(); break;
+    case 'matrix': cmdMatrix(); break;
+    case 'neofetch': cmdNeofetch(); break;
+    case 'sudo': cmdSudo(); break;
+    case 'whoami': cmdWhoami(); break;
+    case 'rm': cmdRm(rest); break;
+    case 'iddqd': cmdIDDQD(); break;
     default: log('Неизвестная команда: ' + cmd, 'warning');
   }
 }
+
+
+function shutdownSystem() {
+  const overlay = document.createElement('div');
+  overlay.id = 'shutdown-screen';
+  overlay.style.cssText = `
+    position:fixed;
+    inset:0;
+    background:#000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    z-index:999999;
+    color:white;
+    font-family:sans-serif;
+    animation:fadeShutdown 1s forwards;
+  `;
+  overlay.innerHTML = `
+    <div style="font-size:28px;margin-bottom:20px;">⏻ Выключение...</div>
+  `;
+  document.body.appendChild(overlay);
+
+  setTimeout(() => {
+    overlay.innerHTML = `
+      <button onclick="powerOnSystem()" style="
+        padding:14px 30px;
+        font-size:20px;
+        border:none;
+        border-radius:12px;
+        background:#222;
+        color:white;
+        cursor:pointer;
+      ">▶ Включить</button>
+    `;
+  }, 1800);
+}
+
+function powerOnSystem() {
+  const overlay = document.getElementById('shutdown-screen');
+  if (overlay) overlay.remove();
+
+  // Скрываем всё остальное
+  document.getElementById('desktop-layer').classList.remove('active');
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('title-screen').classList.remove('hidden');
+  document.getElementById('recovery-screen').style.display = 'none';
+
+  // Показываем boot screen и запускаем анимацию
+  const boot = document.getElementById('boot-screen');
+  const bootLog = document.getElementById('boot-log');
+  boot.style.display = 'flex';
+  bootLog.innerHTML = '';
+  recoveryRequested = false;
+
+  startBootSequence();
+}
+
+
+// ===================== EASTER EGGS =====================
+function cmdEasterEgg() {
+  log('🥚 Пасхалки:', 'success');
+  log('  cowsay <текст>  — говорящая корова');
+  log('  sl              — паровозик');
+  log('  fortune         — мудрость хакера');
+  log('  matrix          — цифровой дождь');
+  log('  neofetch        — о системе');
+  log('  sudo            — попробуй ;)');
+  log('  rm -rf /        — только попробуй...');
+  log('  iddqd           — бессмертие?');
+  log('  whoami          — кто ты');
+}
+
+function cmdCowsay(text) {
+  const msg = text || 'Мууу!';
+  const cow = `
+   ${'_'.repeat(msg.length + 2)}
+  < ${msg} >
+   ${'‾'.repeat(msg.length + 2)}
+          \
+           \
+             ^__^
+             (oo)\_______
+             (__)\       )\/\
+                 ||----w |
+                 ||     ||`;
+  log(cow, 'info');
+}
+
+function cmdSL() {
+  const train = [
+    '      ====        ________                ___________',
+    '  _D _|  |_______/        \\__I_I_____===__|_________|',
+    '   |(_)---  |   H\________/ |   |        =|___ ___|   ',
+    '   /     |  |   H  |  |     |   |         ||_| |_||   ',
+    '  |      |  |   H  |__--------------------| [___] |   ',
+    '  | ________|___H__/__|_____/[][]~\_______|       |   ',
+    '  |/ |   |-----------I_____I [][] []  D   |=======|__'
+  ];
+  train.forEach(line => log(line, 'info'));
+  log('🚂 Чух-чух! Не спеши, наслаждайся процессом.', 'success');
+}
+
+function cmdFortune() {
+  const quotes = [
+    '"Talk is cheap. Show me the code." — Linus Torvalds',
+    '"Сначала они игнорируют тебя, потом смеются, потом борются, потом ты побеждаешь." — Ганди',
+    '"Лучший способ предсказать будущее — создать его." — Alan Kay',
+    '"В мире 10 типов людей: те, кто понимает бинарный код, и те, кто нет."',
+    '"rm -rf / — не баг, а фича." — Анонимный админ',
+    '"Если отладка — процесс удаления багов, то программирование — процесс их создания."',
+    '"Иногда лучшее оружие — это клавиатура."',
+    '"В DarkNet никто не знает, что ты собака."',
+    '"sudo make me a sandwich." — xkcd',
+    '"Есть два способа написать программу без багов. Но работает только третий."'
+  ];
+  log('🥠 ' + quotes[Math.floor(Math.random()*quotes.length)], 'success');
+}
+
+function cmdMatrix() {
+  log('☔ Запуск цифрового дождя... (введите любую команду чтобы остановить)', 'success');
+  let drops = 0;
+  const matrixInt = setInterval(() => {
+    drops++;
+    if (drops > 20 || !document.getElementById('win-terminal').classList.contains('active')) {
+      clearInterval(matrixInt);
+      log('☔ Дождь закончился.', 'info');
+      return;
+    }
+    const chars = '01アイウエオカキクケコサシスセソタチツテト';
+    let line = '';
+    for (let i=0; i<40; i++) line += chars[Math.floor(Math.random()*chars.length)];
+    log(line, 'info');
+  }, 150);
+}
+
+function cmdNeofetch() {
+  const art = `
+    .---.
+   /     \
+   | . . |
+   |  >  |
+   | \\// |
+    '---'
+  Linux Dev OS
+  ---------------
+  OS: Linux Dev OS v3.1
+  Kernel: neo-5.15.0-hacker
+  Uptime: ${state.gameMinutes || 0} min
+  Shell: bash
+  Resolution: ${window.innerWidth}x${window.innerHeight}
+  DE: Ubuntu
+  WM: i3
+  Theme: Cyberpunk
+  Icons: Neon
+  Terminal: xterm-256color
+  CPU: Intel Core i9-9900K
+  GPU: RTX 4090
+  Memory: ${state.hw * 8}GB / ${state.hw * 16}GB`;
+  log(art, 'info');
+}
+
+function cmdSudo() {
+  log('sudo: neo is not in the sudoers file. This incident will be reported.', 'danger');
+  log('...', 'system');
+  setTimeout(() => log('📧 Новое письмо: "Мы знаем, что ты пытался."', 'warning'), 800);
+  state.fbi = Math.min(100, state.fbi + 2);
+}
+
+function cmdRm(rest) {
+  if (rest && rest.includes('-rf') && rest.includes('/')) {
+    log('💀 Вы уверены? Это удалит ВСЁ...', 'danger');
+    setTimeout(() => {
+      log('...шучу. У тебя нет прав.', 'success');
+      log('Но ФБР добавило тебя в список наблюдения.', 'warning');
+      state.fbi = Math.min(100, state.fbi + 5);
+    }, 1000);
+  } else {
+    log('rm: missing operand', 'warning');
+  }
+}
+
+function cmdWhoami() {
+  log('neo — хакер, фрилансер, легенда.', 'info');
+  log(`💰 $${state.money} | ⭐ ${state.reputation} | 🚔 FBI ${Math.floor(state.fbi)}%`);
+  log(`🎭 Ты прошёл ${state.story ? state.story.choicesMade.length : 0} сюжетных выборов.`);
+}
+
+function cmdIDDQD() {
+  log('🎮 IDDQD активирован...', 'success');
+  setTimeout(() => {
+    log('❌ Ошибка: бессмертие не найдено в этом измерении.', 'danger');
+    log('Но мы добавили +10 к репутации за попытку.', 'success');
+    state.reputation = Math.min(100, state.reputation + 10);
+    updateTopBar();
+  }, 600);
+}
+
 
 function cmdHelp() {
   log(`Команды:
@@ -1141,6 +1572,7 @@ function cmdHelp() {
   invest <name> <$$> — инвестировать
   store/mail/projects/darknet/antivirus/browser — открыть окно
   save/load         — сохранить/загрузить
+  easteregg         — 🥚 список пасхалок
   clear/exit`, 'info');
 }
 
@@ -1547,8 +1979,140 @@ function renderStore() {
   `;
 }
 
-function renderBrowser() {
+// ===================== BROWSER ENGINE =====================
+let browserTabs = [{ url: 'googie.com/freelance', title: 'Freelance', history: ['googie.com/freelance'], historyPos: 0 }];
+let activeTab = 0;
+let browserBookmarksVisible = true;
+
+const BROWSER_SITES = {
+  'googie.com': { name: 'Googie', favicon: '🔍', ssl: true },
+  'googie.com/freelance': { name: 'Googie Freelance', favicon: '💼', ssl: true },
+  'darkwiki.net': { name: 'DarkWiki', favicon: '📚', ssl: false },
+  'hackernews.com': { name: 'HackerNews', favicon: '📰', ssl: true },
+  'cryptobank.com': { name: 'CryptoBank', favicon: '🏦', ssl: true },
+  'blackmarket.ru': { name: 'BlackMarket', favicon: '💀', ssl: false },
+  'localhost': { name: 'localhost', favicon: '🖥️', ssl: true }
+};
+
+function getSiteInfo(url) {
+  const clean = url.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  for (const key in BROWSER_SITES) {
+    if (clean === key || clean.startsWith(key + '/')) return BROWSER_SITES[key];
+  }
+  return { name: clean.split('/')[0], favicon: '🌐', ssl: clean.includes('localhost') };
+}
+
+function switchTab(idx) {
+  if (idx < 0 || idx >= browserTabs.length) return;
+  activeTab = idx;
+  document.querySelectorAll('.browser-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  navigateTo(browserTabs[idx].url, false);
+}
+
+function newTab(url) {
+  const u = url || 'googie.com/freelance';
+  browserTabs.push({ url: u, title: getSiteInfo(u).name, history: [u], historyPos: 0 });
+  renderTabs();
+  switchTab(browserTabs.length - 1);
+}
+
+function closeTab(idx) {
+  if (browserTabs.length <= 1) return;
+  browserTabs.splice(idx, 1);
+  if (activeTab >= idx) activeTab = Math.max(0, activeTab - 1);
+  renderTabs();
+  switchTab(activeTab);
+}
+
+function renderTabs() {
+  const container = document.getElementById('browser-tabs');
+  let html = '';
+  browserTabs.forEach((tab, i) => {
+    const info = getSiteInfo(tab.url);
+    html += `<div class="browser-tab ${i===activeTab?'active':''}" data-tab="${i}" onclick="switchTab(${i})">
+      <span class="tab-favicon">${info.ssl?'🔒':'⚠️'} ${info.favicon}</span>
+      <span class="tab-title">${tab.title}</span>
+      <span class="tab-close" onclick="event.stopPropagation(); closeTab(${i})">×</span>
+    </div>`;
+  });
+  html += '<div class="browser-tab-new" onclick="newTab()">+</div>';
+  container.innerHTML = html;
+}
+
+function navigateTo(url, addHistory) {
+  if (addHistory !== false) {
+    const tab = browserTabs[activeTab];
+    // Remove forward history
+    tab.history = tab.history.slice(0, tab.historyPos + 1);
+    tab.history.push(url);
+    tab.historyPos = tab.history.length - 1;
+  }
+
+  browserTabs[activeTab].url = url;
+  const info = getSiteInfo(url);
+  browserTabs[activeTab].title = info.name;
+
+  document.getElementById('browser-url').value = url;
+  document.getElementById('browser-ssl').textContent = info.ssl ? '🔒' : '⚠️';
+  document.getElementById('browser-ssl').classList.toggle('insecure', !info.ssl);
+
+  renderTabs();
+  renderPage(url);
+
+  // Update back/forward buttons
+  const tab = browserTabs[activeTab];
+  // (visual only, no actual disabled state needed)
+}
+
+function browserBack() {
+  const tab = browserTabs[activeTab];
+  if (tab.historyPos > 0) {
+    tab.historyPos--;
+    navigateTo(tab.history[tab.historyPos], false);
+  }
+}
+
+function browserForward() {
+  const tab = browserTabs[activeTab];
+  if (tab.historyPos < tab.history.length - 1) {
+    tab.historyPos++;
+    navigateTo(tab.history[tab.historyPos], false);
+  }
+}
+
+function browserRefresh() {
+  renderPage(browserTabs[activeTab].url);
+}
+
+function browserHome() {
+  navigateTo('googie.com/freelance');
+}
+
+function toggleBookmarks() {
+  browserBookmarksVisible = !browserBookmarksVisible;
+  document.getElementById('browser-bookmarks').style.display = browserBookmarksVisible ? 'flex' : 'none';
+}
+
+function renderPage(url) {
   const el = document.getElementById('browser-content');
+  const clean = url.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+
+  if (clean === 'googie.com' || clean === 'googie.com/freelance' || clean === '') {
+    renderFreelance(el);
+  } else if (clean === 'darkwiki.net') {
+    renderDarkWiki(el);
+  } else if (clean === 'hackernews.com') {
+    renderHackerNews(el);
+  } else if (clean === 'cryptobank.com') {
+    renderCryptoBank(el);
+  } else if (clean === 'blackmarket.ru') {
+    renderBlackMarket(el);
+  } else {
+    render404(el, clean);
+  }
+}
+
+function renderFreelance(el) {
   const listings = [
     {title:'Антивирус для банка', type:'antivirus', pay:Math.floor(350*diffCfg.rewardMult), diff:'Средне', from:'BankSys'},
     {title:'Landing page', type:'web', pay:Math.floor(200*diffCfg.rewardMult), diff:'Легко', from:'GlobalTech'},
@@ -1557,18 +2121,118 @@ function renderBrowser() {
     {title:'Защита серверов', type:'antivirus', pay:Math.floor(300*diffCfg.rewardMult), diff:'Средне', from:'E-Corp'},
     {title:'Веб-приложение', type:'web', pay:Math.floor(220*diffCfg.rewardMult), diff:'Легко', from:'OmniCorp'}
   ];
-  let html = '<div style="display:grid; gap:8px;">';
+  let html = '<div class="site-header"><div class="site-logo" style="background:linear-gradient(135deg,#4285f4,#34a853);">💼</div><div><h1 style="margin:0;font-size:18px;">Googie Freelance</h1><p style="margin:0;color:#888;font-size:12px;">Биржа заказов для разработчиков</p></div></div>';
+  html += '<h2>🔥 Активные заказы</h2>';
   listings.forEach((l, idx) => {
-    html += `
-      <div style="background:white; border:1px solid #ddd; border-radius:6px; padding:12px;">
-        <div style="display:flex; justify-content:space-between;"><b style="color:#333;">${l.title}</b><span style="color:#ea4335; font-weight:bold;">$${l.pay}</span></div>
-        <div style="color:#666; font-size:12px; margin-top:4px;">Заказчик: ${l.from} | Тип: ${l.type} | Сложность: ${l.diff}</div>
-        <button class="btn" style="margin-top:8px; background:#4285f4;" onclick="takeBrowserJob(${idx})">📋 Взять заказ</button>
+    html += `<div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <b>${l.title}</b>
+        <span style="color:#ea4335; font-weight:bold; font-size:16px;">$${l.pay}</span>
       </div>
-    `;
+      <div style="color:#666; font-size:12px; margin-top:4px;">
+        Заказчик: <b>${l.from}</b> | Тип: <span class="tag tag-blue">${l.type}</span> | Сложность: ${l.diff}
+      </div>
+      <button class="btn" style="margin-top:8px; background:#4285f4;" onclick="takeBrowserJob(${idx})">📋 Взять заказ</button>
+    </div>`;
   });
-  html += '</div>';
   el.innerHTML = html;
+}
+
+function renderDarkWiki(el) {
+  let html = '<div class="site-header"><div class="site-logo" style="background:#333;">📚</div><div><h1 style="margin:0;font-size:18px;">DarkWiki</h1><p style="margin:0;color:#888;font-size:12px;">Энциклопедия теневого интернета</p></div></div>';
+  html += '<h2>📖 Популярные статьи</h2>';
+  const articles = [
+    {t:'Основы пентестинга', d:'Как начать карьеру пентестера с нуля. Инструменты, методологии, легальные рамки.'},
+    {t:'Социальная инженерия', d:'Искусство манипуляции людьми. Фишинг, притворство, сбор OSINT.'},
+    {t:'Шифрование данных', d:'AES, RSA, PGP. Как защитить свои данные от посторонних глаз.'},
+    {t:'DarkNet: гид для новичков', d:'Tor, I2P, Freenet. Как попасть в глубокий интернет и не попасться.'},
+    {t:'Этичный хакинг', d:'Разница между white hat, grey hat и black hat. Почему репутация важнее денег.'}
+  ];
+  articles.forEach(a => {
+    html += `<div class="card">
+      <h3>${a.t}</h3>
+      <p style="color:#666; font-size:12px;">${a.d}</p>
+      <a onclick="pushNotification('DarkWiki','Статья загружается...')">Читать далее →</a>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderHackerNews(el) {
+  let html = '<div class="site-header"><div class="site-logo" style="background:#ff6600;">📰</div><div><h1 style="margin:0;font-size:18px;">HackerNews</h1><p style="margin:0;color:#888;font-size:12px;">Новости из мира кибербезопасности</p></div></div>';
+  const news = [
+    {t:'E-Corp подтвердила утечку данных 50M пользователей', time:'2ч назад', hot:true},
+    {t:'Новый 0-day в Windows: эксплоит уже в продаже', time:'5ч назад', hot:true},
+    {t:'Anonymous взломали правительственные сервера', time:'8ч назад', hot:false},
+    {t:'ФБР предложило $10M за информацию о хакерской группе', time:'12ч назад', hot:true},
+    {t:'Криптовалютная биржа потеряла $200M из-за бага в смарт-контракте', time:'1д назад', hot:false},
+    {t:'Google выпустил патч для критической уязвимости Chrome', time:'1д назад', hot:false}
+  ];
+  news.forEach(n => {
+    html += `<div class="news-item">
+      <div class="news-time">${n.hot?'🔥 ':''}${n.time}</div>
+      <a onclick="pushNotification('HackerNews','${n.t}')">${n.t}</a>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderCryptoBank(el) {
+  let html = '<div class="site-header"><div class="site-logo" style="background:linear-gradient(135deg,#f7931a,#4caf50);">🏦</div><div><h1 style="margin:0;font-size:18px;">CryptoBank</h1><p style="margin:0;color:#888;font-size:12px;">Ваши инвестиции под контролем</p></div></div>';
+  html += '<h2>💰 Ваш портфель</h2>';
+  html += `<div class="card">
+    <div style="display:flex; justify-content:space-between; font-size:16px;">
+      <span>Баланс:</span><b>$${state.money}</b>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-top:8px; color:#666;">
+      <span>Репутация:</span><b>⭐ ${state.reputation}</b>
+    </div>
+  </div>`;
+  html += '<h2>📈 Рынок</h2>';
+  html += `<table>
+    <tr><th>Актив</th><th>Цена</th><th>24ч</th></tr>
+    <tr><td>🪙 Bitcoin</td><td>$${42000 + Math.floor(Math.random()*5000)}</td><td class="price-up">+${(Math.random()*5).toFixed(1)}%</td></tr>
+    <tr><td>💎 Ethereum</td><td>$${2200 + Math.floor(Math.random()*300)}</td><td class="price-down">-${(Math.random()*3).toFixed(1)}%</td></tr>
+    <tr><td>🔒 Monero</td><td>$${140 + Math.floor(Math.random()*20)}</td><td class="price-up">+${(Math.random()*8).toFixed(1)}%</td></tr>
+    <tr><td>🐕 Doge</td><td>$${0.08 + Math.random()*0.02}</td><td class="price-up">+${(Math.random()*20).toFixed(1)}%</td></tr>
+  </table>`;
+  html += '<div style="margin-top:12px;"><button class="btn btn-green" onclick="log('🏦 Инвестиции через терминал: invest <название> <сумма>', 'info')">💵 Инвестировать</button></div>';
+  el.innerHTML = html;
+}
+
+function renderBlackMarket(el) {
+  let html = '<div class="site-header"><div class="site-logo" style="background:#111;">💀</div><div><h1 style="margin:0;font-size:18px;">BlackMarket</h1><p style="margin:0;color:#888;font-size:12px;">⚠️ Доступ ограничен. VPN обязателен.</p></div></div>';
+  const items = [
+    {name:'Эксплоит Windows 11', price:800, risk:15},
+    {name:'База данных E-Corp', price:1200, risk:25},
+    {name:'Ключи SSH корп. сетей', price:500, risk:10},
+    {name:'Уязвимость iOS 18', price:2000, risk:30},
+    {name:'Дамп кредитных карт', price:300, risk:40},
+    {name:'Бэкдор для роутеров', price:450, risk:12}
+  ];
+  html += '<h2>🔥 Товары дня</h2>';
+  items.forEach(it => {
+    html += `<div class="card">
+      <div style="display:flex; justify-content:space-between;">
+        <b>${it.name}</b>
+        <span style="color:#e95420; font-weight:bold;">$${it.price}</span>
+      </div>
+      <div style="color:#888; font-size:11px; margin-top:4px;">Риск ФБР: +${it.risk}%</div>
+      <button class="btn btn-red" style="margin-top:6px; font-size:11px;" onclick="log('💀 Покупка на чёрном рынке...', 'danger'); state.fbi = Math.min(100, state.fbi + ${it.risk}); updateTopBar(); pushNotification('BlackMarket','Покупка совершена!');">Купить</button>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function render404(el, url) {
+  el.innerHTML = `
+    <div style="text-align:center; padding:40px;">
+      <div style="font-size:64px; margin-bottom:10px;">😕</div>
+      <h2>Сайт не найден</h2>
+      <p style="color:#888;">Не удалось подключиться к <b>${url}</b></p>
+      <p style="color:#888; font-size:12px;">Проверьте подключение к интернету или попробуйте <a onclick="navigateTo('googie.com')">вернуться домой</a>.</p>
+    </div>
+  `;
 }
 
 function takeBrowserJob(idx) {
@@ -1597,6 +2261,10 @@ function takeBrowserJob(idx) {
   log(`📋 Заказ "${l.title}" добавлен в Почту!`, 'success');
   renderMail();
   openWindow('mail');
+}
+
+function renderBrowser() {
+  renderPage(browserTabs[activeTab].url);
 }
 
 // ===================== DIALOG =====================
@@ -1628,6 +2296,7 @@ function updateTopBar() {
 function tick() {
   if (state.gameOver) return;
   state.gameTime = new Date(state.gameTime.getTime() + 120000);
+  state.gameMinutes = (state.gameMinutes || 0) + 2;
   updateTopBar();
 
   // Auto-progress active project
@@ -1661,19 +2330,33 @@ function tick() {
   // FBI decay
   if (state.fbi > 0) state.fbi = Math.max(0, state.fbi - 0.03);
 
-  // Random events
+  // Random events — реже и разнообразнее
   state.eventTimer++;
-  if (state.eventTimer > 50 + Math.random()*40) {
+  if (state.eventTimer > 140 + Math.random()*100) {
     state.eventTimer = 0;
-    if (Math.random() < 0.5) generateMessage();
-    else {
+    const roll = Math.random();
+    if (roll < 0.22) generateMessage();
+    else if (roll < 0.40) {
       const evts = [
         'Обнаружена попытка сканирования портов.',
         'Фаервол заблокировал подозрительный пакет.',
         'Обновление системы безопасности установлено.',
-        'Новый 0-day опубликован на хакерских форумах.'
+        'Новый 0-day опубликован на хакерских форумах.',
+        'Обнаружен неизвестный майнер в фоне.',
+        'DDoS-атака на порт 80 отражена.',
+        'Обнаружен ключ SSH в публичном репозитории.'
       ];
       log(`[Система] ${evts[Math.floor(Math.random()*evts.length)]}`, 'info');
+    } else if (roll < 0.55) {
+      // Пасхальное случайное событие
+      const secrets = [
+        'В логах замечена подпись: "glhf"',
+        'Пакет с IP 127.0.0.1... странно.',
+        'Кто-то оставил записку: "Ищи в /home"',
+        'Сигнал из глубин сети: "The cake is a lie"',
+        'Обнаружена подпись: "Neo, follow the white rabbit"'
+      ];
+      log(`[?] ${secrets[Math.floor(Math.random()*secrets.length)]}`, 'warning');
     }
   }
 
@@ -1869,6 +2552,141 @@ function initGame() {
     setup();
   }
 })();
+
+// ===================== BOOT / RECOVERY =====================
+let recoveryRequested = false;
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'F2') {
+    recoveryRequested = true;
+  }
+});
+
+// ===== KONAMI CODE EASTER EGG =====
+let konamiSequence = [];
+const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+document.addEventListener('keydown', (e) => {
+  konamiSequence.push(e.key);
+  if (konamiSequence.length > KONAMI.length) konamiSequence.shift();
+  if (konamiSequence.join(',') === KONAMI.join(',')) {
+    konamiSequence = [];
+    log('🎮 KONAMI CODE ACTIVATED!', 'success');
+    log('💰 +$500 к счёту!', 'success');
+    state.money += 500;
+    updateTopBar();
+    pushNotification('Cheat', 'Konami Code: +$500');
+  }
+});
+
+function startBootSequence() {
+  const boot = document.getElementById('boot-screen');
+  const log = document.getElementById('boot-log');
+
+  const lines = [
+    '[ OK ] Initializing kernel...',
+    '[ OK ] Mounting filesystem...',
+    '[ OK ] Starting network manager...',
+    '[ OK ] Loading desktop environment...',
+    '[ OK ] Checking security modules...',
+    '[ OK ] Starting Linux Dev OS...'
+  ];
+
+  let i = 0;
+
+  const timer = setInterval(() => {
+    if (i < lines.length) {
+      log.innerHTML += lines[i] + '\n';
+      i++;
+    } else {
+      clearInterval(timer);
+
+      setTimeout(() => {
+        boot.style.display = 'none';
+
+        if (recoveryRequested) {
+          document.getElementById('recovery-screen').style.display = 'block';
+        } else {
+          document.getElementById('title-screen').style.display = 'flex';
+        }
+      }, 700);
+    }
+  }, 500);
+}
+
+function exitRecovery() {
+  document.getElementById('recovery-screen').style.display = 'none';
+  document.getElementById('title-screen').style.display = 'flex';
+}
+
+// ===================== NOTIFICATIONS =====================
+function pushNotification(title, text) {
+  const wrap = document.getElementById('notifications');
+
+  const n = document.createElement('div');
+  n.style.cssText = `
+    background:rgba(20,20,20,0.95);
+    border:1px solid #555;
+    color:white;
+    padding:10px 14px;
+    border-radius:10px;
+    min-width:220px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.5);
+    animation:notifyIn 0.25s ease;
+    font-size:13px;
+  `;
+
+  n.innerHTML = `<b>${title}</b><div style="margin-top:4px;color:#bbb;">${text}</div>`;
+
+  wrap.appendChild(n);
+
+  setTimeout(() => {
+    n.remove();
+  }, 4000);
+}
+
+// ===================== WIFI SYSTEM =====================
+let wifiOnline = true;
+
+function toggleWifi() {
+  wifiOnline = !wifiOnline;
+
+  const el = document.getElementById('wifi-status');
+
+  if (wifiOnline) {
+    el.textContent = '📶 Online';
+    el.style.color = '#66ffcc';
+    pushNotification('Wi‑Fi', 'Подключение восстановлено');
+  } else {
+    el.textContent = '📡 Offline';
+    el.style.color = '#ff6666';
+    pushNotification('Wi‑Fi', 'Соединение потеряно');
+  }
+}
+
+// random network drops
+setInterval(() => {
+  if (Math.random() < 0.08) {
+    toggleWifi();
+
+    setTimeout(() => {
+      if (!wifiOnline) toggleWifi();
+    }, 5000);
+  }
+}, 25000);
+
+// Startup
+window.addEventListener('load', () => {
+  document.getElementById('title-screen').style.display = 'none';
+  startBootSequence();
+
+  setTimeout(() => {
+    pushNotification('Linux Dev OS', 'Система успешно загружена');
+  }, 4500);
+});
+
 </script>
+
+<div id="notifications" style="position:fixed;top:40px;right:10px;z-index:99999;display:flex;flex-direction:column;gap:8px;"></div>
+
 </body>
 </html>
