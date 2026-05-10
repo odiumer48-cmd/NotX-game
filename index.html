@@ -525,6 +525,156 @@
     background: rgba(255,255,255,0.15);
   }
 
+  /* ===== BIOS SCREEN ===== */
+  #bios-screen {
+    position: fixed; inset: 0;
+    background: #000;
+    color: #aaa;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 40px;
+    z-index: 60000;
+    display: none;
+    white-space: pre-wrap;
+    overflow: hidden;
+  }
+  #bios-screen.active { display: block; }
+  .bios-line { margin-bottom: 4px; }
+  .bios-ok { color: #0f0; }
+  .bios-warn { color: #ff0; }
+  .bios-err { color: #f00; }
+
+  /* ===== ACHIEVEMENTS ===== */
+  #achievements-panel {
+    position: fixed;
+    right: -320px;
+    top: 80px;
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: rgba(56,56,56,0.95);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    z-index: 15000;
+    transition: right 0.3s;
+    backdrop-filter: blur(10px);
+  }
+  #achievements-panel.active { right: 10px; }
+  .ach-item {
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border-left: 4px solid #555;
+    opacity: 0.5;
+  }
+  .ach-item.unlocked {
+    opacity: 1;
+    border-left-color: var(--success);
+    background: rgba(56,180,74,0.1);
+  }
+  .ach-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; }
+  .ach-desc { font-size: 11px; color: var(--text-dim); }
+  .ach-popup {
+    position: fixed;
+    bottom: 60px;
+    right: 20px;
+    background: rgba(56,56,56,0.95);
+    border: 2px solid var(--success);
+    border-radius: 10px;
+    padding: 12px 16px;
+    z-index: 20000;
+    animation: slideIn 0.3s ease;
+    max-width: 280px;
+  }
+  .ach-popup-title { font-weight: bold; color: var(--success); margin-bottom: 4px; }
+  .ach-popup-desc { font-size: 12px; }
+
+  /* ===== NEWS PANEL ===== */
+  #news-panel {
+    position: absolute;
+    top: 28px;
+    right: 0;
+    width: 280px;
+    height: calc(100% - 72px);
+    background: rgba(56,56,56,0.95);
+    border-left: 1px solid var(--border);
+    z-index: 5000;
+    display: none;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+  }
+  #news-panel.active { display: flex; }
+  .news-header {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .news-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+  }
+  .news-item {
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--info);
+  }
+  .news-item.urgent { border-left-color: var(--danger); }
+  .news-time { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+  .news-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; }
+  .news-text { font-size: 12px; line-height: 1.4; }
+
+  /* ===== TUTORIAL OVERLAY ===== */
+  #tutorial-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 25000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  #tutorial-overlay.active { display: flex; }
+  .tutorial-box {
+    background: var(--window);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  }
+  .tutorial-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .tutorial-text {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .tutorial-step {
+    background: rgba(255,255,255,0.05);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--warning);
+  }
+  .tutorial-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
 </style>
 </head>
 <body>
@@ -558,6 +708,37 @@
 
 <!-- ==================== DESKTOP LAYER ==================== -->
 <div id="desktop-layer">
+
+<!-- BIOS Screen -->
+<div id="bios-screen"></div>
+
+<!-- Tutorial Overlay -->
+<div id="tutorial-overlay">
+  <div class="tutorial-box">
+    <div class="tutorial-title" id="tut-title">🐧 Добро пожаловать в Linux Dev OS!</div>
+    <div class="tutorial-text" id="tut-text">Это симулятор хакера-разработчика. Ваша цель — зарабатывать деньги, выполняя заказы и создавая проекты.</div>
+    <div class="tutorial-step" id="tut-step"></div>
+    <div class="tutorial-buttons">
+      <button class="btn btn-secondary" onclick="skipTutorial()">Пропустить</button>
+      <button class="btn" onclick="nextTutorial()">Далее ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- Achievements Panel -->
+<div id="achievements-panel">
+  <div style="font-weight:bold; margin-bottom:10px; color:var(--accent);">🏆 Достижения</div>
+  <div id="ach-list"></div>
+</div>
+
+<!-- News Panel -->
+<div id="news-panel">
+  <div class="news-header">
+    <span>📰 Новости</span>
+    <button class="btn btn-small btn-secondary" onclick="toggleNews()">✕</button>
+  </div>
+  <div class="news-list" id="news-list"></div>
+</div>
 
 <!-- Top Bar -->
 <div id="top-bar">
@@ -613,6 +794,8 @@
   <button id="start-btn" class="taskbar-btn" onclick="toggleMenu()" style="background:var(--accent); font-weight:bold;">🐧</button>
   <div id="taskbar-apps" style="display:flex; gap:4px;"></div>
   <div style="margin-left:auto; display:flex; gap:8px; align-items:center; font-size:12px; color:var(--text-dim);">
+    <button class="btn btn-small btn-secondary" onclick="toggleNews()" title="Новости">📰</button>
+    <button class="btn btn-small btn-secondary" onclick="toggleAchievements()" title="Достижения">🏆</button>
     <span id="tb-hint" style="color:var(--warning);"></span>
   </div>
 </div>
@@ -631,6 +814,7 @@
   <button class="start-menu-item" onclick="menuOpen('darknet')"><span class="emoji">💀</span>DarkNet</button>
   <button class="start-menu-item" onclick="menuOpen('antivirus')"><span class="emoji">🛡️</span>Антивирус</button>
   <button class="start-menu-item" onclick="menuOpen('settings')"><span class="emoji">⚙️</span>Настройки</button>
+  <button class="start-menu-item" onclick="menuOpen('achievements')"><span class="emoji">🏆</span>Достижения</button>
 
   <div class="start-menu-section">
     <div class="start-menu-mini">
@@ -827,6 +1011,31 @@ function selectDiff(d) {
 // ===================== STATE =====================
 let state = null;
 
+// Достижения
+const ACHIEVEMENTS = [
+  { id: 'first_code', name: 'Первый код', desc: 'Напишите первую программу', unlocked: false },
+  { id: 'first_hack', name: 'Первый взлом', desc: 'Взломайте первый сервер', unlocked: false },
+  { id: 'rich', name: 'Богач', desc: 'Заработайте $1000', unlocked: false },
+  { id: 'hacker', name: 'Хакер', desc: 'Достигните 50% репутации', unlocked: false },
+  { id: 'bios_master', name: 'BIOS Master', desc: 'Войдите в BIOS 10 раз', unlocked: false, count: 0 },
+  { id: 'news_reader', name: 'Читатель новостей', desc: 'Прочитайте 20 новостей', unlocked: false, count: 0 },
+  { id: 'speed_coder', name: 'Скоростной кодер', desc: 'Завершите проект за 1 минуту', unlocked: false },
+  { id: 'antivirus_author', name: 'Автор антивирусов', desc: 'Создайте 5 антивирусов', unlocked: false, count: 0 },
+  { id: 'easter_egg', name: 'Пасхалка!', desc: 'Найдите секретную команду', unlocked: false }
+];
+
+// Новости
+const NEWS_TEMPLATES = [
+  { title: 'Новый фреймворк!', text: 'Разработчики представили революционный фреймворк для веб-разработки.', urgent: false },
+  { title: 'Уязвимость в ПО', text: 'Обнаружена критическая уязвимость в популярном антивирусе.', urgent: true },
+  { title: 'Криптобум', text: 'Курс биткоина снова растёт! Эксперты советуют инвестировать.', urgent: false },
+  { title: 'Хакерская атака', text: 'Крупная компания подверглась атаке вымогателей.', urgent: true },
+  { title: 'AI прогресс', text: 'ИИ научился писать код лучше junior-разработчиков.', urgent: false },
+  { title: 'Linux Day', text: 'По всему миру проходят мероприятия в честь Linux.', urgent: false },
+  { title: 'Квантовый прорыв', text: 'Учёные создали новый квантовый процессор.', urgent: false },
+  { title: 'DarkNet мониторинг', text: 'Специалисты заметили рост активности на чёрных рынках.', urgent: true }
+];
+
 function createState() {
   return {
     money: diffCfg.startMoney,
@@ -848,9 +1057,14 @@ function createState() {
     eventTimer: 0,
     wins: { terminal:false, browser:false, mail:false, projects:false, store:false, darknet:false, antivirus:false, settings:false },
     diff: selectedDiff,
-    antivirusStock: 0, // сколько антивирусов написано и готово к продаже
+    antivirusStock: 0,
     antivirusSold: 0,
-    totalEarned: 0
+    totalEarned: 0,
+    achievements: JSON.parse(JSON.stringify(ACHIEVEMENTS)),
+    news: [],
+    tutorialShown: false,
+    biosCount: 0,
+    newsReadCount: 0
   };
 }
 
@@ -958,9 +1172,14 @@ function toggleMenu() {
 }
 
 function menuOpen(name) {
-  openWindow(name);
-  focusWindow(name);
-  hideMenu();
+  if (name === 'achievements') {
+    toggleAchievements();
+    hideMenu();
+  } else {
+    openWindow(name);
+    focusWindow(name);
+    hideMenu();
+  }
 }
 
 document.addEventListener('click', (e) => {
@@ -974,6 +1193,26 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') hideMenu();
+  
+  // Горячие клавиши
+  if (e.ctrlKey || e.metaKey) {
+    switch(e.key.toLowerCase()) {
+      case 't': e.preventDefault(); openWindow('terminal'); break;
+      case 'b': e.preventDefault(); openWindow('browser'); break;
+      case 'm': e.preventDefault(); openWindow('mail'); break;
+      case 'p': e.preventDefault(); openWindow('projects'); break;
+      case 's': e.preventDefault(); saveGame(); break;
+      case 'l': e.preventDefault(); loadGame(); break;
+      case 'n': e.preventDefault(); toggleNews(); break;
+      case 'a': e.preventDefault(); toggleAchievements(); break;
+      case 'h': e.preventDefault(); showTutorial(); break;
+    }
+  }
+  
+  // BIOS вход при загрузке (F2 или Delete во время старта)
+  if ((e.key === 'F2' || e.key === 'Delete') && state && !state.gameOver) {
+    enterBIOS();
+  }
 });
 
 function updateTaskbar() {
@@ -1102,6 +1341,8 @@ function execCmd(input) {
     case 'status': cmdStatus(); break;
     case 'clear': termOut.innerHTML = ''; break;
     case 'exit': location.reload(); break;
+    case 'poweroff': cmdPoweroff(); break;
+    case 'shutdown': cmdPoweroff(); break;
     case 'develop': cmdDevelop(rest); break;
     case 'upload': cmdUpload(args[1]); break;
     case 'cancel': cmdCancel(); break;
@@ -1141,7 +1382,15 @@ function cmdHelp() {
   invest <name> <$$> — инвестировать
   store/mail/projects/darknet/antivirus/browser — открыть окно
   save/load         — сохранить/загрузить
+  poweroff/shutdown — выключить систему
   clear/exit`, 'info');
+}
+
+function cmdPoweroff() {
+  log('Выключение системы...', 'warning');
+  setTimeout(() => {
+    document.body.innerHTML = '<div style="background:#000;color:#666;display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;font-size:18px;">System halted.</div>';
+  }, 1500);
 }
 
 function cmdStatus() {
@@ -1731,6 +1980,15 @@ function initGame() {
   document.getElementById('win-terminal').addEventListener('mousedown', () => {
     setTimeout(() => document.getElementById('term-in').focus(), 100);
   });
+  
+  // Показать обучение если это первая игра
+  if (!state.tutorialShown) {
+    showTutorial();
+  }
+  
+  // Добавить стартовые новости
+  addNews('Добро пожаловать!', 'Вы начали новую игру. Удачи в мире хакеров!', false);
+  addNews('Совет дня', 'Откройте терминал и введите help для списка команд.', false);
 }
 
 
