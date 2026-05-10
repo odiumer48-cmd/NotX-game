@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux Dev OS</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg: #2d2d2d;
+    --panel: #383838;
+    --window: #404040;
+    --header: #4a4a4a;
+    --accent: #e95420;
+    --accent2: #772953;
+    --text: #eeeeee;
+    --text-dim: #aaaaaa;
+    --border: #555555;
+    --success: #38b44a;
+    --danger: #df382c;
+    --warning: #efb73e;
+    --info: #19b6ee;
+    --font-mono: 'Ubuntu Mono', 'Consolas', monospace;
+    --font-ui: 'Ubuntu', 'Segoe UI', sans-serif;
+  }
+  body {
+    font-family: var(--font-ui);
+    background: linear-gradient(135deg, #772953 0%, #2c001e 50%, #1a1a2e 100%);
+    color: var(--text);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+    user-select: none;
+  }
+
+  /* ===== TITLE SCREEN ===== */
+  #title-screen {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #1a0a1a 0%, #2c001e 40%, #1a1a2e 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 50000;
+    transition: opacity 0.6s;
+  }
+  #title-screen.hidden { opacity: 0; pointer-events: none; }
+  .title-logo {
+    font-size: 52px; font-weight: bold;
+    background: linear-gradient(90deg, var(--accent), var(--warning));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    text-shadow: none;
+    letter-spacing: 2px;
+  }
+  .title-sub { font-size: 16px; color: var(--text-dim); margin-bottom: 40px; }
+  .difficulty-select {
+    display: flex; gap: 12px; margin-bottom: 30px;
+  }
+  .diff-btn {
+    padding: 14px 28px;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    min-width: 140px;
+  }
+  .diff-btn:hover { border-color: var(--accent); background: rgba(233,84,32,0.1); }
+  .diff-btn.selected {
+    border-color: var(--accent);
+    background: rgba(233,84,32,0.2);
+    box-shadow: 0 0 20px rgba(233,84,32,0.2);
+  }
+  .diff-btn .diff-label { font-weight: bold; display: block; margin-bottom: 4px; }
+  .diff-btn .diff-desc { font-size: 11px; color: var(--text-dim); }
+  .title-actions {
+    display: flex; gap: 12px;
+  }
+  .title-btn {
+    padding: 12px 36px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  .title-btn:hover { filter: brightness(1.2); }
+  .title-btn.secondary { background: var(--panel); border: 1px solid var(--border); }
+
+  /* ===== DESKTOP ===== */
+  #desktop-layer {
+    position: absolute; inset: 0;
+    display: none;
+  }
+  #desktop-layer.active { display: block; }
+
+  #top-bar {
+    position: absolute;
+    top:0; left:0; right:0;
+    height: 28px;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 13px;
+    z-index: 10000;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  #top-bar .left { display:flex; gap:12px; align-items:center; }
+  #top-bar .right { margin-left:auto; display:flex; gap:16px; align-items:center; }
+
+  #desktop {
+    position: absolute;
+    top: 28px; left: 0; right: 0; bottom: 44px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 8px;
+    z-index: 1;
+  }
+  .desktop-icon {
+    width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-align: center;
+  }
+  .desktop-icon:hover { background: rgba(255,255,255,0.1); }
+  .desktop-icon:active { background: rgba(255,255,255,0.2); }
+  .desktop-icon .icon {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .desktop-icon .label {
+    font-size: 12px;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    word-break: break-word;
+  }
+
+  /* ===== WINDOWS ===== */
+  .window {
+    position: absolute;
+    background: var(--window);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 320px;
+    min-height: 200px;
+    z-index: 100;
+  }
+  .window.active { display: flex; }
+  .window.focused { box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px var(--accent); }
+  .window-titlebar {
+    height: 32px;
+    background: linear-gradient(to bottom, var(--header), #3a3a3a);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+    cursor: grab;
+    border-bottom: 1px solid var(--border);
+    border-radius: 8px 8px 0 0;
+  }
+  .window-titlebar:active { cursor: grabbing; }
+  .window-title { flex:1; font-size: 13px; font-weight: 500; }
+  .window-btn {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: transparent;
+    transition: color 0.15s;
+  }
+  .window-btn:hover { color: rgba(0,0,0,0.6); }
+  .btn-close { background: var(--danger); }
+  .btn-min { background: var(--warning); }
+  .btn-max { background: var(--success); }
+  .window-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px;
+    font-size: 13px;
+  }
+  .window-content::-webkit-scrollbar { width: 8px; }
+  .window-content::-webkit-scrollbar-track { background: transparent; }
+  .window-content::-webkit-scrollbar-thumb { background: #666; border-radius: 4px; }
+  .window-content::-webkit-scrollbar-thumb:hover { background: #888; }
+
+  /* ===== TASKBAR ===== */
+  #taskbar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 44px;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 4px;
+    z-index: 10000;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .taskbar-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.08);
+    border: none;
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    max-width: 160px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .taskbar-btn:hover { background: rgba(255,255,255,0.15); }
+  .taskbar-btn.open { background: rgba(233,84,32,0.25); border-bottom: 2px solid var(--accent); }
+  .taskbar-btn.active { background: rgba(233,84,32,0.4); }
+
+  /* ===== TERMINAL ===== */
+  .term-output {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 8px;
+    border-radius: 4px;
+    min-height: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    margin-bottom: 6px;
+  }
+  .term-input-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #1e1e1e;
+    padding: 6px 8px;
+    border-radius: 4px;
+  }
+  .term-prompt { color: var(--success); font-family: var(--font-mono); font-weight: bold; }
+  .term-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #d4d4d4;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  /* ===== BROWSER ===== */
+  .browser-toolbar {
+    display: flex;
+    gap: 6px;
+    padding: 6px;
+    background: var(--panel);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .browser-toolbar input {
+    flex: 1;
+    background: #2a2a2a;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .browser-page {
+    background: #f5f5f5;
+    color: #333;
+    border-radius: 4px;
+    padding: 12px;
+    min-height: 250px;
+  }
+
+  /* ===== UI COMPONENTS ===== */
+  .list-item {
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .list-item:hover { background: rgba(255,255,255,0.07); }
+  .list-item.unread { border-left-color: var(--info); background: rgba(25,182,238,0.08); }
+  .list-item.danger { border-left-color: var(--danger); }
+  .list-item.success { border-left-color: var(--success); }
+
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    margin-left: 6px;
+  }
+  .tag-green { background: rgba(56,180,74,0.2); color: var(--success); }
+  .tag-red { background: rgba(223,56,44,0.2); color: var(--danger); }
+  .tag-yellow { background: rgba(239,183,62,0.2); color: var(--warning); }
+  .tag-blue { background: rgba(25,182,238,0.2); color: var(--info); }
+
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 4px;
+    transition: width 0.3s;
+  }
+
+  .btn {
+    padding: 5px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: filter 0.15s;
+  }
+  .btn:hover { filter: brightness(1.15); }
+  .btn-secondary { background: var(--panel); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: #4a4a4a; }
+  .btn-small { padding: 3px 10px; font-size: 11px; }
+  .btn-green { background: var(--success); }
+  .btn-red { background: var(--danger); }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 13px;
+  }
+
+  .hint-box {
+    background: rgba(239,183,62,0.1);
+    border: 1px solid rgba(239,183,62,0.3);
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-top: 6px;
+    display: none;
+  }
+  .hint-box.show { display: block; }
+
+  .host-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .host-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .host-card.owned { border-color: var(--success); background: rgba(56,180,74,0.05); }
+
+  /* ===== OVERLAY ===== */
+  #overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 20000;
+  }
+  #overlay.active { display: flex; }
+  .dialog {
+    background: var(--window);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  .dialog h3 { margin-bottom: 10px; color: var(--accent); }
+  .dialog p { font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
+  .dialog-buttons { display: flex; gap: 8px; justify-content: flex-end; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .window.opening { animation: slideIn 0.2s ease; }
+</style>
+</head>
+<body>
+
+<!-- ==================== TITLE SCREEN ==================== -->
+<div id="title-screen">
+  <div class="title-logo">🐧 LINUX DEV OS</div>
+  <div class="title-sub">Хакерский симулятор разработчика</div>
+
+  <div style="margin-bottom:12px; color:var(--text-dim); font-size:13px;">Выберите сложность:</div>
+  <div class="difficulty-select">
+    <div class="diff-btn" data-diff="easy" onclick="selectDiff('easy')">
+      <span class="diff-label">🟢 Легкий</span>
+      <span class="diff-desc">Короткий код<br>Низкая защита<br>Больше времени</span>
+    </div>
+    <div class="diff-btn selected" data-diff="normal" onclick="selectDiff('normal')">
+      <span class="diff-label">🟡 Средний</span>
+      <span class="diff-desc">Стандартный код<br>Средняя защита<br>Баланс</span>
+    </div>
+    <div class="diff-btn" data-diff="hard" onclick="selectDiff('hard')">
+      <span class="diff-label">🔴 Сложный</span>
+      <span class="diff-desc">Длинный код<br>Высокая защита<br>Мало времени</span>
+    </div>
+  </div>
+
+  <div class="title-actions">
+    <button class="title-btn" onclick="startGame()">▶ Новая игра</button>
+    <button class="title-btn secondary" onclick="loadGameFromTitle()">📂 Загрузить</button>
+  </div>
+</div>
+
+<!-- ==================== DESKTOP LAYER ==================== -->
+<div id="desktop-layer">
+
+<!-- Top Bar -->
+<div id="top-bar">
+  <div class="left">
+    <span style="font-weight:bold;">🐧 Linux Dev OS</span>
+    <span id="top-stats" style="color:var(--text-dim); font-size:12px;">💰 $300 | ⭐ 50</span>
+  </div>
+  <div class="right">
+    <span id="top-diff" style="color:var(--warning); font-size:12px;">🟡 Средний</span>
+    <span id="top-fbi" style="color:var(--danger); font-size:12px;">🚔 FBI: 0%</span>
+    <span id="top-time" style="font-weight:bold;">09:00</span>
+  </div>
+</div>
+
+<!-- Desktop Icons -->
+<div id="desktop">
+  <div class="desktop-icon" onclick="openWindow('terminal')">
+    <div class="icon" style="background:linear-gradient(135deg,#333,#1a1a1a);">🖥️</div>
+    <div class="label">Терминал</div>
+  </div>
+  <div class="desktop-icon" onclick="openWindow('browser')">
+    <div class="icon" style="background:linear-gradient(135deg,#4285f4,#34a853);">🌐</div>
+    <div class="label">Googie</div>
+  </div>
+  <div class="desktop-icon" onclick="openWindow('mail')">
+    <div class="icon" style="background:linear-gradient(135deg,#ea4335,#fbbc05);">📧</div>
+    <div class="label">Почта</div>
+  </div>
+  <div class="desktop-icon" onclick="openWindow('projects')">
+    <div class="icon" style="background:linear-gradient(135deg,#9c27b0,#673ab7);">📁</div>
+    <div class="label">Проекты</div>
+  </div>
+  <div class="desktop-icon" onclick="openWindow('store')">
+    <div class="icon" style="background:linear-gradient(135deg,#ff9800,#f44336);">🛒</div>
+    <div class="label">Магазин</div>
+  </div>
+  <div class="desktop-icon" onclick="openWindow('darknet')">
+    <div class="icon" style="background:linear-gradient(135deg,#111,#333);">💀</div>
+    <div class="label">DarkNet</div>
+  </div>
+  <div class="desktop-icon" onclick="openWindow('antivirus')">
+    <div class="icon" style="background:linear-gradient(135deg,#1976d2,#0d47a1);">🛡️</div>
+    <div class="label">Антивирус</div>
+  </div>
+  <div class="desktop-icon" onclick="openWindow('settings')">
+    <div class="icon" style="background:linear-gradient(135deg,#607d8b,#455a64);">⚙️</div>
+    <div class="label">Настройки</div>
+  </div>
+</div>
+
+<!-- Taskbar -->
+<div id="taskbar">
+  <button class="taskbar-btn" onclick="toggleMenu()" style="background:var(--accent); font-weight:bold;">🐧</button>
+  <div id="taskbar-apps" style="display:flex; gap:4px;"></div>
+  <div style="margin-left:auto; display:flex; gap:8px; align-items:center; font-size:12px; color:var(--text-dim);">
+    <span id="tb-hint" style="color:var(--warning);"></span>
+  </div>
+</div>
+
+<!-- ==================== WINDOWS ==================== -->
+
+<!-- Terminal -->
+<div class="window" id="win-terminal" style="width:600px; height:420px; top:60px; left:40px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-terminal')">
+    <span class="window-title">🖥️ Терминал</span>
+    <button class="window-btn btn-min" onclick="minWindow('terminal')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('terminal')">×</button>
+  </div>
+  <div class="window-content" style="display:flex; flex-direction:column;">
+    <div class="term-output" id="term-out">Добро пожаловать в Linux Dev OS v3.0
+Введите help для справки.
+Совет: откройте Googie или Почту, чтобы получить заказ.</div>
+    <div class="hint-box" id="term-hint"></div>
+    <div class="term-input-line">
+      <span class="term-prompt" id="term-prompt">neo@dev:~$</span>
+      <input type="text" class="term-input" id="term-in" autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+</div>
+
+<!-- Browser (Googie) -->
+<div class="window" id="win-browser" style="width:720px; height:500px; top:50px; left:200px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-browser')">
+    <span class="window-title">🌐 Googie Browser</span>
+    <button class="window-btn btn-min" onclick="minWindow('browser')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('browser')">×</button>
+  </div>
+  <div class="window-content">
+    <div class="browser-toolbar">
+      <span>🔒</span>
+      <input type="text" value="googie.com/freelance" readonly>
+      <button class="btn btn-small" onclick="renderBrowser()">🔄</button>
+    </div>
+    <div class="browser-page" id="browser-page">
+      <h2 style="color:#ea4335; margin-bottom:6px;">Googie Freelance</h2>
+      <p style="color:#666; margin-bottom:12px; font-size:13px;">Биржа заказов. Выбирайте и начинайте прямо здесь!</p>
+      <div id="browser-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Mail -->
+<div class="window" id="win-mail" style="width:520px; height:440px; top:80px; left:300px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-mail')">
+    <span class="window-title">📧 Почта</span>
+    <button class="window-btn btn-min" onclick="minWindow('mail')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('mail')">×</button>
+  </div>
+  <div class="window-content" id="mail-content">
+    <p style="color:var(--text-dim); text-align:center; margin-top:40px;">Нет сообщений.</p>
+  </div>
+</div>
+
+<!-- Projects -->
+<div class="window" id="win-projects" style="width:540px; height:440px; top:70px; left:100px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-projects')">
+    <span class="window-title">📁 Проекты</span>
+    <button class="window-btn btn-min" onclick="minWindow('projects')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('projects')">×</button>
+  </div>
+  <div class="window-content" id="projects-content">
+    <p style="color:var(--text-dim); text-align:center; margin-top:40px;">Нет активных проектов.</p>
+  </div>
+</div>
+
+<!-- Store -->
+<div class="window" id="win-store" style="width:480px; height:420px; top:90px; left:150px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-store')">
+    <span class="window-title">🛒 Магазин</span>
+    <button class="window-btn btn-min" onclick="minWindow('store')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('store')">×</button>
+  </div>
+  <div class="window-content" id="store-content"></div>
+</div>
+
+<!-- DarkNet (renamed from Network) -->
+<div class="window" id="win-darknet" style="width:580px; height:460px; top:60px; left:250px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-darknet')">
+    <span class="window-title">💀 DarkNet Scanner</span>
+    <button class="window-btn btn-min" onclick="minWindow('darknet')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('darknet')">×</button>
+  </div>
+  <div class="window-content" id="darknet-content"></div>
+</div>
+
+<!-- Antivirus Lab -->
+<div class="window" id="win-antivirus" style="width:560px; height:440px; top:80px; left:180px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-antivirus')">
+    <span class="window-title">🛡️ Antivirus Lab</span>
+    <button class="window-btn btn-min" onclick="minWindow('antivirus')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('antivirus')">×</button>
+  </div>
+  <div class="window-content" id="antivirus-content"></div>
+</div>
+
+<!-- Settings -->
+<div class="window" id="win-settings" style="width:420px; height:360px; top:100px; left:400px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-settings')">
+    <span class="window-title">⚙️ Настройки</span>
+    <button class="window-btn btn-min" onclick="minWindow('settings')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('settings')">×</button>
+  </div>
+  <div class="window-content">
+    <h3 style="margin-bottom:12px; color:var(--accent);">Настройки системы</h3>
+    <label style="display:flex; align-items:center; gap:8px; margin:10px 0; cursor:pointer;">
+      <input type="checkbox" id="set-hints" checked onchange="state.showHints=this.checked"> Показывать подсказки кода
+    </label>
+    <label style="display:flex; align-items:center; gap:8px; margin:10px 0; cursor:pointer;">
+      <input type="checkbox" id="set-sound" onchange="state.sound=this.checked"> Звуковые уведомления
+    </label>
+    <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border);">
+      <button class="btn" onclick="saveGame()" style="margin-right:6px;">💾 Сохранить</button>
+      <button class="btn btn-secondary" onclick="loadGame()">📂 Загрузить</button>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="btn btn-secondary" onclick="if(confirm('Сбросить прогресс?')){localStorage.removeItem('linuxdev_save');location.reload();}">🗑️ Сброс</button>
+    </div>
+    <div style="margin-top:20px; font-size:12px; color:var(--text-dim);">
+      Linux Dev OS v3.1<br>Сохранение в локальном хранилище браузера.
+    </div>
+  </div>
+</div>
+
+</div><!-- /desktop-layer -->
+
+<!-- Overlay Dialog -->
+<div id="overlay">
+  <div class="dialog" id="dialog-box">
+    <h3 id="dialog-title">Заголовок</h3>
+    <p id="dialog-text">Текст</p>
+    <div class="dialog-buttons" id="dialog-buttons"></div>
+  </div>
+</div>
+
+<script>
+// ===================== DIFFICULTY CONFIG =====================
+const DIFFICULTY = {
+  easy: {
+    label: '🟢 Легкий',
+    codeMult: 0.5,
+    hostSecMult: 0.6,
+    deadlineMult: 1.5,
+    rewardMult: 1.3,
+    fbiMult: 0.5,
+    startMoney: 500,
+    autoProgress: 0.12,
+    name: 'Легкий'
+  },
+  normal: {
+    label: '🟡 Средний',
+    codeMult: 1.0,
+    hostSecMult: 1.0,
+    deadlineMult: 1.0,
+    rewardMult: 1.0,
+    fbiMult: 1.0,
+    startMoney: 300,
+    autoProgress: 0.05,
+    name: 'Средний'
+  },
+  hard: {
+    label: '🔴 Сложный',
+    codeMult: 1.8,
+    hostSecMult: 1.4,
+    deadlineMult: 0.7,
+    rewardMult: 0.8,
+    fbiMult: 1.8,
+    startMoney: 150,
+    autoProgress: 0.02,
+    name: 'Сложный'
+  }
+};
+
+let selectedDiff = 'normal';
+let diffCfg = DIFFICULTY.normal;
+
+function selectDiff(d) {
+  selectedDiff = d;
+  diffCfg = DIFFICULTY[d];
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector('.diff-btn[data-diff="'+d+'"]').classList.add('selected');
+}
+
+// ===================== STATE =====================
+let state = null;
+
+function createState() {
+  return {
+    money: diffCfg.startMoney,
+    reputation: 50,
+    fbi: 0,
+    gameTime: new Date(2026, 4, 9, 9, 0),
+    hw: 1, sw: 1, net: 1,
+    lang: 'python',
+    projects: [],
+    messages: [],
+    hosts: [],
+    activeTask: null,
+    nextMsgId: 1,
+    nextProjId: 1,
+    nextHostId: 1,
+    showHints: true,
+    sound: false,
+    gameOver: false,
+    eventTimer: 0,
+    wins: { terminal:false, browser:false, mail:false, projects:false, store:false, darknet:false, antivirus:false, settings:false },
+    diff: selectedDiff,
+    antivirusStock: 0, // сколько антивирусов написано и готово к продаже
+    antivirusSold: 0,
+    totalEarned: 0
+  };
+}
+
+const langs = {
+  python: { name:'Python', speed:1.0, reward:1.0 },
+  cpp: { name:'C++', speed:1.3, reward:1.2 },
+  js: { name:'JavaScript', speed:1.1, reward:1.1 }
+};
+
+// ===================== TITLE SCREEN =====================
+function startGame() {
+  state = createState();
+  document.getElementById('title-screen').classList.add('hidden');
+  document.getElementById('desktop-layer').classList.add('active');
+  document.getElementById('top-diff').textContent = diffCfg.label;
+  initGame();
+}
+
+function loadGameFromTitle() {
+  const d = localStorage.getItem('linuxdev_save');
+  if (!d) { alert('Нет сохранения!'); return; }
+  try {
+    const p = JSON.parse(d, (k,v) => {
+      if (k==='deadline'||k==='date') return v?new Date(v):v;
+      return v;
+    });
+    state = p;
+    selectedDiff = state.diff || 'normal';
+    diffCfg = DIFFICULTY[selectedDiff] || DIFFICULTY.normal;
+    document.getElementById('title-screen').classList.add('hidden');
+    document.getElementById('desktop-layer').classList.add('active');
+    document.getElementById('top-diff').textContent = diffCfg.label;
+    initGame();
+  } catch(e) { alert('Ошибка загрузки!'); }
+}
+
+// ===================== WINDOW SYSTEM =====================
+let zIndex = 200;
+let drag = null;
+
+function openWindow(name) {
+  const win = document.getElementById('win-' + name);
+  if (!win) return;
+  win.classList.add('active', 'opening', 'focused');
+  setTimeout(() => win.classList.remove('opening'), 200);
+  win.style.zIndex = ++zIndex;
+  state.wins[name] = true;
+  updateTaskbar();
+  if (name === 'terminal') setTimeout(() => document.getElementById('term-in').focus(), 100);
+  if (name === 'mail') renderMail();
+  if (name === 'projects') renderProjects();
+  if (name === 'store') renderStore();
+  if (name === 'darknet') renderDarkNet();
+  if (name === 'antivirus') renderAntivirus();
+  if (name === 'browser') renderBrowser();
+}
+
+function closeWindow(name) {
+  const win = document.getElementById('win-' + name);
+  if (win) win.classList.remove('active', 'focused');
+  state.wins[name] = false;
+  updateTaskbar();
+}
+
+function minWindow(name) {
+  const win = document.getElementById('win-' + name);
+  if (win) win.classList.remove('active');
+  updateTaskbar();
+}
+
+function focusWindow(name) {
+  const win = document.getElementById('win-' + name);
+  if (!win) return;
+  if (!win.classList.contains('active')) win.classList.add('active');
+  win.style.zIndex = ++zIndex;
+  document.querySelectorAll('.window').forEach(w => w.classList.remove('focused'));
+  win.classList.add('focused');
+  if (name === 'terminal') setTimeout(() => document.getElementById('term-in').focus(), 50);
+}
+
+function updateTaskbar() {
+  const bar = document.getElementById('taskbar-apps');
+  bar.innerHTML = '';
+  const apps = [
+    {id:'terminal', icon:'🖥️', label:'Терминал'},
+    {id:'browser', icon:'🌐', label:'Googie'},
+    {id:'mail', icon:'📧', label:'Почта'},
+    {id:'projects', icon:'📁', label:'Проекты'},
+    {id:'store', icon:'🛒', label:'Магазин'},
+    {id:'darknet', icon:'💀', label:'DarkNet'},
+    {id:'antivirus', icon:'🛡️', label:'Антивирус'},
+    {id:'settings', icon:'⚙️', label:'Настройки'}
+  ];
+  apps.forEach(a => {
+    if (!state.wins[a.id]) return;
+    const btn = document.createElement('button');
+    btn.className = 'taskbar-btn' + (document.getElementById('win-'+a.id).classList.contains('active') ? ' active' : '');
+    btn.innerHTML = a.icon + ' <span>' + a.label + '</span>';
+    btn.onclick = () => {
+      const win = document.getElementById('win-'+a.id);
+      if (win.classList.contains('active')) minWindow(a.id);
+      else { openWindow(a.id); focusWindow(a.id); }
+    };
+    bar.appendChild(btn);
+  });
+}
+
+document.addEventListener('mousemove', e => {
+  if (!drag) return;
+  const win = document.getElementById(drag.id);
+  win.style.left = (e.clientX - drag.dx) + 'px';
+  win.style.top = (e.clientY - drag.dy) + 'px';
+});
+document.addEventListener('mouseup', () => drag = null);
+
+function startDrag(e, id) {
+  const win = document.getElementById(id);
+  drag = { id, dx: e.clientX - win.offsetLeft, dy: e.clientY - win.offsetTop };
+  focusWindow(id.replace('win-',''));
+}
+
+document.querySelectorAll('.window').forEach(win => {
+  win.addEventListener('mousedown', () => {
+    const name = win.id.replace('win-','');
+    focusWindow(name);
+  });
+});
+
+// ===================== TERMINAL =====================
+const termOut = document.getElementById('term-out');
+const termIn = document.getElementById('term-in');
+const termHint = document.getElementById('term-hint');
+
+function log(text, type='info') {
+  const div = document.createElement('div');
+  const colors = { info:'#d4d4d4', success:'#38b44a', warning:'#efb73e', danger:'#df382c', system:'#19b6ee' };
+  div.style.color = colors[type] || colors.info;
+  div.textContent = text;
+  termOut.appendChild(div);
+  termOut.scrollTop = termOut.scrollHeight;
+}
+
+termIn.addEventListener('keydown', e => {
+  if (state.gameOver) return;
+  if (e.key === 'Enter') {
+    const val = termIn.value.trim();
+    termIn.value = '';
+    if (val) {
+      log('neo@dev:~$ ' + val, 'system');
+      execCmd(val);
+    }
+    return;
+  }
+  if (state.activeTask) {
+    if (e.key === 'Backspace') {
+      if (state.activeTask.progress > 0) {
+        state.activeTask.progress--;
+        updateHint();
+      }
+      e.preventDefault();
+      return;
+    }
+    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      const task = state.activeTask;
+      if (task.progress < task.code.length) {
+        const expected = task.code[task.progress];
+        if (e.key === expected) {
+          task.progress++;
+          updateHint();
+          if (task.progress === task.code.length) {
+            log('✅ Код завершён! Нажмите Enter для сдачи проекта.', 'success');
+          }
+        } else {
+          log(`❌ Ошибка: ожидался '${expected}', введён '${e.key}'`, 'warning');
+        }
+        e.preventDefault();
+      }
+    }
+  }
+});
+
+function updateHint() {
+  if (!state.showHints || !state.activeTask) {
+    termHint.classList.remove('show');
+    return;
+  }
+  const t = state.activeTask;
+  if (t.progress >= t.code.length) { termHint.classList.remove('show'); return; }
+  const before = t.code.substring(0, t.progress);
+  const ch = t.code[t.progress];
+  const after = t.code.substring(t.progress + 1);
+  termHint.innerHTML = `Подсказка: <code style="background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;">${before}<span style="background:var(--warning); color:#000; padding:0 3px; border-radius:2px;">${ch}</span>${after}</code>`;
+  termHint.classList.add('show');
+}
+
+// ===================== COMMANDS =====================
+function execCmd(input) {
+  const args = input.trim().split(/\s+/);
+  const cmd = args[0].toLowerCase();
+  const rest = input.slice(cmd.length).trim();
+
+  switch(cmd) {
+    case 'help': cmdHelp(); break;
+    case 'status': cmdStatus(); break;
+    case 'clear': termOut.innerHTML = ''; break;
+    case 'exit': location.reload(); break;
+    case 'develop': cmdDevelop(rest); break;
+    case 'upload': cmdUpload(args[1]); break;
+    case 'cancel': cmdCancel(); break;
+    case 'nmap': cmdNmap(args[1]); break;
+    case 'exploit': cmdExploit(args[1]); break;
+    case 'connect': cmdConnect(args[1]); break;
+    case 'scan': cmdScan(); break;
+    case 'buy': cmdBuy(rest); break;
+    case 'invest': cmdInvest(args[1], args[2]); break;
+    case 'store': openWindow('store'); break;
+    case 'mail': openWindow('mail'); break;
+    case 'projects': openWindow('projects'); break;
+    case 'darknet': openWindow('darknet'); break;
+    case 'antivirus': openWindow('antivirus'); break;
+    case 'browser': openWindow('browser'); break;
+    case 'save': saveGame(); break;
+    case 'load': loadGame(); break;
+    case 'sell': cmdSellAntivirus(args[1]); break;
+    default: log('Неизвестная команда: ' + cmd, 'warning');
+  }
+}
+
+function cmdHelp() {
+  log(`Команды:
+  help              — справка
+  status            — статус
+  develop <тип> --name=... [--lang=python|cpp|js]
+    типы: game, virus, antivirus, web
+  upload <id>       — сдать проект
+  cancel            — отменить текущий код
+  sell <кол-во>     — продать антивирус
+  nmap <ip>         — сканировать хост
+  exploit <ip>      — взломать хост
+  connect <ip>      — подключиться
+  scan              — показать сеть
+  buy <item>        — купить (hw, sw, net, def)
+  invest <name> <$$> — инвестировать
+  store/mail/projects/darknet/antivirus/browser — открыть окно
+  save/load         — сохранить/загрузить
+  clear/exit`, 'info');
+}
+
+function cmdStatus() {
+  log(`💰 $${state.money} | ⭐ ${state.reputation} | 🕒 ${fmtTime(state.gameTime)}`);
+  log(`🚔 FBI: ${Math.floor(state.fbi)}% | 🛡️ Защита: ${state.sw*15}%`);
+  log(`🖥️ HW:${state.hw} 💿 SW:${state.sw} 🌐 NET:${state.net}`);
+  log(`🛡️ Антивирусов на складе: ${state.antivirusStock} | Продано: ${state.antivirusSold}`);
+  const t = state.activeTask;
+  log(t ? `Проект: ${t.name} (${t.progress}/${t.code.length})` : 'Нет активного проекта');
+}
+
+// ===================== PROJECTS =====================
+function generateCode(type, name, lang) {
+  const base = name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  const mult = diffCfg.codeMult;
+  // Generate code based on difficulty length
+  let code = '';
+  if (type === 'virus') {
+    code = `malware_${base}_payload_exec`;
+  } else if (type === 'antivirus') {
+    code = `antivirus_${base}_scan_quarantine`;
+  } else if (type === 'web') {
+    code = `react_${base}_component_render`;
+  } else {
+    code = `game_${base}_engine_init_loop`;
+  }
+  // Apply difficulty multiplier to length
+  const targetLen = Math.max(15, Math.floor(code.length * mult));
+  while (code.length < targetLen) {
+    code += '_' + Math.random().toString(36).substring(2, 5);
+  }
+  return code.substring(0, targetLen);
+}
+
+function cmdDevelop(argsStr) {
+  if (state.activeTask) { log('Уже есть активный проект. Используйте cancel.', 'warning'); return; }
+  const type = argsStr.split(/\s+/)[0];
+  if (!['game','virus','antivirus','web'].includes(type)) { log('Типы: game, virus, antivirus, web', 'warning'); return; }
+  let name = null, lang = state.lang;
+  argsStr.split(/\s+/).slice(1).forEach(arg => {
+    if (arg.startsWith('--name=')) name = arg.split('=')[1];
+    if (arg.startsWith('--lang=')) lang = arg.split('=')[1];
+  });
+  if (!name) name = type + '_' + Math.floor(Math.random()*1000);
+  if (!langs[lang]) lang = 'python';
+
+  const code = generateCode(type, name, lang);
+  const l = langs[lang];
+  const reward = Math.floor(code.length * 15 * l.reward * diffCfg.rewardMult * (1 + Math.random()*0.3));
+  const deadline = new Date(state.gameTime.getTime() + (6 + Math.floor(Math.random()*4)) * 3600000 * diffCfg.deadlineMult);
+
+  const proj = {
+    id: state.nextProjId++,
+    type, name, lang,
+    code,
+    progress: 0,
+    completed: false,
+    failed: false,
+    uploaded: false,
+    reward,
+    deadline,
+    fbiRisk: Math.floor((type==='virus'?12 : type==='antivirus'?2 : 5) * diffCfg.fbiMult)
+  };
+  state.projects.push(proj);
+  state.activeTask = proj;
+  log(`📝 Проект "${name}" [${type}] начат. Язык: ${l.name}. Длина: ${code.length} симв. Награда: $${reward}`, 'success');
+  updateHint();
+  renderProjects();
+  openWindow('projects');
+}
+
+function cmdUpload(id) {
+  const proj = state.projects.find(p => p.id === parseInt(id));
+  if (!proj) { log('Проект не найден.', 'warning'); return; }
+  if (!proj.completed) { log('Сначала завершите код (введите всю строку).', 'warning'); return; }
+  if (proj.uploaded) { log('Уже сдан.', 'warning'); return; }
+  proj.uploaded = true;
+  state.money += proj.reward;
+  state.totalEarned += proj.reward;
+  state.fbi = Math.min(100, state.fbi + proj.fbiRisk);
+  state.reputation = Math.min(100, state.reputation + (proj.type==='virus'?-3:8));
+  log(`📦 "${proj.name}" сдан! +$${proj.reward}`, 'success');
+  if (proj.fbiRisk > 5) log(`🚔 Внимание FBI +${proj.fbiRisk}%`, 'danger');
+  state.activeTask = null;
+  updateHint();
+  renderProjects();
+  updateTopBar();
+}
+
+function cmdCancel() {
+  if (!state.activeTask) { log('Нет активного проекта.', 'warning'); return; }
+  state.activeTask = null;
+  log('Проект отменён.', 'warning');
+  updateHint();
+}
+
+// ===================== ANTIVIRUS SYSTEM =====================
+function renderAntivirus() {
+  const el = document.getElementById('antivirus-content');
+  el.innerHTML = `
+    <h3 style="margin-bottom:10px; color:var(--info);">🛡️ Antivirus Lab</h3>
+    <p style="color:var(--text-dim); font-size:12px; margin-bottom:12px;">
+      Здесь вы можете разрабатывать антивирусы для продажи.<br>
+      Каждый антивирус приносит пассивный доход. Чем больше написано — тем выше доход.
+    </p>
+    <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:12px; margin-bottom:12px;">
+      <div class="stat-row"><span>📦 На складе:</span><b>${state.antivirusStock}</b></div>
+      <div class="stat-row"><span>💰 Продано:</span><b>${state.antivirusSold}</b></div>
+      <div class="stat-row"><span>💵 Доход/час:</span><b>$${state.antivirusStock * 5}</b></div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn btn-green" onclick="createAntivirus()">📝 Написать антивирус</button>
+      <button class="btn" onclick="sellAntivirus(1)">💰 Продать 1 шт. ($80)</button>
+      <button class="btn" onclick="sellAntivirus(5)">💰 Продать 5 шт. ($350)</button>
+      <button class="btn btn-secondary" onclick="sellAntivirus(${state.antivirusStock})">💰 Продать всё ($${state.antivirusStock * 70})</button>
+    </div>
+    <div style="margin-top:14px; font-size:12px; color:var(--text-dim);">
+      💡 Совет: напишите несколько антивирусов и продавайте оптом — выгоднее!
+    </div>
+  `;
+}
+
+function createAntivirus() {
+  if (state.activeTask) { log('Сначала завершите текущий проект.', 'warning'); return; }
+  // Create a quick antivirus project
+  const name = 'AV_Security_' + Math.floor(Math.random()*1000);
+  const code = generateCode('antivirus', name, 'python');
+  const proj = {
+    id: state.nextProjId++,
+    type: 'antivirus',
+    name,
+    lang: 'python',
+    code,
+    progress: 0,
+    completed: false,
+    failed: false,
+    uploaded: false,
+    reward: 0, // no direct reward, goes to stock
+    deadline: new Date(state.gameTime.getTime() + 4 * 3600000 * diffCfg.deadlineMult),
+    fbiRisk: 0,
+    isAV: true // flag for antivirus lab project
+  };
+  state.projects.push(proj);
+  state.activeTask = proj;
+  log(`🛡️ Начата разработка антивируса "${name}". Введите код!`, 'info');
+  updateHint();
+  renderProjects();
+  openWindow('terminal');
+}
+
+function sellAntivirus(amount) {
+  if (amount <= 0) return;
+  if (state.antivirusStock < amount) { log('Недостаточно антивирусов на складе!', 'warning'); return; }
+  const pricePerUnit = amount >= 5 ? 70 : 80;
+  const total = amount * pricePerUnit;
+  state.antivirusStock -= amount;
+  state.antivirusSold += amount;
+  state.money += total;
+  state.reputation = Math.min(100, state.reputation + amount);
+  log(`💰 Продано ${amount} антивирусов за $${total}. Репутация +${amount}`, 'success');
+  renderAntivirus();
+  updateTopBar();
+}
+
+function cmdSellAntivirus(amount) {
+  const n = parseInt(amount) || 1;
+  sellAntivirus(n);
+}
+
+// ===================== DARKNET (Network) =====================
+function generateHosts() {
+  const names = ['E-Corp','GlobalTech','Cyberdyne','OmniCorp','Nexus','GovNet','BankSys','DarkHost','ShadowNet','PhantomSys'];
+  for (let i=0; i<10; i++) {
+    const sec = Math.floor((Math.random()*60 + 20) * diffCfg.hostSecMult);
+    state.hosts.push({
+      id: state.nextHostId++,
+      ip: `10.0.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
+      name: names[Math.floor(Math.random()*names.length)] + '-' + Math.floor(Math.random()*100),
+      security: Math.min(95, sec),
+      ports: [22,80,443,3306,8080].filter(()=>Math.random()>0.3),
+      owned: false,
+      looted: false
+    });
+  }
+}
+
+function cmdNmap(ip) {
+  if (!ip) { log('Использование: nmap <ip>', 'warning'); return; }
+  const h = state.hosts.find(x => x.ip === ip);
+  if (!h) { log('Хост не найден.', 'warning'); return; }
+  log(`🔍 ${ip} — ${h.name}`, 'info');
+  log(`   Защита: ${h.security}% | Порты: ${h.ports.join(', ')}`);
+  state.fbi = Math.min(100, state.fbi + 1);
+}
+
+function cmdExploit(ip) {
+  if (!ip) { log('Использование: exploit <ip>', 'warning'); return; }
+  const h = state.hosts.find(x => x.ip === ip);
+  if (!h) { log('Хост не найден.', 'warning'); return; }
+  if (h.owned) { log('Уже взломан.', 'warning'); return; }
+  const chance = 50 + state.sw*10 + state.net*5 - h.security;
+  if (Math.random()*100 < chance) {
+    h.owned = true;
+    const loot = Math.floor((80 + Math.floor(Math.random()*150)) * diffCfg.rewardMult);
+    state.money += loot;
+    state.reputation = Math.min(100, state.reputation + 3);
+    log(`🎉 Взлом успешен! ${h.name} под контролем. Добыча: $${loot}`, 'success');
+  } else {
+    log(`❌ Взлом провален. Защита слишком сильна.`, 'danger');
+    state.fbi = Math.min(100, state.fbi + Math.floor(4 * diffCfg.fbiMult));
+  }
+  renderDarkNet();
+  updateTopBar();
+}
+
+function cmdConnect(ip) {
+  const h = state.hosts.find(x => x.ip === ip);
+  if (!h) { log('Хост не найден.', 'warning'); return; }
+  if (!h.owned) { log('Нет доступа. Взломайте сначала.', 'warning'); return; }
+  document.getElementById('term-prompt').textContent = `root@${h.name}:~#`;
+  log(`Подключён к ${h.name} как root.`, 'success');
+}
+
+function cmdScan() {
+  log('💀 DarkNet хосты:', 'info');
+  state.hosts.forEach(h => {
+    log(`  ${h.owned?'✅':'🔒'} ${h.ip} — ${h.name} (защита ${h.security}%)`);
+  });
+  openWindow('darknet');
+}
+
+function renderDarkNet() {
+  const el = document.getElementById('darknet-content');
+  let html = '<h3 style="margin-bottom:10px; color:var(--accent);">💀 DarkNet Scanner</h3>';
+  html += '<p style="color:var(--text-dim); font-size:12px; margin-bottom:10px;">Анонимная сеть для пентестинга. Не попадитесь ФБР.</p>';
+  html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:8px;">';
+  state.hosts.forEach(h => {
+    html += `
+      <div class="host-card ${h.owned?'owned':''}">
+        <div style="font-weight:bold; ${h.owned?'color:var(--success);':''}">${h.name}</div>
+        <div style="color:var(--text-dim); font-size:11px;">${h.ip}</div>
+        <div style="margin-top:4px; font-size:11px;">🔒 ${h.security}%</div>
+        <div style="margin-top:4px; font-size:10px; color:#888;">Порты: ${h.ports.join(',')}</div>
+        <div style="margin-top:6px; display:flex; gap:4px;">
+          <button class="btn btn-small" onclick="cmdNmap('${h.ip}')">nmap</button>
+          ${!h.owned ? `<button class="btn btn-small btn-secondary" onclick="cmdExploit('${h.ip}')">взлом</button>` : '<span style="color:var(--success); font-size:11px;">✅ ROOT</span>'}
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ===================== MESSAGES =====================
+function generateMessage() {
+  if (state.messages.length > 14) return;
+  const companies = ['E-Corp','GlobalTech','Cyberdyne','OmniCorp','Nexus','GovNet'];
+  const types = ['antivirus','web','game'];
+  if (state.reputation < 25 || state.fbi > 40) types.push('virus');
+  const type = types[Math.floor(Math.random()*types.length)];
+  const from = companies[Math.floor(Math.random()*companies.length)];
+  const rewards = { antivirus:250, web:200, game:180, virus:300 };
+  const bodies = {
+    antivirus: 'Нужен антивирус для корпоративной сети.',
+    web: 'Разработать landing page для нового продукта.',
+    game: 'Простая аркада для внутреннего мероприятия.',
+    virus: 'Нужен тихий сборщик данных. Без вопросов.'
+  };
+  const msg = {
+    id: state.nextMsgId++,
+    from,
+    subject: type==='antivirus'?'Заказ на защиту':type==='web'?'Веб-разработка':type==='game'?'Игра':'Специальный заказ',
+    body: bodies[type],
+    type,
+    reward: Math.floor((rewards[type] + Math.floor(Math.random()*150)) * diffCfg.rewardMult),
+    deadlineHours: Math.floor((5 + Math.floor(Math.random()*5)) * diffCfg.deadlineMult),
+    date: new Date(state.gameTime),
+    read: false,
+    accepted: false
+  };
+  state.messages.push(msg);
+  log(`📧 Новое письмо от ${from}`, 'info');
+  renderMail();
+  updateTopBar();
+}
+
+function cmdBuy(item) {
+  const prices = { hw:200, sw:300, net:250, def:150 };
+  const names = { hw:'железо', sw:'софт', net:'сеть', def:'защиту' };
+  if (!prices[item]) { log('Товары: hw, sw, net, def', 'info'); return; }
+  if (state.money < prices[item]) { log('Недостаточно средств.', 'warning'); return; }
+  state.money -= prices[item];
+  if (item==='hw') state.hw++;
+  if (item==='sw') state.sw++;
+  if (item==='net') state.net++;
+  if (item==='def') { state.reputation = Math.min(100, state.reputation + 5); state.fbi = Math.max(0, state.fbi - 5); }
+  log(`⬆️ Куплено ${names[item]}!`, 'success');
+  renderStore();
+  updateTopBar();
+}
+
+function cmdInvest(name, amount) {
+  if (!name || !amount) { log('Использование: invest <название> <сумма>', 'warning'); return; }
+  const sum = parseInt(amount);
+  if (!sum || sum <= 0) return;
+  if (state.money < sum) { log('Недостаточно средств.', 'warning'); return; }
+  state.money -= sum;
+  log(`📈 Вложено $${sum} в ${name}.`, 'success');
+  updateTopBar();
+}
+
+// ===================== RENDERERS =====================
+function renderMail() {
+  const el = document.getElementById('mail-content');
+  if (state.messages.length === 0) { el.innerHTML = '<p style="color:var(--text-dim); text-align:center; margin-top:40px;">Нет сообщений.</p>'; return; }
+  el.innerHTML = '';
+  state.messages.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'list-item' + (m.read?'':' unread');
+    div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><b>${m.from}</b><span class="tag tag-green">$${m.reward}</span></div><div style="color:var(--text-dim); font-size:12px; margin-top:2px;">${m.subject}</div>`;
+    div.onclick = () => {
+      m.read = true;
+      showDialog(m.subject, `<b>От:</b> ${m.from}<br><b>Награда:</b> $${m.reward}<br><b>Дедлайн:</b> ${m.deadlineHours}ч<br><br>${m.body}`, [
+        {text:'Принять', action:()=>{ acceptMsg(m.id); closeDialog(); }},
+        {text:'Закрыть', action:closeDialog}
+      ]);
+      renderMail();
+    };
+    el.appendChild(div);
+  });
+}
+
+function acceptMsg(id) {
+  const msg = state.messages.find(m => m.id === id && !m.accepted);
+  if (!msg) return;
+  msg.accepted = true;
+  const type = msg.type;
+  const name = `${type}_${msg.from}_${Date.now()%1000}`;
+  log(`Заказ принят! Создайте проект: develop ${type} --name=${name}`, 'success');
+  renderMail();
+}
+
+function renderProjects() {
+  const el = document.getElementById('projects-content');
+  if (state.projects.length === 0) { el.innerHTML = '<p style="color:var(--text-dim); text-align:center; margin-top:40px;">Нет проектов. Начните через терминал: develop game --name=MyGame</p>'; return; }
+  el.innerHTML = '';
+  state.projects.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'list-item' + (p.failed?' danger':p.completed?' success':'');
+    const pct = p.completed ? 100 : Math.floor((p.progress / p.code.length) * 100);
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <b>${p.name}</b>
+        <span class="tag ${p.type==='virus'?'tag-red':p.type==='antivirus'?'tag-blue':'tag-green'}">${p.type}</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+        <small style="color:var(--text-dim);">${p.completed?'Готов к загрузке':p.failed?'Провален':pct+'%'}</small>
+        ${p.completed && !p.uploaded ? `<button class="btn btn-small" onclick="cmdUpload('${p.id}')">Сдать (+$${p.reward})</button>` : ''}
+        ${p.isAV && p.completed && !p.uploaded ? `<button class="btn btn-small btn-green" onclick="finishAVProject('${p.id}')">На склад</button>` : ''}
+      </div>
+    `;
+    el.appendChild(div);
+  });
+}
+
+function finishAVProject(id) {
+  const proj = state.projects.find(p => p.id === parseInt(id));
+  if (!proj || !proj.isAV) return;
+  proj.uploaded = true;
+  state.antivirusStock++;
+  state.reputation = Math.min(100, state.reputation + 5);
+  log(`🛡️ Антивирус "${proj.name}" добавлен на склад!`, 'success');
+  renderProjects();
+  renderAntivirus();
+  updateTopBar();
+}
+
+function renderStore() {
+  const el = document.getElementById('store-content');
+  el.innerHTML = `
+    <h3 style="margin-bottom:10px; color:var(--accent);">🛒 Магазин улучшений</h3>
+    <div class="list-item" style="display:flex; justify-content:space-between; align-items:center;">
+      <span>🖥️ Улучшить железо (ур.${state.hw}) — ускоряет разработку</span>
+      <button class="btn" onclick="cmdBuy('hw')">$200</button>
+    </div>
+    <div class="list-item" style="display:flex; justify-content:space-between; align-items:center;">
+      <span>💿 Улучшить софт (ур.${state.sw}) — лучше взлом</span>
+      <button class="btn" onclick="cmdBuy('sw')">$300</button>
+    </div>
+    <div class="list-item" style="display:flex; justify-content:space-between; align-items:center;">
+      <span>🌐 Улучшить сеть (ур.${state.net}) — больше хостов</span>
+      <button class="btn" onclick="cmdBuy('net')">$250</button>
+    </div>
+    <div class="list-item" style="display:flex; justify-content:space-between; align-items:center;">
+      <span>🛡️ Антивирус — +репутация, -риск ФБР</span>
+      <button class="btn" onclick="cmdBuy('def')">$150</button>
+    </div>
+    <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border); font-size:12px; color:var(--text-dim);">
+      💰 Текущий баланс: <b style="color:var(--text);">$${state.money}</b>
+    </div>
+  `;
+}
+
+function renderBrowser() {
+  const el = document.getElementById('browser-content');
+  const listings = [
+    {title:'Антивирус для банка', type:'antivirus', pay:Math.floor(350*diffCfg.rewardMult), diff:'Средне', from:'BankSys'},
+    {title:'Landing page', type:'web', pay:Math.floor(200*diffCfg.rewardMult), diff:'Легко', from:'GlobalTech'},
+    {title:'Мобильная игра', type:'game', pay:Math.floor(280*diffCfg.rewardMult), diff:'Средне', from:'Nexus'},
+    {title:'Корпоративный пентест', type:'virus', pay:Math.floor(400*diffCfg.rewardMult), diff:'Сложно', from:'ShadowNet'},
+    {title:'Защита серверов', type:'antivirus', pay:Math.floor(300*diffCfg.rewardMult), diff:'Средне', from:'E-Corp'},
+    {title:'Веб-приложение', type:'web', pay:Math.floor(220*diffCfg.rewardMult), diff:'Легко', from:'OmniCorp'}
+  ];
+  let html = '<div style="display:grid; gap:8px;">';
+  listings.forEach((l, idx) => {
+    html += `
+      <div style="background:white; border:1px solid #ddd; border-radius:6px; padding:12px;">
+        <div style="display:flex; justify-content:space-between;"><b style="color:#333;">${l.title}</b><span style="color:#ea4335; font-weight:bold;">$${l.pay}</span></div>
+        <div style="color:#666; font-size:12px; margin-top:4px;">Заказчик: ${l.from} | Тип: ${l.type} | Сложность: ${l.diff}</div>
+        <button class="btn" style="margin-top:8px; background:#4285f4;" onclick="takeBrowserJob(${idx})">📋 Взять заказ</button>
+      </div>
+    `;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function takeBrowserJob(idx) {
+  const listings = [
+    {title:'Антивирус для банка', type:'antivirus', pay:Math.floor(350*diffCfg.rewardMult), from:'BankSys'},
+    {title:'Landing page', type:'web', pay:Math.floor(200*diffCfg.rewardMult), from:'GlobalTech'},
+    {title:'Мобильная игра', type:'game', pay:Math.floor(280*diffCfg.rewardMult), from:'Nexus'},
+    {title:'Корпоративный пентест', type:'virus', pay:Math.floor(400*diffCfg.rewardMult), from:'ShadowNet'},
+    {title:'Защита серверов', type:'antivirus', pay:Math.floor(300*diffCfg.rewardMult), from:'E-Corp'},
+    {title:'Веб-приложение', type:'web', pay:Math.floor(220*diffCfg.rewardMult), from:'OmniCorp'}
+  ];
+  const l = listings[idx];
+  const msg = {
+    id: state.nextMsgId++,
+    from: l.from,
+    subject: l.title,
+    body: `Заказ из Googie Freelance: ${l.title}. Срок: ${Math.floor(6*diffCfg.deadlineMult)}ч.`,
+    type: l.type,
+    reward: l.pay,
+    deadlineHours: Math.floor(6 * diffCfg.deadlineMult),
+    date: new Date(state.gameTime),
+    read: false,
+    accepted: false
+  };
+  state.messages.push(msg);
+  log(`📋 Заказ "${l.title}" добавлен в Почту!`, 'success');
+  renderMail();
+  openWindow('mail');
+}
+
+// ===================== DIALOG =====================
+function showDialog(title, text, buttons) {
+  document.getElementById('dialog-title').textContent = title;
+  document.getElementById('dialog-text').innerHTML = text;
+  const box = document.getElementById('dialog-buttons');
+  box.innerHTML = '';
+  buttons.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'btn' + (b.primary ? '' : ' btn-secondary');
+    btn.textContent = b.text;
+    btn.onclick = b.action;
+    box.appendChild(btn);
+  });
+  document.getElementById('overlay').classList.add('active');
+}
+function closeDialog() { document.getElementById('overlay').classList.remove('active'); }
+
+// ===================== GAME LOOP =====================
+function fmtTime(d) { return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+
+function updateTopBar() {
+  document.getElementById('top-stats').textContent = `💰 $${state.money} | ⭐ ${state.reputation}`;
+  document.getElementById('top-fbi').textContent = `🚔 FBI: ${Math.floor(state.fbi)}%`;
+  document.getElementById('top-time').textContent = fmtTime(state.gameTime);
+}
+
+function tick() {
+  if (state.gameOver) return;
+  state.gameTime = new Date(state.gameTime.getTime() + 120000);
+  updateTopBar();
+
+  // Auto-progress active project
+  state.projects.forEach(p => {
+    if (p.completed || p.failed) return;
+    if (!state.activeTask || state.activeTask.id !== p.id) {
+      p.progress = Math.min(p.code.length, p.progress + diffCfg.autoProgress * state.hw);
+    }
+    if (p.progress >= p.code.length && !p.completed) {
+      p.completed = true;
+      p.progress = p.code.length;
+      log(`✅ Проект "${p.name}" завершён! ${p.isAV ? 'Отправьте на склад через Проекты.' : 'Введите upload ' + p.id}`, 'success');
+      renderProjects();
+    }
+    if (p.deadline && state.gameTime >= p.deadline && !p.completed) {
+      p.failed = true;
+      state.reputation = Math.max(0, state.reputation - 8);
+      log(`❌ Дедлайн "${p.name}" истёк! Репутация -8`, 'danger');
+      if (state.activeTask && state.activeTask.id === p.id) state.activeTask = null;
+      renderProjects();
+    }
+  });
+
+  // Passive income from antivirus stock
+  if (state.antivirusStock > 0 && Math.random() < 0.1) {
+    const income = state.antivirusStock * 5;
+    state.money += income;
+    state.totalEarned += income;
+  }
+
+  // FBI decay
+  if (state.fbi > 0) state.fbi = Math.max(0, state.fbi - 0.03);
+
+  // Random events
+  state.eventTimer++;
+  if (state.eventTimer > 50 + Math.random()*40) {
+    state.eventTimer = 0;
+    if (Math.random() < 0.5) generateMessage();
+    else {
+      const evts = [
+        'Обнаружена попытка сканирования портов.',
+        'Фаервол заблокировал подозрительный пакет.',
+        'Обновление системы безопасности установлено.',
+        'Новый 0-day опубликован на хакерских форумах.'
+      ];
+      log(`[Система] ${evts[Math.floor(Math.random()*evts.length)]}`, 'info');
+    }
+  }
+
+  if (state.fbi >= 100) {
+    state.fbi = 100;
+    document.getElementById('tb-hint').textContent = '⚠️ FBI ВНИМАНИЕ!';
+  } else {
+    document.getElementById('tb-hint').textContent = '';
+  }
+  if (state.money < -300) {
+    state.gameOver = true;
+    log('💸 Вы банкрот. Но вы можете продолжить, восстановив финансы.', 'danger');
+  }
+}
+
+// ===================== SAVE/LOAD =====================
+function saveGame() {
+  const data = JSON.stringify(state, (k,v) => {
+    if (k==='deadline'||k==='date') return v?v.toISOString():v;
+    if (k==='activeTask' && v) return { ...v, deadline: v.deadline?v.deadline.toISOString():null };
+    return v;
+  });
+  localStorage.setItem('linuxdev_save', data);
+  log('💾 Сохранено!', 'success');
+}
+function loadGame() {
+  const d = localStorage.getItem('linuxdev_save');
+  if (!d) { log('Нет сохранения.', 'warning'); return; }
+  try {
+    const p = JSON.parse(d, (k,v) => {
+      if (k==='deadline'||k==='date') return v?new Date(v):v;
+      return v;
+    });
+    Object.assign(state, p);
+    state.gameTime = new Date(state.gameTime);
+    state.projects.forEach(x=>{ if(x.deadline) x.deadline=new Date(x.deadline); });
+    state.messages.forEach(x=>{ x.date=new Date(x.date); });
+    selectedDiff = state.diff || 'normal';
+    diffCfg = DIFFICULTY[selectedDiff] || DIFFICULTY.normal;
+    document.getElementById('top-diff').textContent = diffCfg.label;
+    log('📂 Загружено!', 'success');
+    updateTopBar(); renderMail(); renderProjects(); renderStore(); renderDarkNet(); renderAntivirus();
+  } catch(e) { log('Ошибка загрузки.', 'danger'); }
+}
+
+// ===================== INIT =====================
+function initGame() {
+  generateHosts();
+  updateTopBar();
+  renderStore();
+  renderBrowser();
+  setInterval(tick, 1000);
+  setTimeout(() => generateMessage(), 3000);
+  setTimeout(() => generateMessage(), 8000);
+  document.getElementById('win-terminal').addEventListener('mousedown', () => {
+    setTimeout(() => document.getElementById('term-in').focus(), 100);
+  });
+}
+</script>
+</body>
+</html>
