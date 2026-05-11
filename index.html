@@ -536,6 +536,68 @@
   to { opacity:1; transform:translateX(0); }
 }
 
+
+  /* ===== FILE MANAGER ===== */
+  .fm-toolbar {
+    display:flex; gap:6px; padding:6px; background:var(--panel); border-radius:4px; margin-bottom:8px; align-items:center;
+  }
+  .fm-breadcrumb {
+    flex:1; font-size:12px; color:var(--text-dim); background:#2a2a2a; border:1px solid var(--border); padding:4px 8px; border-radius:4px;
+  }
+  .fm-list {
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap:8px;
+  }
+  .fm-item {
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:10px 4px; border-radius:8px; cursor:pointer;
+    background:rgba(255,255,255,0.03); border:1px solid transparent;
+    transition:all 0.15s; text-align:center; font-size:12px; position:relative;
+  }
+  .fm-item:hover { background:rgba(255,255,255,0.08); border-color:var(--border); }
+  .fm-item.selected { background:rgba(233,84,32,0.15); border-color:var(--accent); }
+  .fm-item .fm-icon { font-size:28px; }
+  .fm-item .fm-name {
+    width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    color:var(--text); font-size:11px;
+  }
+  .fm-context {
+    position:absolute; background:var(--window); border:1px solid var(--border);
+    border-radius:6px; padding:4px 0; box-shadow:0 4px 16px rgba(0,0,0,0.5);
+    display:none; flex-direction:column; z-index:50; min-width:120px;
+  }
+  .fm-context.active { display:flex; }
+  .fm-context-item {
+    padding:6px 12px; font-size:12px; cursor:pointer; color:var(--text);
+  }
+  .fm-context-item:hover { background:rgba(255,255,255,0.08); }
+
+  /* ===== TEXT EDITOR ===== */
+  .editor-toolbar {
+    display:flex; gap:6px; padding:6px; background:var(--panel); border-radius:4px; margin-bottom:8px; align-items:center;
+  }
+  .editor-filename {
+    flex:1; font-size:12px; color:var(--text); font-weight:500;
+  }
+  .editor-area {
+    width:100%; flex:1; background:#1e1e1e; color:#d4d4d4;
+    font-family:var(--font-mono); font-size:13px; line-height:1.5;
+    border:1px solid var(--border); border-radius:4px; padding:8px;
+    resize:none; outline:none;
+  }
+
+  /* ===== ACHIEVEMENTS ===== */
+  .ach-grid {
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px;
+  }
+  .ach-card {
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    padding:12px; text-align:center; opacity:0.45; transition:all 0.2s;
+  }
+  .ach-card.unlocked { opacity:1; border-color:var(--accent); background:rgba(233,84,32,0.08); }
+  .ach-card .ach-icon { font-size:32px; margin-bottom:6px; }
+  .ach-card .ach-title { font-size:12px; font-weight:bold; margin-bottom:4px; }
+  .ach-card .ach-desc { font-size:10px; color:var(--text-dim); }
+
 </style>
 </head>
 <body>
@@ -678,6 +740,14 @@
     <div class="icon" style="background:linear-gradient(135deg,#607d8b,#455a64);">⚙️</div>
     <div class="label">Настройки</div>
   </div>
+  <div class="desktop-icon" id="icon-files" style="left:220px;top:20px" onclick="openWindow('files')">
+    <div class="icon" style="background:linear-gradient(135deg,#ff9800,#f57c00);">📂</div>
+    <div class="label">Файлы</div>
+  </div>
+  <div class="desktop-icon" id="icon-achievements" style="left:220px;top:110px" onclick="openWindow('achievements')">
+    <div class="icon" style="background:linear-gradient(135deg,#ffd700,#ff8c00);">🏆</div>
+    <div class="label">Ачивки</div>
+  </div>
 </div>
 
 <!-- Taskbar -->
@@ -702,6 +772,8 @@
   <button class="start-menu-item" onclick="menuOpen('store')"><span class="emoji">🛒</span>Магазин</button>
   <button class="start-menu-item" onclick="menuOpen('darknet')"><span class="emoji">💀</span>DarkNet</button>
   <button class="start-menu-item" onclick="menuOpen('antivirus')"><span class="emoji">🛡️</span>Антивирус</button>
+  <button class="start-menu-item" onclick="menuOpen('files')"><span class="emoji">📂</span>Файлы</button>
+  <button class="start-menu-item" onclick="menuOpen('achievements')"><span class="emoji">🏆</span>Достижения</button>
   <button class="start-menu-item" onclick="menuOpen('settings')"><span class="emoji">⚙️</span>Настройки</button>
 
   <div class="start-menu-section">
@@ -837,6 +909,53 @@
   </div>
 </div>
 
+
+<!-- Files -->
+<div class="window" id="win-files" style="width:560px; height:440px; top:70px; left:120px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-files')">
+    <span class="window-title">📂 Файловый менеджер</span>
+    <button class="window-btn btn-min" onclick="minWindow('files')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('files')">×</button>
+  </div>
+  <div class="window-content" id="files-content" style="display:flex; flex-direction:column;">
+    <div class="fm-toolbar">
+      <button class="btn btn-small" onclick="fmUp()">⬆️</button>
+      <button class="btn btn-small" onclick="fmNewFolder()">📁 Новая папка</button>
+      <button class="btn btn-small" onclick="fmNewFile()">📄 Новый файл</button>
+      <button class="btn btn-small btn-red" onclick="fmDelete()">🗑️ Удалить</button>
+      <div class="fm-breadcrumb" id="fm-path">/home</div>
+    </div>
+    <div class="fm-list" id="fm-list"></div>
+  </div>
+</div>
+
+<!-- Text Editor -->
+<div class="window" id="win-editor" style="width:520px; height:420px; top:90px; left:180px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-editor')">
+    <span class="window-title">📝 Текстовый редактор</span>
+    <button class="window-btn btn-min" onclick="minWindow('editor')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('editor')">×</button>
+  </div>
+  <div class="window-content" style="display:flex; flex-direction:column;">
+    <div class="editor-toolbar">
+      <span class="editor-filename" id="editor-filename">Без названия</span>
+      <button class="btn btn-small" onclick="editorSave()">💾 Сохранить</button>
+      <button class="btn btn-small btn-secondary" onclick="closeWindow('editor')">Закрыть</button>
+    </div>
+    <textarea class="editor-area" id="editor-area" spellcheck="false"></textarea>
+  </div>
+</div>
+
+<!-- Achievements -->
+<div class="window" id="win-achievements" style="width:520px; height:460px; top:60px; left:260px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-achievements')">
+    <span class="window-title">🏆 Достижения</span>
+    <button class="window-btn btn-min" onclick="minWindow('achievements')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('achievements')">×</button>
+  </div>
+  <div class="window-content" id="achievements-content"></div>
+</div>
+
 </div><!-- /desktop-layer -->
 
 <!-- Overlay Dialog -->
@@ -964,6 +1083,7 @@ let zIndex = 200;
 let drag = null;
 
 function openWindow(name) {
+  if (window._iconDragging) return;
   const win = document.getElementById('win-' + name);
   if (!win) return;
   win.classList.add('active', 'opening', 'focused');
@@ -978,6 +1098,8 @@ function openWindow(name) {
   if (name === 'darknet') renderDarkNet();
   if (name === 'antivirus') renderAntivirus();
   if (name === 'browser') renderBrowser();
+  if (name === 'files') renderFiles();
+  if (name === 'achievements') renderAchievements();
 }
 
 function closeWindow(name) {
@@ -1059,6 +1181,8 @@ function updateTaskbar() {
     {id:'store', icon:'🛒', label:'Магазин'},
     {id:'darknet', icon:'💀', label:'DarkNet'},
     {id:'antivirus', icon:'🛡️', label:'Антивирус'},
+    {id:'files', icon:'📂', label:'Файлы'},
+    {id:'achievements', icon:'🏆', label:'Ачивки'},
     {id:'settings', icon:'⚙️', label:'Настройки'}
   ];
   apps.forEach(a => {
@@ -1239,8 +1363,9 @@ function powerOnSystem() {
   if (overlay) overlay.remove();
 
   document.getElementById('desktop-layer').classList.remove('active');
-  document.getElementById('title-screen').style.display = 'none';
-  document.getElementById('title-screen').classList.remove('hidden');
+  const ts = document.getElementById('title-screen');
+  ts.style.display = 'none';
+  ts.classList.remove('hidden');
   document.getElementById('recovery-screen').style.display = 'none';
 
   const boot = document.getElementById('boot-screen');
@@ -1815,13 +1940,16 @@ function tick() {
     state.gameOver = true;
     log('💸 Вы банкрот. Но вы можете продолжить, восстановив финансы.', 'danger');
   }
+
+  checkAchievements();
 }
 
 // ===================== SAVE/LOAD =====================
 function saveGame() {
-  const data = JSON.stringify(state, (k,v) => {
+  const saveObj = { ...state, activeTaskId: state.activeTask ? state.activeTask.id : null };
+  delete saveObj.activeTask;
+  const data = JSON.stringify(saveObj, (k,v) => {
     if (k==='deadline'||k==='date') return v?v.toISOString():v;
-    if (k==='activeTask' && v) return { ...v, deadline: v.deadline?v.deadline.toISOString():null };
     return v;
   });
   localStorage.setItem('linuxdev_save', data);
@@ -1839,21 +1967,289 @@ function loadGame() {
     state.gameTime = new Date(state.gameTime);
     state.projects.forEach(x=>{ if(x.deadline) x.deadline=new Date(x.deadline); });
     state.messages.forEach(x=>{ x.date=new Date(x.date); });
+    // Восстановление activeTask по id (поддержка старых и новых сейвов)
+    if (p.activeTask && typeof p.activeTask === 'object' && p.activeTask.id) {
+      state.activeTask = state.projects.find(pr => pr.id === p.activeTask.id) || null;
+    } else if (p.activeTaskId) {
+      state.activeTask = state.projects.find(pr => pr.id === p.activeTaskId) || null;
+    } else {
+      state.activeTask = null;
+    }
     selectedDiff = state.diff || 'normal';
     diffCfg = DIFFICULTY[selectedDiff] || DIFFICULTY.normal;
     document.getElementById('top-diff').textContent = diffCfg.label;
     log('📂 Загружено!', 'success');
     updateTopBar(); renderMail(); renderProjects(); renderStore(); renderDarkNet(); renderAntivirus();
-  } catch(e) { log('Ошибка загрузки.', 'danger'); }
+    updateTaskbar();
+    if (state.wins) {
+      Object.entries(state.wins).forEach(([name, open]) => {
+        const win = document.getElementById('win-' + name);
+        if (win) {
+          if (open) win.classList.add('active');
+          else win.classList.remove('active', 'focused');
+        }
+      });
+    }
+  } catch(e) { log('Ошибка загрузки.', 'danger'); console.error(e); }
+}
+
+
+// ===================== FILE SYSTEM =====================
+function createDefaultFS() {
+  return {
+    type: 'dir',
+    children: {
+      'home': {
+        type: 'dir',
+        children: {
+          'documents': { type: 'dir', children: {} },
+          'projects': { type: 'dir', children: {} },
+          'notes': {
+            type: 'dir',
+            children: {
+              'readme.txt': { type: 'file', content: 'Добро пожаловать в Linux Dev OS!\n\nСоветы:\n- Используйте терминал для разработки\n- Проверяйте почту для новых заказов\n- Прокачивайте железо в магазине\n- Не попадитесь FBI!' }
+            }
+          }
+        }
+      }
+    }
+  };
+}
+
+let fmPath = ['home'];
+let fmSelected = null;
+let editorTarget = null; // { path: ['home','notes'], name: 'readme.txt' }
+
+function fsGetNode(pathArr) {
+  let node = state.fs;
+  for (const part of pathArr) {
+    if (node.type !== 'dir' || !node.children[part]) return null;
+    node = node.children[part];
+  }
+  return node;
+}
+
+function fsResolve(pathArr, name) {
+  const node = fsGetNode(pathArr);
+  if (!node || node.type !== 'dir') return null;
+  return node.children[name] || null;
+}
+
+function fsCreate(pathArr, name, type, content) {
+  const node = fsGetNode(pathArr);
+  if (!node || node.type !== 'dir') return false;
+  if (node.children[name]) return false;
+  node.children[name] = type === 'dir' ? { type: 'dir', children: {} } : { type: 'file', content: content || '' };
+  return true;
+}
+
+function fsDelete(pathArr, name) {
+  const node = fsGetNode(pathArr);
+  if (!node || node.type !== 'dir') return false;
+  delete node.children[name];
+  return true;
+}
+
+function fsRename(pathArr, oldName, newName) {
+  const node = fsGetNode(pathArr);
+  if (!node || node.type !== 'dir' || !node.children[oldName] || node.children[newName]) return false;
+  node.children[newName] = node.children[oldName];
+  delete node.children[oldName];
+  return true;
+}
+
+function renderFiles() {
+  const el = document.getElementById('fm-list');
+  const pathEl = document.getElementById('fm-path');
+  if (!el) return;
+  pathEl.textContent = '/' + fmPath.join('/');
+  el.innerHTML = '';
+
+  const node = fsGetNode(fmPath);
+  if (!node || node.type !== 'dir') return;
+
+  Object.entries(node.children).forEach(([name, item]) => {
+    const div = document.createElement('div');
+    div.className = 'fm-item' + (fmSelected === name ? ' selected' : '');
+    div.innerHTML = `<div class="fm-icon">${item.type==='dir'?'📁':'📄'}</div><div class="fm-name">${name}</div>`;
+    div.onclick = (e) => { e.stopPropagation(); fmSelect(name); };
+    div.ondblclick = (e) => { e.stopPropagation(); fmOpen(name); };
+    el.appendChild(div);
+  });
+
+  if (Object.keys(node.children).length === 0) {
+    el.innerHTML = '<div style="color:var(--text-dim); font-size:12px; grid-column:1/-1; text-align:center; padding:20px;">Папка пуста</div>';
+  }
+}
+
+function fmSelect(name) {
+  fmSelected = (fmSelected === name) ? null : name;
+  renderFiles();
+}
+
+function fmOpen(name) {
+  const item = fsResolve(fmPath, name);
+  if (!item) return;
+  if (item.type === 'dir') {
+    fmPath.push(name);
+    fmSelected = null;
+    renderFiles();
+  } else {
+    editorOpen(fmPath, name);
+  }
+}
+
+function fmUp() {
+  if (fmPath.length > 1) {
+    fmPath.pop();
+    fmSelected = null;
+    renderFiles();
+  }
+}
+
+function fmNewFolder() {
+  const name = prompt('Имя новой папки:');
+  if (!name || name.includes('/') || name.includes('\')) return;
+  if (fsCreate(fmPath, name, 'dir')) {
+    renderFiles();
+  } else {
+    log('Не удалось создать папку (возможно, имя занято).', 'warning');
+  }
+}
+
+function fmNewFile() {
+  const name = prompt('Имя нового файла:');
+  if (!name || name.includes('/') || name.includes('\')) return;
+  if (fsCreate(fmPath, name, 'file', '')) {
+    renderFiles();
+    editorOpen(fmPath, name);
+  } else {
+    log('Не удалось создать файл.', 'warning');
+  }
+}
+
+function fmDelete() {
+  if (!fmSelected) { log('Выберите файл или папку.', 'warning'); return; }
+  if (!confirm('Удалить "' + fmSelected + '"?')) return;
+  if (fsDelete(fmPath, fmSelected)) {
+    fmSelected = null;
+    renderFiles();
+  }
+}
+
+// ===================== TEXT EDITOR =====================
+function editorOpen(pathArr, name) {
+  const item = fsResolve(pathArr, name);
+  if (!item || item.type !== 'file') return;
+  editorTarget = { path: [...pathArr], name };
+  document.getElementById('editor-filename').textContent = '/' + pathArr.join('/') + '/' + name;
+  document.getElementById('editor-area').value = item.content;
+  openWindow('editor');
+  focusWindow('editor');
+}
+
+function editorSave() {
+  if (!editorTarget) return;
+  const item = fsResolve(editorTarget.path, editorTarget.name);
+  if (item && item.type === 'file') {
+    item.content = document.getElementById('editor-area').value;
+    log('💾 Файл сохранён.', 'success');
+  }
+}
+
+// ===================== ACHIEVEMENTS =====================
+function createAchievements() {
+  return {
+    first_project: { id:'first_project', title:'Hello World', desc:'Завершить первый проект', icon:'👋', unlocked:false },
+    first_hack:    { id:'first_hack',    title:'Script Kiddie', desc:'Взломать первый хост', icon:'💻', unlocked:false },
+    rich:          { id:'rich',          title:'Капиталист', desc:'Заработать $1000', icon:'💰', unlocked:false },
+    ghost:         { id:'ghost',         title:'Призрак', desc:'Сбросить FBI до 0%', icon:'👻', unlocked:false },
+    av_king:       { id:'av_king',       title:'Антивирусный магнат', desc:'Продать 10 антивирусов', icon:'🛡️', unlocked:false },
+    bankrupt:      { id:'bankrupt',      title:'Банкрот', desc:'Деньги упали ниже $0', icon:'📉', unlocked:false },
+    collector:     { id:'collector',     title:'Коллекционер', desc:'Написать 5 файлов в Файлах', icon:'📂', unlocked:false },
+    hacker_pro:    { id:'hacker_pro',    title:'Hackerman', desc:'Взломать 5 хостов', icon:'🕶️', unlocked:false },
+    reputation:    { id:'reputation',    title:'Легенда', desc:'Достичь 100 репутации', icon:'⭐', unlocked:false }
+  };
+}
+
+function renderAchievements() {
+  const el = document.getElementById('achievements-content');
+  if (!el) return;
+  let html = '<h3 style="margin-bottom:10px; color:var(--accent);">🏆 Достижения</h3>';
+  html += '<div class="ach-grid">';
+  Object.values(state.achievements).forEach(a => {
+    html += `
+      <div class="ach-card ${a.unlocked?'unlocked':''}">
+        <div class="ach-icon">${a.icon}</div>
+        <div class="ach-title">${a.title}</div>
+        <div class="ach-desc">${a.desc}</div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  html += '<div style="margin-top:12px; font-size:12px; color:var(--text-dim);">Разблокировано: ' + Object.values(state.achievements).filter(a=>a.unlocked).length + ' / ' + Object.keys(state.achievements).length + '</div>';
+  el.innerHTML = html;
+}
+
+function unlockAchievement(id) {
+  const a = state.achievements[id];
+  if (a && !a.unlocked) {
+    a.unlocked = true;
+    log('🏆 Достижение разблокировано: ' + a.title + '!', 'success');
+    pushNotification('Достижение', a.title + ' — ' + a.desc);
+    renderAchievements();
+  }
+}
+
+function checkAchievements() {
+  if (!state || !state.achievements) return;
+  const a = state.achievements;
+  const completedProjects = state.projects.filter(p => p.uploaded).length;
+  const ownedHosts = state.hosts.filter(h => h.owned).length;
+  let fileCount = 0;
+  function countFiles(node) {
+    if (node.type === 'file') { fileCount++; return; }
+    if (node.children) Object.values(node.children).forEach(countFiles);
+  }
+  countFiles(state.fs);
+
+  if (completedProjects >= 1 && !a.first_project.unlocked) unlockAchievement('first_project');
+  if (ownedHosts >= 1 && !a.first_hack.unlocked) unlockAchievement('first_hack');
+  if (state.totalEarned >= 1000 && !a.rich.unlocked) unlockAchievement('rich');
+  if (state.fbi <= 0 && state.gameTime.getHours() > 0 && !a.ghost.unlocked) unlockAchievement('ghost');
+  if (state.antivirusSold >= 10 && !a.av_king.unlocked) unlockAchievement('av_king');
+  if (state.money < 0 && !a.bankrupt.unlocked) unlockAchievement('bankrupt');
+  if (fileCount >= 5 && !a.collector.unlocked) unlockAchievement('collector');
+  if (ownedHosts >= 5 && !a.hacker_pro.unlocked) unlockAchievement('hacker_pro');
+  if (state.reputation >= 100 && !a.reputation.unlocked) unlockAchievement('reputation');
 }
 
 // ===================== INIT =====================
+let gameInterval = null;
 function initGame() {
-  generateHosts();
+  if (!state.hosts || state.hosts.length === 0) generateHosts();
+  if (!state.fs) state.fs = createDefaultFS();
+  if (!state.achievements) state.achievements = createAchievements();
   updateTopBar();
   renderStore();
   renderBrowser();
-  setInterval(tick, 1000);
+  renderMail();
+  renderProjects();
+  renderDarkNet();
+  renderAntivirus();
+  renderFiles();
+  renderAchievements();
+  updateTaskbar();
+  if (state.wins) {
+    Object.entries(state.wins).forEach(([name, open]) => {
+      const win = document.getElementById('win-' + name);
+      if (win) {
+        if (open) win.classList.add('active');
+        else win.classList.remove('active', 'focused');
+      }
+    });
+  }
+  if (!gameInterval) gameInterval = setInterval(tick, 1000);
   setTimeout(() => generateMessage(), 3000);
   setTimeout(() => generateMessage(), 8000);
   document.getElementById('win-terminal').addEventListener('mousedown', () => {
@@ -1871,11 +2267,13 @@ function initGame() {
   let startMouseY = 0;
   let hasDragged = false;
   const SAVE_KEY = 'linuxdev_icons_v4';
+  const DRAG_THRESHOLD = 4;
+  const GRID_SIZE = 10;
 
   const desktop = () => document.getElementById('desktop');
 
   function getPoint(e) {
-    return e.touches ? e.touches[0] : e;
+    return e.touches && e.touches.length ? e.touches[0] : e;
   }
 
   function clamp(value, min, max) {
@@ -1887,9 +2285,9 @@ function initGame() {
       const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
       Object.entries(saved).forEach(([id, pos]) => {
         const el = document.getElementById(id);
-        if (el) {
-          if (typeof pos.x === 'number') el.style.left = pos.x + 'px';
-          if (typeof pos.y === 'number') el.style.top = pos.y + 'px';
+        if (el && typeof pos.x === 'number' && typeof pos.y === 'number') {
+          el.style.left = pos.x + 'px';
+          el.style.top = pos.y + 'px';
         }
       });
     } catch (e) {}
@@ -1920,7 +2318,8 @@ function initGame() {
     startMouseY = p.clientY;
     hasDragged = false;
 
-    e.preventDefault();
+    // prevent text selection & scrolling on touch
+    if (e.type === 'touchstart') e.preventDefault();
   }
 
   function onMove(e) {
@@ -1930,9 +2329,11 @@ function initGame() {
     const movedX = Math.abs(p.clientX - startMouseX);
     const movedY = Math.abs(p.clientY - startMouseY);
 
-    if (movedX > 3 || movedY > 3) {
+    if (!hasDragged && (movedX > DRAG_THRESHOLD || movedY > DRAG_THRESHOLD)) {
       hasDragged = true;
       dragEl.classList.add('dragging');
+      // suppress click on all icons during drag
+      window._iconDragging = true;
     }
     if (!hasDragged) return;
 
@@ -1947,17 +2348,17 @@ function initGame() {
     nx = clamp(nx, 0, maxX);
     ny = clamp(ny, 0, maxY);
 
-    // Snap to a neat grid without breaking vertical movement.
-    nx = Math.round(nx / 10) * 10;
-    ny = Math.round(ny / 10) * 10;
+    // snap to grid
+    nx = Math.round(nx / GRID_SIZE) * GRID_SIZE;
+    ny = Math.round(ny / GRID_SIZE) * GRID_SIZE;
 
     dragEl.style.left = nx + 'px';
     dragEl.style.top = ny + 'px';
 
-    e.preventDefault();
+    if (e.type === 'touchmove') e.preventDefault();
   }
 
-  function onUp() {
+  function onUp(e) {
     if (!dragEl) return;
 
     const el = dragEl;
@@ -1965,11 +2366,13 @@ function initGame() {
 
     if (hasDragged) {
       savePositions();
-      const cancelClick = ev => {
-        ev.stopPropagation();
-        ev.preventDefault();
-      };
-      el.addEventListener('click', cancelClick, { capture: true, once: true });
+      // keep suppression flag for a tick so inline onclick doesn't fire
+      window._iconDragging = true;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window._iconDragging = false;
+        });
+      });
     }
 
     dragEl = null;
@@ -2035,6 +2438,7 @@ function startBootSequence() {
 
         if (recoveryRequested) {
           document.getElementById('recovery-screen').style.display = 'block';
+          updateRecoveryStats();
         } else {
           document.getElementById('title-screen').style.display = 'flex';
         }
@@ -2046,6 +2450,109 @@ function startBootSequence() {
 function exitRecovery() {
   document.getElementById('recovery-screen').style.display = 'none';
   document.getElementById('title-screen').style.display = 'flex';
+}
+
+function recoveryRestore() {
+  if (!state) state = createState();
+  let fixed = 0;
+  state.projects.forEach(p => {
+    if (p.failed) {
+      p.failed = false;
+      p.deadline = new Date(state.gameTime.getTime() + 4 * 3600000);
+      fixed++;
+    }
+  });
+  state.reputation = Math.min(100, state.reputation + 10);
+  logRecovery('Исправлено проектов: ' + fixed + '. Репутация +10.');
+  updateRecoveryStats();
+}
+
+function recoveryResetFBI() {
+  if (!state) state = createState();
+  state.fbi = 0;
+  logRecovery('Уровень внимания FBI сброшен на 0%.');
+  updateRecoveryStats();
+}
+
+function recoveryLoadBackup() {
+  const d = localStorage.getItem('linuxdev_save');
+  if (!d) {
+    logRecovery('Бэкап не найден в локальном хранилище.');
+    return;
+  }
+  try {
+    const p = JSON.parse(d, (k,v) => {
+      if (k==='deadline'||k==='date') return v?new Date(v):v;
+      return v;
+    });
+    state = p;
+    state.gameTime = new Date(state.gameTime);
+    state.projects.forEach(x=>{ if(x.deadline) x.deadline=new Date(x.deadline); });
+    state.messages.forEach(x=>{ x.date=new Date(x.date); });
+    if (p.activeTask && typeof p.activeTask === 'object' && p.activeTask.id) {
+      state.activeTask = state.projects.find(pr => pr.id === p.activeTask.id) || null;
+    } else if (p.activeTaskId) {
+      state.activeTask = state.projects.find(pr => pr.id === p.activeTaskId) || null;
+    } else {
+      state.activeTask = null;
+    }
+    if (!state.fs) state.fs = createDefaultFS();
+    if (!state.achievements) state.achievements = createAchievements();
+    selectedDiff = state.diff || 'normal';
+    diffCfg = DIFFICULTY[selectedDiff] || DIFFICULTY.normal;
+    logRecovery('Бэкап загружен. Переход к обычной загрузке...');
+    updateRecoveryStats();
+    setTimeout(() => {
+      exitRecovery();
+      const ts = document.getElementById('title-screen');
+      ts.classList.add('hidden');
+      ts.style.display = 'none';
+      document.getElementById('desktop-layer').classList.add('active');
+      initGame();
+    }, 800);
+  } catch(e) {
+    logRecovery('Ошибка загрузки бэкапа: ' + e.message);
+  }
+}
+
+function recoverySafeMode() {
+  if (!state) state = createState();
+  state.fbi = 0;
+  state.money += 200;
+  state.projects.forEach(p => {
+    if (p.failed) {
+      p.failed = false;
+      p.deadline = new Date(state.gameTime.getTime() + 4 * 3600000);
+    }
+  });
+  logRecovery('Safe Mode: FBI сброшен, +$200, дедлайны восстановлены.');
+  updateRecoveryStats();
+}
+
+function logRecovery(text) {
+  const el = document.getElementById('recovery-log');
+  if (el) {
+    const time = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    el.innerHTML += '[ ' + time + ' ] ' + text + '<br>';
+    el.scrollTop = el.scrollHeight;
+  }
+}
+
+function updateRecoveryStats() {
+  const el = document.getElementById('recovery-stats');
+  if (!el) return;
+  if (!state) {
+    el.innerHTML = '<div style="color:#888;">Нет данных. Загрузите бэкап.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div>💰 Деньги: <span style="color:#fff">$${state.money}</span></div>
+    <div>⭐ Репутация: <span style="color:#fff">${state.reputation}</span></div>
+    <div>🚔 FBI: <span style="color:#fff">${Math.floor(state.fbi)}%</span></div>
+    <div>🕒 Время: <span style="color:#fff">${fmtTime(state.gameTime)}</span></div>
+    <div>🖥️ Железо: <span style="color:#fff">${state.hw}</span></div>
+    <div>💿 Софт: <span style="color:#fff">${state.sw}</span></div>
+  `;
 }
 
 // ===================== NOTIFICATIONS =====================
