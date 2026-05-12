@@ -630,66 +630,6 @@
 </div>
 
 
-<!-- ==================== BOOT SCREEN ==================== -->
-<div id="boot-screen" style="position:fixed;inset:0;background:#000;color:#33ff33;font-family:monospace;z-index:999998;display:flex;flex-direction:column;padding:20px;">
-  <div id="boot-log" style="white-space:pre-line;flex:1;"></div>
-  <div style="color:#888;font-size:14px;">
-    B = Recovery Mode
-  </div>
-</div>
-
-<!-- ==================== RECOVERY MODE ==================== -->
-<div id="recovery-screen" style="position:fixed;inset:0;background:#050505;color:#ffcc00;font-family:monospace;z-index:999999;display:none;padding:20px;overflow-y:auto;">
-  <div style="max-width:600px;margin:0 auto;">
-    <h2 style="color:#ffcc00;margin-bottom:20px;">🛠️ Recovery Mode</h2>
-    <p style="color:#888;margin-bottom:20px;">Диагностика и восстановление системы</p>
-
-    <div style="background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:8px;padding:16px;margin-bottom:20px;">
-      <h3 style="color:#ffcc00;margin-bottom:10px;font-size:14px;">📊 Статус системы</h3>
-      <div id="recovery-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:#aaa;">
-        <div>💰 Деньги: <span style="color:#fff">$0</span></div>
-        <div>⭐ Репутация: <span style="color:#fff">0</span></div>
-        <div>🚔 FBI: <span style="color:#fff">0%</span></div>
-        <div>🕒 Время: <span style="color:#fff">--:--</span></div>
-        <div>🖥️ Железо: <span style="color:#fff">1</span></div>
-        <div>💿 Софт: <span style="color:#fff">1</span></div>
-      </div>
-    </div>
-
-    <div style="background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:8px;padding:16px;margin-bottom:20px;">
-      <h3 style="color:#ffcc00;margin-bottom:10px;font-size:14px;">🔧 Инструменты восстановления</h3>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <button onclick="recoveryRestore()" style="padding:10px 16px;background:#2a2a3a;border:1px solid #555;color:#ffcc00;border-radius:6px;cursor:pointer;text-align:left;font-size:13px;font-family:monospace;transition:background 0.15s;">
-          🔧 Восстановить систему — исправляет баги, +10 репутации
-        </button>
-        <button onclick="recoveryResetFBI()" style="padding:10px 16px;background:#2a2a3a;border:1px solid #555;color:#ffcc00;border-radius:6px;cursor:pointer;text-align:left;font-size:13px;font-family:monospace;transition:background 0.15s;">
-          🚔 Сбросить FBI — обнуляет уровень внимания ФБР
-        </button>
-        <button onclick="recoveryLoadBackup()" style="padding:10px 16px;background:#2a2a3a;border:1px solid #555;color:#ffcc00;border-radius:6px;cursor:pointer;text-align:left;font-size:13px;font-family:monospace;transition:background 0.15s;">
-          💾 Восстановить из бэкапа — загружает последний сейв
-        </button>
-        <button onclick="recoverySafeMode()" style="padding:10px 16px;background:#2a2a3a;border:1px solid #555;color:#ffcc00;border-radius:6px;cursor:pointer;text-align:left;font-size:13px;font-family:monospace;transition:background 0.15s;">
-          🔒 Safe Mode — загрузка с минимальными настройками
-        </button>
-      </div>
-    </div>
-
-    <div style="background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:8px;padding:16px;margin-bottom:20px;">
-      <h3 style="color:#ffcc00;margin-bottom:10px;font-size:14px;">📋 Лог диагностики</h3>
-      <div id="recovery-log" style="font-size:12px;color:#66ff66;line-height:1.6;max-height:120px;overflow-y:auto;">
-        [ OK ] Recovery mode initialized...<br>
-        [ OK ] Checking filesystem...<br>
-        [ OK ] Memory test passed...<br>
-        [ OK ] Waiting for user input...
-      </div>
-    </div>
-
-    <div style="display:flex;gap:10px;">
-      <button onclick="exitRecovery()" style="flex:1;padding:12px;background:#ffcc00;color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:bold;font-size:14px;">▶ Обычная загрузка</button>
-    </div>
-  </div>
-</div>
-
 <!-- ==================== DESKTOP LAYER ==================== -->
 <div id="desktop-layer">
 
@@ -1237,6 +1177,15 @@ function log(text, type='info') {
 termIn.addEventListener('keydown', e => {
   if (state.gameOver) return;
   if (e.key === 'Enter') {
+    // If hack code is complete, submit it
+    if (state.hackTask && state.hackTask.progress >= state.hackTask.code.length) {
+      const h = state.hosts.find(x => x.id === state.hackTask.hostId);
+      const chance = state.hackTask.chance;
+      const roll = Math.random() * 100;
+      log(`⚡ Запуск эксплойта... Ролл: ${Math.floor(roll)} vs ${Math.floor(chance)}%`, 'system');
+      finishHackTask(roll < chance);
+      return;
+    }
     const val = termIn.value.trim();
     termIn.value = '';
     if (val) {
@@ -1245,6 +1194,35 @@ termIn.addEventListener('keydown', e => {
     }
     return;
   }
+  // Handle hack task typing (same mechanic as coding)
+  if (state.hackTask) {
+    if (e.key === 'Backspace') {
+      if (state.hackTask.progress > 0) {
+        state.hackTask.progress--;
+        updateHackHint();
+      }
+      e.preventDefault();
+      return;
+    }
+    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      const task = state.hackTask;
+      if (task.progress < task.code.length) {
+        const expected = task.code[task.progress];
+        if (e.key === expected) {
+          task.progress++;
+          updateHackHint();
+          if (task.progress === task.code.length) {
+            log('⚡ Эксплойт завершён! Нажмите Enter для запуска.', 'success');
+          }
+        } else {
+          log(`❌ Ошибка ввода: ожидался '${expected}', введён '${e.key}'`, 'warning');
+        }
+        e.preventDefault();
+      }
+    }
+    return;
+  }
+  // Handle active project coding
   if (state.activeTask) {
     if (e.key === 'Backspace') {
       if (state.activeTask.progress > 0) {
@@ -1303,7 +1281,9 @@ function execCmd(input) {
     case 'upload': cmdUpload(args[1]); break;
     case 'cancel': cmdCancel(); break;
     case 'nmap': cmdNmap(args[1]); break;
-    case 'exploit': cmdExploit(args[1]); break;
+    case 'exploit': cmdExploit(rest); break;
+    case 'loot': cmdLoot(args[1]); break;
+    case 'cancelhack': cmdCancelHack(); break;
     case 'connect': cmdConnect(args[1]); break;
     case 'scan': cmdScan(); break;
     case 'buy': cmdBuy(rest); break;
@@ -1364,17 +1344,12 @@ function powerOnSystem() {
 
   document.getElementById('desktop-layer').classList.remove('active');
   const ts = document.getElementById('title-screen');
-  ts.style.display = 'none';
+  ts.style.display = 'flex';
   ts.classList.remove('hidden');
-  document.getElementById('recovery-screen').style.display = 'none';
 
-  const boot = document.getElementById('boot-screen');
-  const bootLog = document.getElementById('boot-log');
-  boot.style.display = 'flex';
-  bootLog.innerHTML = '';
-  recoveryRequested = false;
-
-  startBootSequence();
+  setTimeout(() => {
+    pushNotification('Linux Dev OS', 'Система включена');
+  }, 1000);
 }
 
 function cmdHelp() {
@@ -1385,9 +1360,11 @@ function cmdHelp() {
     типы: game, virus, antivirus, web
   upload <id>       — сдать проект
   cancel            — отменить текущий код
+  cancelhack        — отменить текущий взлом
   sell <кол-во>     — продать антивирус
   nmap <ip>         — сканировать хост
-  exploit <ip>      — взломать хост
+  exploit <ip> [порт] — взломать хост (укажите порт для бонуса)
+  loot <ip>         — забрать данные с взломанного хоста
   connect <ip>      — подключиться
   scan              — показать сеть
   buy <item>        — купить (hw, sw, net, def)
@@ -1404,6 +1381,9 @@ function cmdStatus() {
   log(`🛡️ Антивирусов на складе: ${state.antivirusStock} | Продано: ${state.antivirusSold}`);
   const t = state.activeTask;
   log(t ? `Проект: ${t.name} (${t.progress}/${t.code.length})` : 'Нет активного проекта');
+  const h = state.hackTask;
+  log(h ? `⚡ Взлом: ${h.hostName} (${h.progress}/${h.code.length}) | Шанс: ${Math.floor(h.chance)}%` : 'Нет активного взлома');
+  if (state.lockout.active) log(`🔒 Блокировка FBI: ${Math.ceil((state.lockout.endTime - Date.now())/1000)} сек`, 'danger');
 }
 
 // ===================== PROJECTS =====================
@@ -1565,18 +1545,36 @@ function cmdSellAntivirus(amount) {
 }
 
 // ===================== DARKNET (Network) =====================
+const PORT_SERVICES = {
+  21: 'FTP', 22: 'SSH', 23: 'Telnet', 25: 'SMTP', 53: 'DNS',
+  80: 'HTTP', 110: 'POP3', 143: 'IMAP', 443: 'HTTPS', 445: 'SMB',
+  3306: 'MySQL', 3389: 'RDP', 5432: 'PostgreSQL', 5900: 'VNC',
+  8080: 'HTTP-Proxy', 9200: 'Elastic'
+};
+
 function generateHosts() {
-  const names = ['E-Corp','GlobalTech','Cyberdyne','OmniCorp','Nexus','GovNet','BankSys','DarkHost','ShadowNet','PhantomSys'];
-  for (let i=0; i<10; i++) {
-    const sec = Math.floor((Math.random()*60 + 20) * diffCfg.hostSecMult);
+  const names = ['E-Corp','GlobalTech','Cyberdyne','OmniCorp','Nexus','GovNet','BankSys','DarkHost','ShadowNet','PhantomSys','MiliBase','DataVault','CloudNine'];
+  const allPorts = Object.keys(PORT_SERVICES).map(Number);
+  for (let i=0; i<14; i++) {
+    const sec = Math.floor((Math.random()*55 + 25) * diffCfg.hostSecMult);
+    const portCount = Math.floor(Math.random()*4) + 2;
+    const shuffled = [...allPorts].sort(() => Math.random()-0.5);
+    const ports = shuffled.slice(0, portCount);
+    const vulnPort = ports[Math.floor(Math.random()*ports.length)];
     state.hosts.push({
       id: state.nextHostId++,
-      ip: `10.0.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
+      ip: `10.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
       name: names[Math.floor(Math.random()*names.length)] + '-' + Math.floor(Math.random()*100),
       security: Math.min(95, sec),
-      ports: [22,80,443,3306,8080].filter(()=>Math.random()>0.3),
+      ports: ports,
+      services: ports.map(p => PORT_SERVICES[p] || 'Unknown'),
       owned: false,
-      looted: false
+      looted: false,
+      scanned: false,
+      vulnPort: vulnPort,
+      traceLevel: 0,
+      money: Math.floor((100 + Math.random()*400) * diffCfg.rewardMult),
+      data: Math.floor(Math.random()*3)
     });
   }
 }
@@ -1585,28 +1583,68 @@ function cmdNmap(ip) {
   if (!ip) { log('Использование: nmap <ip>', 'warning'); return; }
   const h = state.hosts.find(x => x.ip === ip);
   if (!h) { log('Хост не найден.', 'warning'); return; }
+  h.scanned = true;
   log(`🔍 ${ip} — ${h.name}`, 'info');
-  log(`   Защита: ${h.security}% | Порты: ${h.ports.join(', ')}`);
-  state.fbi = Math.min(100, state.fbi + 1);
+  log(`   Защита: ${h.security}% | Порты: ${h.ports.map(p=>p+'('+PORT_SERVICES[p]+')').join(', ')}`);
+  log(`   💡 Совет: порт ${h.vulnPort} (${PORT_SERVICES[h.vulnPort]}) выглядит уязвимым`);
+  state.fbi = Math.min(100, state.fbi + 1.5);
+  renderDarkNet();
 }
 
 function cmdExploit(ip) {
-  if (!ip) { log('Использование: exploit <ip>', 'warning'); return; }
-  const h = state.hosts.find(x => x.ip === ip);
+  if (!ip) { log('Использование: exploit <ip> [порт]', 'warning'); return; }
+  const args = ip.split(' ');
+  const targetIp = args[0];
+  const targetPort = args[1] ? parseInt(args[1]) : null;
+  const h = state.hosts.find(x => x.ip === targetIp);
   if (!h) { log('Хост не найден.', 'warning'); return; }
   if (h.owned) { log('Уже взломан.', 'warning'); return; }
-  const chance = 50 + state.sw*10 + state.net*5 - h.security;
+
+  let chance = 30 + state.sw*8 + state.net*4 - h.security;
+  if (targetPort && targetPort === h.vulnPort) {
+    chance += 25;
+    log(`🎯 Целевой порт ${targetPort} — уязвимость подтверждена!`, 'info');
+  } else if (targetPort) {
+    chance -= 10;
+    log(`⚠️ Порт ${targetPort} не является уязвимым для этого хоста.`, 'warning');
+  }
+  if (!h.scanned) chance -= 15;
+  chance = Math.max(5, Math.min(95, chance));
+
+  log(`🎲 Шанс взлома: ${Math.floor(chance)}%`);
+
   if (Math.random()*100 < chance) {
     h.owned = true;
-    const loot = Math.floor((80 + Math.floor(Math.random()*150)) * diffCfg.rewardMult);
+    const loot = h.money;
     state.money += loot;
-    state.reputation = Math.min(100, state.reputation + 3);
-    log(`🎉 Взлом успешен! ${h.name} под контролем. Добыча: $${loot}`, 'success');
+    state.reputation = Math.min(100, state.reputation + 4);
+    log(`🎉 Взлом успешен! ${h.name} под контролем.`, 'success');
+    log(`   💰 Добыча: $${loot} | 📊 Данных: ${h.data} файлов`, 'success');
+    if (h.data > 0) {
+      log(`   📁 Используйте 'loot ${h.ip}' чтобы забрать данные (+$${h.data*60})`, 'info');
+    }
   } else {
-    log(`❌ Взлом провален. Защита слишком сильна.`, 'danger');
-    state.fbi = Math.min(100, state.fbi + Math.floor(4 * diffCfg.fbiMult));
+    log(`❌ Взлом провален. Система защиты сработала.`, 'danger');
+    h.traceLevel += Math.floor(Math.random()*15) + 5;
+    state.fbi = Math.min(100, state.fbi + Math.floor(3 * diffCfg.fbiMult) + (h.traceLevel > 50 ? 5 : 0));
+    if (h.traceLevel > 30) log(`⚠️ Уровень слежки на ${h.name}: ${h.traceLevel}%`, 'warning');
   }
   renderDarkNet();
+  updateTopBar();
+}
+
+function cmdLoot(ip) {
+  if (!ip) { log('Использование: loot <ip>', 'warning'); return; }
+  const h = state.hosts.find(x => x.ip === ip);
+  if (!h) { log('Хост не найден.', 'warning'); return; }
+  if (!h.owned) { log('Нет доступа. Взломайте сначала.', 'warning'); return; }
+  if (h.looted) { log('Данные уже забраны.', 'warning'); return; }
+  if (h.data === 0) { log('На этом хосте нет ценных данных.', 'warning'); return; }
+  h.looted = true;
+  const reward = h.data * 60;
+  state.money += reward;
+  state.reputation = Math.min(100, state.reputation + 2);
+  log(`📁 Данные с ${h.name} проданы за $${reward}`, 'success');
   updateTopBar();
 }
 
@@ -1616,12 +1654,14 @@ function cmdConnect(ip) {
   if (!h.owned) { log('Нет доступа. Взломайте сначала.', 'warning'); return; }
   document.getElementById('term-prompt').textContent = `root@${h.name}:~#`;
   log(`Подключён к ${h.name} как root.`, 'success');
+  log(`   Доступные команды: loot ${h.ip}, nmap, exploit`);
 }
 
 function cmdScan() {
   log('💀 DarkNet хосты:', 'info');
   state.hosts.forEach(h => {
-    log(`  ${h.owned?'✅':'🔒'} ${h.ip} — ${h.name} (защита ${h.security}%)`);
+    const status = h.owned ? '✅ ROOT' : h.scanned ? '🔍 Сканирован' : '🔒 Неизвестен';
+    log(`  ${status} ${h.ip} — ${h.name} (защита ${h.security}%)`);
   });
   openWindow('darknet');
 }
@@ -1629,23 +1669,29 @@ function cmdScan() {
 function renderDarkNet() {
   const el = document.getElementById('darknet-content');
   let html = '<h3 style="margin-bottom:10px; color:var(--accent);">💀 DarkNet Scanner</h3>';
-  html += '<p style="color:var(--text-dim); font-size:12px; margin-bottom:10px;">Анонимная сеть для пентестинга. Не попадитесь ФБР.</p>';
-  html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:8px;">';
+  html += '<p style="color:var(--text-dim); font-size:12px; margin-bottom:10px;">Разведка → Сканирование → Взлом → Добыча. Не торопитесь — ФБР следит.</p>';
+  html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(170px,1fr)); gap:10px;">';
   state.hosts.forEach(h => {
+    const scanColor = h.scanned ? 'var(--info)' : 'var(--text-dim)';
+    const traceWarn = h.traceLevel > 30 ? `<div style="color:var(--danger); font-size:10px;">⚠️ Слежка ${h.traceLevel}%</div>` : '';
     html += `
-      <div class="host-card ${h.owned?'owned':''}">
+      <div class="host-card ${h.owned?'owned':''}" style="${h.traceLevel>50?'border-color:var(--danger);':''}">
         <div style="font-weight:bold; ${h.owned?'color:var(--success);':''}">${h.name}</div>
         <div style="color:var(--text-dim); font-size:11px;">${h.ip}</div>
         <div style="margin-top:4px; font-size:11px;">🔒 ${h.security}%</div>
-        <div style="margin-top:4px; font-size:10px; color:#888;">Порты: ${h.ports.join(',')}</div>
-        <div style="margin-top:6px; display:flex; gap:4px;">
-          <button class="btn btn-small" onclick="cmdNmap('${h.ip}')">nmap</button>
-          ${!h.owned ? `<button class="btn btn-small btn-secondary" onclick="cmdExploit('${h.ip}')">взлом</button>` : '<span style="color:var(--success); font-size:11px;">✅ ROOT</span>'}
+        <div style="margin-top:4px; font-size:10px; color:${scanColor};">${h.scanned ? 'Порты: '+h.ports.map(p=>PORT_SERVICES[p]).join(',') : 'Требуется сканирование'}</div>
+        ${traceWarn}
+        <div style="margin-top:6px; display:flex; gap:4px; flex-wrap:wrap;">
+          <button class="btn btn-small" onclick="cmdNmap('${h.ip}')">🔍</button>
+          ${!h.owned ? `<button class="btn btn-small btn-secondary" onclick="cmdExploit('${h.ip}')">⚡</button>` : ''}
+          ${h.owned && !h.looted && h.data>0 ? `<button class="btn btn-small btn-green" onclick="cmdLoot('${h.ip}')">📁</button>` : ''}
+          ${h.owned ? '<span style="color:var(--success); font-size:11px;">✅ ROOT</span>' : ''}
         </div>
       </div>
     `;
   });
   html += '</div>';
+  html += '<div style="margin-top:12px; font-size:11px; color:var(--text-dim);">💡 Совет: сканируйте перед взломом. Используйте уязвимый порт для +25% шанса.</div>';
   el.innerHTML = html;
 }
 
@@ -2109,7 +2155,7 @@ function fmUp() {
 
 function fmNewFolder() {
   const name = prompt('Имя новой папки:');
-  if (!name || name.includes('/') || name.includes('\')) return;
+  if (!name || name.includes('/') || name.includes('\\')) return;
   if (fsCreate(fmPath, name, 'dir')) {
     renderFiles();
   } else {
@@ -2119,7 +2165,7 @@ function fmNewFolder() {
 
 function fmNewFile() {
   const name = prompt('Имя нового файла:');
-  if (!name || name.includes('/') || name.includes('\')) return;
+  if (!name || name.includes('/') || name.includes('\\')) return;
   if (fsCreate(fmPath, name, 'file', '')) {
     renderFiles();
     editorOpen(fmPath, name);
@@ -2230,6 +2276,8 @@ function initGame() {
   if (!state.hosts || state.hosts.length === 0) generateHosts();
   if (!state.fs) state.fs = createDefaultFS();
   if (!state.achievements) state.achievements = createAchievements();
+  if (!state.exploitLogs) state.exploitLogs = [];
+  if (!state.lockout) state.lockout = { active: false, endTime: 0, count: 0 };
   updateTopBar();
   renderStore();
   renderBrowser();
@@ -2402,162 +2450,10 @@ function initGame() {
 })();
 
 // ===================== BOOT / RECOVERY =====================
-let recoveryRequested = false;
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'b' || e.key === 'B') {
-    recoveryRequested = true;
-    pushNotification('Boot','Recovery mode selected. Press any key to continue...');
-  }
-});
-
-function startBootSequence() {
-  const boot = document.getElementById('boot-screen');
-  const log = document.getElementById('boot-log');
-
-  const lines = [
-    '[ OK ] Initializing kernel...',
-    '[ OK ] Mounting filesystem...',
-    '[ OK ] Starting network manager...',
-    '[ OK ] Loading desktop environment...',
-    '[ OK ] Checking security modules...',
-    '[ OK ] Starting Linux Dev OS...'
-  ];
-
-  let i = 0;
-
-  const timer = setInterval(() => {
-    if (i < lines.length) {
-      log.innerHTML += lines[i] + '\n';
-      i++;
-    } else {
-      clearInterval(timer);
-
-      setTimeout(() => {
-        boot.style.display = 'none';
-
-        if (recoveryRequested) {
-          document.getElementById('recovery-screen').style.display = 'block';
-          updateRecoveryStats();
-        } else {
-          document.getElementById('title-screen').style.display = 'flex';
-        }
-      }, 700);
-    }
-  }, 500);
-}
-
-function exitRecovery() {
-  document.getElementById('recovery-screen').style.display = 'none';
-  document.getElementById('title-screen').style.display = 'flex';
-}
-
-function recoveryRestore() {
-  if (!state) state = createState();
-  let fixed = 0;
-  state.projects.forEach(p => {
-    if (p.failed) {
-      p.failed = false;
-      p.deadline = new Date(state.gameTime.getTime() + 4 * 3600000);
-      fixed++;
-    }
-  });
-  state.reputation = Math.min(100, state.reputation + 10);
-  logRecovery('Исправлено проектов: ' + fixed + '. Репутация +10.');
-  updateRecoveryStats();
-}
-
-function recoveryResetFBI() {
-  if (!state) state = createState();
-  state.fbi = 0;
-  logRecovery('Уровень внимания FBI сброшен на 0%.');
-  updateRecoveryStats();
-}
-
-function recoveryLoadBackup() {
-  const d = localStorage.getItem('linuxdev_save');
-  if (!d) {
-    logRecovery('Бэкап не найден в локальном хранилище.');
-    return;
-  }
-  try {
-    const p = JSON.parse(d, (k,v) => {
-      if (k==='deadline'||k==='date') return v?new Date(v):v;
-      return v;
-    });
-    state = p;
-    state.gameTime = new Date(state.gameTime);
-    state.projects.forEach(x=>{ if(x.deadline) x.deadline=new Date(x.deadline); });
-    state.messages.forEach(x=>{ x.date=new Date(x.date); });
-    if (p.activeTask && typeof p.activeTask === 'object' && p.activeTask.id) {
-      state.activeTask = state.projects.find(pr => pr.id === p.activeTask.id) || null;
-    } else if (p.activeTaskId) {
-      state.activeTask = state.projects.find(pr => pr.id === p.activeTaskId) || null;
-    } else {
-      state.activeTask = null;
-    }
-    if (!state.fs) state.fs = createDefaultFS();
-    if (!state.achievements) state.achievements = createAchievements();
-    selectedDiff = state.diff || 'normal';
-    diffCfg = DIFFICULTY[selectedDiff] || DIFFICULTY.normal;
-    logRecovery('Бэкап загружен. Переход к обычной загрузке...');
-    updateRecoveryStats();
-    setTimeout(() => {
-      exitRecovery();
-      const ts = document.getElementById('title-screen');
-      ts.classList.add('hidden');
-      ts.style.display = 'none';
-      document.getElementById('desktop-layer').classList.add('active');
-      initGame();
-    }, 800);
-  } catch(e) {
-    logRecovery('Ошибка загрузки бэкапа: ' + e.message);
-  }
-}
-
-function recoverySafeMode() {
-  if (!state) state = createState();
-  state.fbi = 0;
-  state.money += 200;
-  state.projects.forEach(p => {
-    if (p.failed) {
-      p.failed = false;
-      p.deadline = new Date(state.gameTime.getTime() + 4 * 3600000);
-    }
-  });
-  logRecovery('Safe Mode: FBI сброшен, +$200, дедлайны восстановлены.');
-  updateRecoveryStats();
-}
-
-function logRecovery(text) {
-  const el = document.getElementById('recovery-log');
-  if (el) {
-    const time = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    el.innerHTML += '[ ' + time + ' ] ' + text + '<br>';
-    el.scrollTop = el.scrollHeight;
-  }
-}
-
-function updateRecoveryStats() {
-  const el = document.getElementById('recovery-stats');
-  if (!el) return;
-  if (!state) {
-    el.innerHTML = '<div style="color:#888;">Нет данных. Загрузите бэкап.</div>';
-    return;
-  }
-  el.innerHTML = `
-    <div>💰 Деньги: <span style="color:#fff">$${state.money}</span></div>
-    <div>⭐ Репутация: <span style="color:#fff">${state.reputation}</span></div>
-    <div>🚔 FBI: <span style="color:#fff">${Math.floor(state.fbi)}%</span></div>
-    <div>🕒 Время: <span style="color:#fff">${fmtTime(state.gameTime)}</span></div>
-    <div>🖥️ Железо: <span style="color:#fff">${state.hw}</span></div>
-    <div>💿 Софт: <span style="color:#fff">${state.sw}</span></div>
-  `;
-}
-
 // ===================== NOTIFICATIONS =====================
 function pushNotification(title, text) {
   const wrap = document.getElementById('notifications');
+  if (!wrap) return;
 
   const n = document.createElement('div');
   n.style.cssText = `
@@ -2613,12 +2509,12 @@ setInterval(() => {
 
 // Startup
 window.addEventListener('load', () => {
-  document.getElementById('title-screen').style.display = 'none';
-  startBootSequence();
+  const ts = document.getElementById('title-screen');
+  if (ts) ts.style.display = 'flex';
 
   setTimeout(() => {
     pushNotification('Linux Dev OS', 'Система успешно загружена');
-  }, 4000);
+  }, 2000);
 });
 
 </script>
