@@ -1024,6 +1024,7 @@ let drag = null;
 
 function openWindow(name) {
   if (window._iconDragging) return;
+  if (name === 'darknet' && isHackingLocked()) return;
   const win = document.getElementById('win-' + name);
   if (!win) return;
   win.classList.add('active', 'opening', 'focused');
@@ -1177,14 +1178,18 @@ function log(text, type='info') {
 termIn.addEventListener('keydown', e => {
   if (state.gameOver) return;
   if (e.key === 'Enter') {
-    // If hack code is complete, submit it
-    if (state.hackTask && state.hackTask.progress >= state.hackTask.code.length) {
-      const h = state.hosts.find(x => x.id === state.hackTask.hostId);
-      const chance = state.hackTask.chance;
-      const roll = Math.random() * 100;
-      log(`⚡ Запуск эксплойта... Ролл: ${Math.floor(roll)} vs ${Math.floor(chance)}%`, 'system');
-      finishHackTask(roll < chance);
-      return;
+    if (state.hackTask) {
+      if (state.hackTask.progress >= state.hackTask.code.length) {
+        const h = state.hosts.find(x => x.id === state.hackTask.hostId);
+        const chance = state.hackTask.chance;
+        const roll = Math.random() * 100;
+        log(`⚡ Запуск эксплойта... Ролл: ${Math.floor(roll)} vs ${Math.floor(chance)}%`, 'system');
+        finishHackTask(roll < chance);
+        return;
+      } else {
+        e.preventDefault();
+        return;
+      }
     }
     const val = termIn.value.trim();
     termIn.value = '';
@@ -1263,6 +1268,130 @@ function updateHint() {
   const after = t.code.substring(t.progress + 1);
   termHint.innerHTML = `Подсказка: <code style="background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;">${before}<span style="background:var(--warning); color:#000; padding:0 3px; border-radius:2px;">${ch}</span>${after}</code>`;
   termHint.classList.add('show');
+}
+
+function updateHackHint() {
+  if (!state.showHints || !state.hackTask) {
+    if (termHint) termHint.classList.remove('show');
+    return;
+  }
+  const t = state.hackTask;
+  if (t.progress >= t.code.length) { termHint.classList.remove('show'); return; }
+  const before = t.code.substring(0, t.progress);
+  const ch = t.code[t.progress];
+  const after = t.code.substring(t.progress + 1);
+  termHint.innerHTML = `Эксплойт: <code style="background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;">${before}<span style="background:var(--warning); color:#000; padding:0 3px; border-radius:2px;">${ch}</span>${after}</code>`;
+  termHint.classList.add('show');
+}
+
+function generateHackCode(hostName) {
+  const base = hostName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  let code = `exploit_${base}_inject_payload`;
+  const mult = diffCfg.codeMult;
+  const targetLen = Math.max(20, Math.floor(code.length * mult * 0.8));
+  while (code.length < targetLen) {
+    code += '_' + Math.random().toString(36).substring(2, 5);
+  }
+  return code.substring(0, targetLen);
+}
+
+function finishHackTask(success) {
+  if (!state.hackTask) return;
+  const task = state.hackTask;
+  const h = state.hosts.find(x => x.id === task.hostId);
+  if (!h) {
+    state.hackTask = null;
+    document.getElementById('term-prompt').textContent = 'neo@dev:~$';
+    return;
+  }
+
+  if (success) {
+    h.owned = true;
+    const loot = h.money;
+    state.money += loot;
+    state.reputation = Math.min(100, state.reputation + 4);
+    log(`🎉 Взлом успешен! ${h.name} под контролем.`, 'success');
+    log(`   💰 Добыча: $${loot} | 📊 Данных: ${h.data} файлов`, 'success');
+
+    state.exploitLogs.unshift({
+      date: new Date(state.gameTime),
+      host: h.name,
+      ip: h.ip,
+      success: true,
+      loot: loot,
+      data: h.data
+    });
+    if (state.exploitLogs.length > 20) state.exploitLogs.pop();
+
+    if (h.data > 0) {
+      log(`   📁 Используйте 'loot ${h.ip}' чтобы забрать данные (+$${h.data*60})`, 'info');
+    }
+  } else {
+    log(`❌ Взлом провален. Система защиты сработала.`, 'danger');
+    h.traceLevel += Math.floor(Math.random()*15) + 5;
+    state.fbi = Math.min(100, state.fbi + Math.floor(3 * diffCfg.fbiMult) + (h.traceLevel > 50 ? 5 : 0));
+
+    state.exploitLogs.unshift({
+      date: new Date(state.gameTime),
+      host: h.name,
+      ip: h.ip,
+      success: false,
+      traceLevel: h.traceLevel
+    });
+    if (state.exploitLogs.length > 20) state.exploitLogs.pop();
+
+    if (h.traceLevel > 30) log(`⚠️ Уровень слежки на ${h.name}: ${h.traceLevel}%`, 'warning');
+    checkTraceComplaint(h);
+  }
+
+  state.hackTask = null;
+  document.getElementById('term-prompt').textContent = 'neo@dev:~$';
+  updateHackHint();
+  renderDarkNet();
+  updateTopBar();
+}
+
+function checkTraceComplaint(host) {
+  if (host.traceLevel >= 100) {
+    host.traceLevel = 100;
+    state.lockout.count = (state.lockout.count || 0) + 1;
+    const duration = 30000 * state.lockout.count;
+    state.lockout.active = true;
+    state.lockout.endTime = Date.now() + duration;
+
+    log(`🚨 ${host.name} пожаловался в FBI!`, 'danger');
+    log(`🔒 Хакерские инструменты заблокированы на ${duration/1000} сек.`, 'danger');
+    pushNotification('FBI Alert', `Доступ заблокирован на ${duration/1000} сек`);
+
+    host.traceLevel = 0;
+
+    setTimeout(() => {
+      if (state.lockout.active && Date.now() >= state.lockout.endTime) {
+        state.lockout.active = false;
+        log(`🔓 Хакерские инструменты разблокированы.`, 'success');
+        updateTopBar();
+      }
+    }, duration);
+  }
+}
+
+function isHackingLocked() {
+  if (!state.lockout || !state.lockout.active) return false;
+  if (Date.now() >= state.lockout.endTime) {
+    state.lockout.active = false;
+    return false;
+  }
+  const remaining = Math.ceil((state.lockout.endTime - Date.now()) / 1000);
+  log(`🔒 Доступ заблокирован FBI. Осталось ${remaining} сек.`, 'danger');
+  return true;
+}
+
+function cmdCancelHack() {
+  if (!state.hackTask) { log('Нет активного взлома.', 'warning'); return; }
+  state.hackTask = null;
+  document.getElementById('term-prompt').textContent = 'neo@dev:~$';
+  log('Взлом отменён.', 'warning');
+  updateHackHint();
 }
 
 // ===================== COMMANDS =====================
@@ -1383,7 +1512,7 @@ function cmdStatus() {
   log(t ? `Проект: ${t.name} (${t.progress}/${t.code.length})` : 'Нет активного проекта');
   const h = state.hackTask;
   log(h ? `⚡ Взлом: ${h.hostName} (${h.progress}/${h.code.length}) | Шанс: ${Math.floor(h.chance)}%` : 'Нет активного взлома');
-  if (state.lockout.active) log(`🔒 Блокировка FBI: ${Math.ceil((state.lockout.endTime - Date.now())/1000)} сек`, 'danger');
+  if (state.lockout && state.lockout.active) log(`🔒 Блокировка FBI: ${Math.ceil((state.lockout.endTime - Date.now())/1000)} сек`, 'danger');
 }
 
 // ===================== PROJECTS =====================
@@ -1580,18 +1709,22 @@ function generateHosts() {
 }
 
 function cmdNmap(ip) {
+  if (isHackingLocked()) return;
   if (!ip) { log('Использование: nmap <ip>', 'warning'); return; }
   const h = state.hosts.find(x => x.ip === ip);
   if (!h) { log('Хост не найден.', 'warning'); return; }
   h.scanned = true;
+  h.traceLevel += Math.floor(Math.random() * 6) + 2;
   log(`🔍 ${ip} — ${h.name}`, 'info');
   log(`   Защита: ${h.security}% | Порты: ${h.ports.map(p=>p+'('+PORT_SERVICES[p]+')').join(', ')}`);
   log(`   💡 Совет: порт ${h.vulnPort} (${PORT_SERVICES[h.vulnPort]}) выглядит уязвимым`);
   state.fbi = Math.min(100, state.fbi + 1.5);
+  checkTraceComplaint(h);
   renderDarkNet();
 }
 
 function cmdExploit(ip) {
+  if (isHackingLocked()) return;
   if (!ip) { log('Использование: exploit <ip> [порт]', 'warning'); return; }
   const args = ip.split(' ');
   const targetIp = args[0];
@@ -1611,26 +1744,21 @@ function cmdExploit(ip) {
   if (!h.scanned) chance -= 15;
   chance = Math.max(5, Math.min(95, chance));
 
-  log(`🎲 Шанс взлома: ${Math.floor(chance)}%`);
+  const code = generateHackCode(h.name);
+  state.hackTask = {
+    hostId: h.id,
+    hostName: h.name,
+    code: code,
+    progress: 0,
+    chance: chance,
+    targetPort: targetPort
+  };
 
-  if (Math.random()*100 < chance) {
-    h.owned = true;
-    const loot = h.money;
-    state.money += loot;
-    state.reputation = Math.min(100, state.reputation + 4);
-    log(`🎉 Взлом успешен! ${h.name} под контролем.`, 'success');
-    log(`   💰 Добыча: $${loot} | 📊 Данных: ${h.data} файлов`, 'success');
-    if (h.data > 0) {
-      log(`   📁 Используйте 'loot ${h.ip}' чтобы забрать данные (+$${h.data*60})`, 'info');
-    }
-  } else {
-    log(`❌ Взлом провален. Система защиты сработала.`, 'danger');
-    h.traceLevel += Math.floor(Math.random()*15) + 5;
-    state.fbi = Math.min(100, state.fbi + Math.floor(3 * diffCfg.fbiMult) + (h.traceLevel > 50 ? 5 : 0));
-    if (h.traceLevel > 30) log(`⚠️ Уровень слежки на ${h.name}: ${h.traceLevel}%`, 'warning');
-  }
-  renderDarkNet();
-  updateTopBar();
+  log(`⚡ Инициализация взлома ${h.name} (${h.ip})...`, 'system');
+  log(`🎲 Базовый шанс: ${Math.floor(chance)}%`);
+  log(`⌨️ Введите эксплойт-код (${code.length} симв) и нажмите Enter:`);
+  updateHackHint();
+  document.getElementById('term-prompt').textContent = `exploit@${h.name}:~#`;
 }
 
 function cmdLoot(ip) {
@@ -1658,6 +1786,7 @@ function cmdConnect(ip) {
 }
 
 function cmdScan() {
+  if (isHackingLocked()) return;
   log('💀 DarkNet хосты:', 'info');
   state.hosts.forEach(h => {
     const status = h.owned ? '✅ ROOT' : h.scanned ? '🔍 Сканирован' : '🔒 Неизвестен';
@@ -1692,6 +1821,20 @@ function renderDarkNet() {
   });
   html += '</div>';
   html += '<div style="margin-top:12px; font-size:11px; color:var(--text-dim);">💡 Совет: сканируйте перед взломом. Используйте уязвимый порт для +25% шанса.</div>';
+
+  if (state.exploitLogs && state.exploitLogs.length > 0) {
+    html += '<div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--border);">';
+    html += '<h4 style="color:var(--accent); margin-bottom:6px; font-size:13px;">📜 Логи взлома</h4>';
+    html += '<div style="max-height:130px; overflow-y:auto; font-size:11px; line-height:1.4;">';
+    state.exploitLogs.slice(0, 10).forEach(l => {
+      const color = l.success ? 'var(--success)' : 'var(--danger)';
+      const icon = l.success ? '✅' : '❌';
+      const details = l.success ? `+$${l.loot}, ${l.data} файлов` : `trace ${l.traceLevel}%`;
+      html += `<div style="margin-bottom:3px; color:${color};">${icon} [${fmtTime(l.date)}] ${l.host} (${l.ip}) — ${details}</div>`;
+    });
+    html += '</div></div>';
+  }
+
   el.innerHTML = html;
 }
 
@@ -1919,7 +2062,12 @@ function closeDialog() { document.getElementById('overlay').classList.remove('ac
 function fmtTime(d) { return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 
 function updateTopBar() {
-  document.getElementById('top-stats').textContent = `💰 $${state.money} | ⭐ ${state.reputation}`;
+  let stats = `💰 $${state.money} | ⭐ ${state.reputation}`;
+  if (state.lockout && state.lockout.active) {
+    const remaining = Math.ceil((state.lockout.endTime - Date.now()) / 1000);
+    stats += ` | 🔒 ${remaining}с`;
+  }
+  document.getElementById('top-stats').textContent = stats;
   document.getElementById('top-fbi').textContent = `🚔 FBI: ${Math.floor(state.fbi)}%`;
   document.getElementById('top-time').textContent = fmtTime(state.gameTime);
 }
