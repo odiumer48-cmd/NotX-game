@@ -585,7 +585,57 @@
     resize:none; outline:none;
   }
 
-  /* ===== ACHIEVEMENTS ===== */
+  /* ===== SETTINGS EXTENSIONS ===== */
+.settings-tabs {
+  display:flex; gap:4px; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:6px;
+}
+.settings-tab {
+  padding:6px 14px; background:rgba(255,255,255,0.05); border:1px solid transparent;
+  border-radius:6px; color:var(--text); font-size:12px; cursor:pointer; transition:all 0.15s;
+}
+.settings-tab:hover { background:rgba(255,255,255,0.1); }
+.settings-tab.active { background:rgba(233,84,32,0.2); border-color:var(--accent); color:var(--accent); font-weight:600; }
+.settings-section { display:none; }
+.settings-section.active { display:block; }
+
+.wallpaper-grid {
+  display:grid; grid-template-columns: repeat(auto-fill, minmax(90px,1fr)); gap:10px; margin-top:10px;
+}
+.wp-tile {
+  height:70px; border-radius:8px; border:2px solid transparent; cursor:pointer;
+  transition:all 0.2s; position:relative; overflow:hidden;
+}
+.wp-tile:hover { transform:scale(1.05); border-color:var(--border); }
+.wp-tile.selected { border-color:var(--accent); box-shadow:0 0 12px rgba(233,84,32,0.35); }
+.wp-tile .wp-name {
+  position:absolute; bottom:0; left:0; right:0;
+  background:rgba(0,0,0,0.6); font-size:10px; padding:3px 6px;
+  color:white; text-align:center;
+}
+
+.volume-row {
+  display:flex; align-items:center; gap:12px; margin:10px 0;
+}
+.volume-slider {
+  flex:1; -webkit-appearance:none; appearance:none;
+  height:6px; background:rgba(255,255,255,0.1); border-radius:3px; outline:none;
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none;
+  width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer;
+  box-shadow:0 0 6px rgba(233,84,32,0.5);
+}
+.volume-value {
+  min-width:36px; text-align:right; font-size:13px; color:var(--text-dim);
+}
+.sound-test-btn {
+  margin-top:8px; padding:6px 14px; background:var(--panel); border:1px solid var(--border);
+  border-radius:5px; color:var(--text); font-size:12px; cursor:pointer;
+}
+.sound-test-btn:hover { background:#4a4a4a; }
+
+
+/* ===== ACHIEVEMENTS ===== */
   .ach-grid {
     display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px;
   }
@@ -822,29 +872,69 @@
 </div>
 
 <!-- Settings -->
-<div class="window" id="win-settings" style="width:420px; height:360px; top:100px; left:400px;">
+<div class="window" id="win-settings" style="width:520px; height:480px; top:80px; left:300px;">
   <div class="window-titlebar" onmousedown="startDrag(event,'win-settings')">
-    <span class="window-title">⚙️ Настройки</span>
+    <span class="window-title">⚙️ Параметры системы</span>
     <button class="window-btn btn-min" onclick="minWindow('settings')">−</button>
     <button class="window-btn btn-close" onclick="closeWindow('settings')">×</button>
   </div>
-  <div class="window-content">
-    <h3 style="margin-bottom:12px; color:var(--accent);">Настройки системы</h3>
-    <label style="display:flex; align-items:center; gap:8px; margin:10px 0; cursor:pointer;">
-      <input type="checkbox" id="set-hints" checked onchange="state.showHints=this.checked"> Показывать подсказки кода
-    </label>
-    <label style="display:flex; align-items:center; gap:8px; margin:10px 0; cursor:pointer;">
-      <input type="checkbox" id="set-sound" onchange="state.sound=this.checked"> Звуковые уведомления
-    </label>
-    <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border);">
-      <button class="btn" onclick="saveGame()" style="margin-right:6px;">💾 Сохранить</button>
-      <button class="btn btn-secondary" onclick="loadGame()">📂 Загрузить</button>
+  <div class="window-content" id="settings-content">
+    <div class="settings-tabs">
+      <div class="settings-tab active" onclick="switchSettingsTab('sys')" id="tab-sys">🔧 Система</div>
+      <div class="settings-tab" onclick="switchSettingsTab('personal')" id="tab-personal">🎨 Персонализация</div>
+      <div class="settings-tab" onclick="switchSettingsTab('sound')" id="tab-sound">🔊 Звук</div>
     </div>
-    <div style="margin-top:10px;">
-      <button class="btn btn-secondary" onclick="if(confirm('Сбросить прогресс?')){localStorage.removeItem('linuxdev_save');location.reload();}">🗑️ Сброс</button>
+
+    <div class="settings-section active" id="section-sys">
+      <h3 style="margin-bottom:12px; color:var(--accent);">Системные настройки</h3>
+      <label style="display:flex; align-items:center; gap:8px; margin:10px 0; cursor:pointer;">
+        <input type="checkbox" id="set-hints" checked onchange="state.showHints=this.checked"> Показывать подсказки кода
+      </label>
+      <label style="display:flex; align-items:center; gap:8px; margin:10px 0; cursor:pointer;">
+        <input type="checkbox" id="set-sound" onchange="state.sound=this.checked"> Звуковые уведомления
+      </label>
+      <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border);">
+        <button class="btn" onclick="saveGame()" style="margin-right:6px;">💾 Сохранить</button>
+        <button class="btn btn-secondary" onclick="loadGame()">📂 Загрузить</button>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="btn btn-secondary" onclick="if(confirm('Сбросить прогресс?')){localStorage.removeItem('linuxdev_save');location.reload();}">🗑️ Сброс прогресса</button>
+      </div>
+      <div style="margin-top:20px; font-size:12px; color:var(--text-dim);">
+        Linux Dev OS v3.2<br>Сохранение в локальном хранилище браузера.
+      </div>
     </div>
-    <div style="margin-top:20px; font-size:12px; color:var(--text-dim);">
-      Linux Dev OS v3.1<br>Сохранение в локальном хранилище браузера.
+
+    <div class="settings-section" id="section-personal">
+      <h3 style="margin-bottom:10px; color:var(--accent);">🎨 Фон рабочего стола</h3>
+      <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Выберите обои для рабочего стола:</p>
+      <div class="wallpaper-grid" id="wallpaper-grid"></div>
+      <div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--border);">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
+          <input type="checkbox" id="set-anim-bg" onchange="toggleAnimBg(this.checked)"> Анимированный фон (слабые ПК — отключайте)
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-section" id="section-sound">
+      <h3 style="margin-bottom:10px; color:var(--accent);">🔊 Настройки звука</h3>
+      <div style="margin-bottom:10px; font-size:12px; color:var(--text-dim);">Громкость системных уведомлений:</div>
+      <div class="volume-row">
+        <span>🔇</span>
+        <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="70" oninput="setVolume(this.value)">
+        <span class="volume-value" id="volume-value">70%</span>
+        <span>🔊</span>
+      </div>
+      <div style="margin-top:8px; font-size:12px; color:var(--text-dim);">Звуковая тема:</div>
+      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+        <button class="btn btn-small" id="snd-theme-classic" onclick="setSoundTheme('classic')">🎹 Классика</button>
+        <button class="btn btn-small" id="snd-theme-retro" onclick="setSoundTheme('retro')">📟 Ретро</button>
+        <button class="btn btn-small" id="snd-theme-cyber" onclick="setSoundTheme('cyber')">🤖 Киберпанк</button>
+      </div>
+      <button class="sound-test-btn" onclick="playTestSound()">▶ Тестовый звук</button>
+      <div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--border); font-size:12px; color:var(--text-dim);">
+        💡 Совет: звуки работают через Web Audio API. Если браузер блокирует — кликните в окне один раз.
+      </div>
     </div>
   </div>
 </div>
@@ -908,6 +998,218 @@
 </div>
 
 <script>
+
+// ===================== WALLPAPER & SOUND =====================
+const WALLPAPERS = [
+  { name: 'Ubuntu Dark', bg: 'linear-gradient(135deg, #772953 0%, #2c001e 50%, #1a1a2e 100%)' },
+  { name: 'Midnight', bg: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' },
+  { name: 'Matrix', bg: 'linear-gradient(135deg, #000000 0%, #003300 50%, #001a00 100%)' },
+  { name: 'Cyberpunk', bg: 'linear-gradient(135deg, #2a0a1a 0%, #4a004a 50%, #001a3a 100%)' },
+  { name: 'Ocean', bg: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)' },
+  { name: 'Sunset', bg: 'linear-gradient(135deg, #2c1a1a 0%, #5c2a2a 50%, #8c3a3a 100%)' },
+  { name: 'Forest', bg: 'linear-gradient(135deg, #0a1a0a 0%, #1a3a1a 50%, #0a2a0a 100%)' },
+  { name: 'Neon City', bg: 'linear-gradient(135deg, #1a0a2a 0%, #3a0a5a 50%, #1a0a4a 100%)' }
+];
+
+let soundTheme = 'classic';
+let audioCtx = null;
+let masterGain = null;
+
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.connect(audioCtx.destination);
+    masterGain.gain.value = (state && state.soundVolume ? state.soundVolume : 70) / 100;
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq, type, duration, vol) {
+  if (!state || !state.sound) return;
+  ensureAudio();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  gain.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (duration || 0.3));
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start();
+  osc.stop(audioCtx.currentTime + (duration || 0.3));
+}
+
+function playTestSound() {
+  if (!state || !state.sound) { log('🔇 Звук отключен в настройках.', 'warning'); return; }
+  ensureAudio();
+  if (soundTheme === 'classic') {
+    playTone(523.25, 'sine', 0.2, 0.2);
+    setTimeout(() => playTone(659.25, 'sine', 0.2, 0.2), 120);
+    setTimeout(() => playTone(783.99, 'sine', 0.3, 0.2), 240);
+  } else if (soundTheme === 'retro') {
+    playTone(440, 'square', 0.1, 0.1);
+    setTimeout(() => playTone(880, 'square', 0.15, 0.1), 100);
+  } else {
+    playTone(200, 'sawtooth', 0.4, 0.08);
+    setTimeout(() => playTone(400, 'sawtooth', 0.3, 0.08), 200);
+  }
+  log('🔊 Тестовый звук воспроизведён.', 'success');
+}
+
+function setVolume(val) {
+  if (state) state.soundVolume = parseInt(val);
+  const el = document.getElementById('volume-value');
+  if (el) el.textContent = val + '%';
+  if (masterGain) masterGain.gain.value = val / 100;
+}
+
+function setSoundTheme(theme) {
+  soundTheme = theme;
+  document.querySelectorAll('[id^="snd-theme-"]').forEach(b => b.style.borderColor = 'transparent');
+  const active = document.getElementById('snd-theme-' + theme);
+  if (active) active.style.borderColor = 'var(--accent)';
+  log('🎵 Звуковая тема: ' + theme, 'info');
+}
+
+function setWallpaper(idx) {
+  if (state) state.wallpaper = idx;
+  const wp = WALLPAPERS[idx];
+  if (wp) {
+    document.body.style.background = wp.bg;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundAttachment = 'fixed';
+  }
+  renderWallpapers();
+}
+
+function renderWallpapers() {
+  const grid = document.getElementById('wallpaper-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  WALLPAPERS.forEach((wp, i) => {
+    const tile = document.createElement('div');
+    tile.className = 'wp-tile' + ((state && state.wallpaper === i) ? ' selected' : '');
+    tile.style.background = wp.bg;
+    tile.innerHTML = '<div class="wp-name">' + wp.name + '</div>';
+    tile.onclick = () => setWallpaper(i);
+    grid.appendChild(tile);
+  });
+}
+
+let animBgInterval = null;
+function toggleAnimBg(on) {
+  if (animBgInterval) { clearInterval(animBgInterval); animBgInterval = null; }
+  if (on) {
+    let hue = 0;
+    animBgInterval = setInterval(() => {
+      hue = (hue + 0.3) % 360;
+      document.body.style.background = `linear-gradient(${hue}deg, #772953, #2c001e, #1a1a2e)`;
+    }, 50);
+  } else {
+    setWallpaper((state && typeof state.wallpaper === 'number') ? state.wallpaper : 0);
+  }
+}
+
+function switchSettingsTab(tab) {
+  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('section-' + tab).classList.add('active');
+  if (tab === 'personal') renderWallpapers();
+  if (tab === 'sound') {
+    const slider = document.getElementById('volume-slider');
+    const val = document.getElementById('volume-value');
+    if (slider) slider.value = (state && state.soundVolume) ? state.soundVolume : 70;
+    if (val) val.textContent = ((state && state.soundVolume) ? state.soundVolume : 70) + '%';
+    setSoundTheme(soundTheme);
+  }
+}
+
+// ===================== EASTER EGGS & EXTRA COMMANDS =====================
+const fortunes = [
+  "Смысл жизни — в коде.",
+  "Если это работает — не трогай.",
+  "Есть два способа писать программы: с комментариями и для себя через месяц.",
+  "sudo rm -rf / — последнее, что ты сделаешь.",
+  "Баг — это просто фича без документации.",
+  "Кофе — основной ингредиент хорошего кода.",
+  "Работает на моей машине™",
+  "grep -r 'TODO' /home/neo — список дел на ближайший год.",
+  "ФБР уже в пути. Но код важнее.",
+  "Переписывать на Rust — не всегда ответ."
+];
+
+function cmdMatrix() {
+  const chars = '0123456789ABCDEF@#$%&*アイウエオカキクケコ';
+  let out = '';
+  for (let i = 0; i < 20; i++) {
+    let line = '';
+    for (let j = 0; j < 50; j++) line += chars[Math.floor(Math.random() * chars.length)];
+    out += line + '\n';
+  }
+  log(out, 'success');
+  log('Wake up, Neo...', 'info');
+}
+
+function cmdCowsay(text) {
+  const msg = text || 'Му!';
+  const cow = `
+    ${'─'.repeat(msg.length + 2)}
+   < ${msg} >
+    ${'─'.repeat(msg.length + 2)}
+         \\   ^__^
+          \\  (oo)\\_______
+             (__)\\       )\/\
+                 ||----w |
+                 ||     ||`;
+  log(cow, 'info');
+}
+
+function cmdFortune() {
+  const f = fortunes[Math.floor(Math.random() * fortunes.length)];
+  log('🥠 ' + f, 'success');
+}
+
+function cmdReboot() {
+  log('Перезагрузка системы...', 'warning');
+  setTimeout(() => location.reload(), 1200);
+}
+
+function cmdDate() {
+  log('Системное время: ' + state.gameTime.toLocaleString('ru-RU'), 'info');
+  log('Реальное время: ' + new Date().toLocaleString('ru-RU'), 'info');
+}
+
+function cmdWhoami() {
+  log('neo (developer, hacker, coffee addict)', 'info');
+  log(`  Денег: $${state.money} | Репутация: ${state.reputation} | FBI: ${Math.floor(state.fbi)}%`, 'info');
+}
+
+function cmdUptime() {
+  const h = state.gameTime.getHours();
+  const m = state.gameTime.getMinutes();
+  log(`Время в игре: ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`, 'info');
+}
+
+function cmdNeofetch() {
+  const lines = [
+    "🐍 OS: Linux Dev OS 3.2",
+    "💻 Host: Quantum Workstation",
+    "🧠 Kernel: 5.15.0-dev-os",
+    "⏱ Uptime: see uptime",
+    "🐚 Shell: bash 5.1.16",
+    "🎨 DE: Custom Wayland",
+    "🖥️ Theme: Ubuntu Dark",
+    "🔤 Terminal: tty1",
+    "💰 Money: $" + state.money,
+    "⭐ Reputation: " + state.reputation,
+    "🚔 FBI Risk: " + Math.floor(state.fbi) + "%"
+  ];
+  lines.forEach(l => log(l, 'info'));
+}
+
+
 // ===================== DIFFICULTY CONFIG =====================
 const DIFFICULTY = {
   easy: {
@@ -975,11 +1277,13 @@ function createState() {
     nextHostId: 1,
     showHints: true,
     sound: false,
+    soundVolume: 70,
+    wallpaper: 0,
     gameOver: false,
     eventTimer: 0,
     wins: { terminal:false, browser:false, mail:false, projects:false, store:false, darknet:false, antivirus:false, settings:false },
     diff: selectedDiff,
-    antivirusStock: 0, // сколько антивирусов написано и готово к продаже
+    antivirusStock: 0,
     antivirusSold: 0,
     totalEarned: 0
   };
@@ -1426,6 +1730,14 @@ function execCmd(input) {
     case 'save': saveGame(); break;
     case 'load': loadGame(); break;
     case 'sell': cmdSellAntivirus(args[1]); break;
+    case 'matrix': cmdMatrix(); break;
+    case 'cowsay': cmdCowsay(rest); break;
+    case 'fortune': cmdFortune(); break;
+    case 'reboot': cmdReboot(); break;
+    case 'date': cmdDate(); break;
+    case 'whoami': cmdWhoami(); break;
+    case 'uptime': cmdUptime(); break;
+    case 'neofetch': cmdNeofetch(); break;
     default: log('Неизвестная команда: ' + cmd, 'warning');
   }
 }
@@ -1485,6 +1797,14 @@ function cmdHelp() {
   log(`Команды:
   help              — справка
   status            — статус
+  neofetch          — системная инфа в стиле neofetch
+  whoami            — кто ты
+  date              — системное и реальное время
+  uptime            — время в игре
+  matrix            — пасхалка из Матрицы
+  cowsay <текст>    — корова говорит
+  fortune           — мудрость дня
+  reboot            — перезагрузка
   develop <тип> --name=... [--lang=python|cpp|js]
     типы: game, virus, antivirus, web
   upload <id>       — сдать проект
@@ -2173,6 +2493,9 @@ function loadGame() {
     diffCfg = DIFFICULTY[selectedDiff] || DIFFICULTY.normal;
     document.getElementById('top-diff').textContent = diffCfg.label;
     log('📂 Загружено!', 'success');
+    if (typeof state.wallpaper === 'number') setWallpaper(state.wallpaper);
+    const soundCb = document.getElementById('set-sound');
+    if (soundCb) soundCb.checked = !!state.sound;
     updateTopBar(); renderMail(); renderProjects(); renderStore(); renderDarkNet(); renderAntivirus();
     updateTaskbar();
     if (state.wins) {
@@ -2426,6 +2749,12 @@ function initGame() {
   if (!state.achievements) state.achievements = createAchievements();
   if (!state.exploitLogs) state.exploitLogs = [];
   if (!state.lockout) state.lockout = { active: false, endTime: 0, count: 0 };
+  // Apply wallpaper
+  if (typeof state.wallpaper === 'number') setWallpaper(state.wallpaper);
+  else setWallpaper(0);
+  // Apply sound checkbox
+  const soundCb = document.getElementById('set-sound');
+  if (soundCb) soundCb.checked = !!state.sound;
   updateTopBar();
   renderStore();
   renderBrowser();
@@ -2623,6 +2952,21 @@ function pushNotification(title, text) {
   setTimeout(() => {
     n.remove();
   }, 4000);
+
+  // Sound
+  if (state && state.sound) {
+    ensureAudio();
+    if (soundTheme === 'classic') {
+      playTone(880, 'sine', 0.12, 0.12);
+      setTimeout(() => playTone(1100, 'sine', 0.18, 0.1), 80);
+    } else if (soundTheme === 'retro') {
+      playTone(1200, 'square', 0.08, 0.06);
+      setTimeout(() => playTone(900, 'square', 0.12, 0.06), 60);
+    } else {
+      playTone(600, 'sawtooth', 0.15, 0.05);
+      setTimeout(() => playTone(900, 'sawtooth', 0.2, 0.05), 100);
+    }
+  }
 }
 
 // ===================== WIFI SYSTEM =====================
