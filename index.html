@@ -897,8 +897,13 @@
         <button class="btn" onclick="saveGame()" style="margin-right:6px;">💾 Сохранить</button>
         <button class="btn btn-secondary" onclick="loadGame()">📂 Загрузить</button>
       </div>
+      <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="exportSaveToFile()">📤 Экспорт .json</button>
+        <button class="btn btn-secondary" onclick="importSaveFromString()">📥 Импорт</button>
+        <button class="btn btn-secondary" onclick="exportSaveToClipboard()">📋 Копировать код</button>
+      </div>
       <div style="margin-top:10px;">
-        <button class="btn btn-secondary" onclick="if(confirm('Сбросить прогресс?')){localStorage.removeItem('linuxdev_save');location.reload();}">🗑️ Сброс прогресса</button>
+        <button class="btn btn-secondary" onclick="if(confirm('Сбросить прогресс?')){localStorage.removeItem('linuxdev_save');localStorage.removeItem('linuxdev_save_meta');location.reload();}">🗑️ Сброс прогресса</button>
       </div>
       <div style="margin-top:20px; font-size:12px; color:var(--text-dim);">
         Linux Dev OS v3.2<br>Сохранение в локальном хранилище браузера.
@@ -998,6 +1003,10 @@
 </div>
 
 <script>
+
+
+// ===================== LZString Lite (compressToBase64 / decompressFromBase64) =====================
+var LZString=function(){var o=String.fromCharCode,i="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",n={};function r(o,i){if(!n[o]){n[o]={};for(var a=0;a<o.length;a++)n[o][o.charAt(a)]=a}return n[o][i]}var e={compressToBase64:function(o){if(null==o)return"";var a=e._compress(o,6,function(o){return i.charAt(o)});switch(a.length%4){default:case 0:return a;case 1:return a+"===";case 2:return a+"==";case 3:return a+"="}},decompressFromBase64:function(o){return null==o?"":""==o?null:e._decompress(o.length,32,function(a){return r(i,o.charAt(a))})},_compress:function(o,i,a){if(null==o)return"";var n,r,e,t={},s={},l="",c="",u="",p=2,f=3,d=2,h=[],m=0,v=0;for(e=0;e<o.length;e+=1)if(l=c,c=o.charAt(e),t.hasOwnProperty(l+c)?t[l+c]++:(t[l+c]=1,h.push(l+c),v++),s.hasOwnProperty(c)||(s[c]=f++,d++),u=t[l+c],s.hasOwnProperty(u))c=u;else{if(c.charCodeAt(0)<256){for(n=0;n<d;n++)m=m<<1,h.length>f&&(v++,m+=1);r=c.charCodeAt(0);for(n=0;n<8;n++)m=m<<1|1&r,r=r>>1,h.length>f&&(v++,m+=1)}else{for(n=0;n<d;n++)m=m<<1,h.length>f&&(v++,m+=1);r=c.charCodeAt(0);for(n=0;n<16;n++)m=m<<1|1&r,r=r>>1,h.length>f&&(v++,m+=1)}s[c]=f++,d++,c=String.fromCharCode(f-1)}if(""!==c){if(t.hasOwnProperty(l+c))c=t[l+c];else{if(c.charCodeAt(0)<256){for(n=0;n<d;n++)m=m<<1,h.length>f&&(v++,m+=1);r=c.charCodeAt(0);for(n=0;n<8;n++)m=m<<1|1&r,r=r>>1,h.length>f&&(v++,m+=1)}else{for(n=0;n<d;n++)m=m<<1,h.length>f&&(v++,m+=1);r=c.charCodeAt(0);for(n=0;n<16;n++)m=m<<1|1&r,r=r>>1,h.length>f&&(v++,m+=1)}s[c]=f++,d++}t[l+c]=f++}for(n=0;n<d;n++)m=m<<1,h.length>f&&(v++,m+=1);return a(m)},_decompress:function(i,a,n){var r,e,t,s,l,c,u,p=[],f=4,d=4,h=3,m="",v="",g={val:n(0),position:a,index:1};for(e=0;e<3;e+=1)p[e]=e;for(s=0,l=Math.pow(2,2),c=1;c!=l;){r=g.val&g.position,g.position>>=1,0==g.position&&(g.position=a,g.val=n(g.index++)),s|=(r>0?1:0)*c,c<<=1}switch(s){case 0:for(s=0,l=Math.pow(2,8),c=1;c!=l;){r=g.val&g.position,g.position>>=1,0==g.position&&(g.position=a,g.val=n(g.index++)),s|=(r>0?1:0)*c,c<<=1}u=o(s);break;case 1:for(s=0,l=Math.pow(2,16),c=1;c!=l;){r=g.val&g.position,g.position>>=1,0==g.position&&(g.position=a,g.val=n(g.index++)),s|=(r>0?1:0)*c,c<<=1}u=o(s);break;case 2:return""}for(p[3]=u,t=u,h.push(u);;){if(g.index>i)return"";for(s=0,l=Math.pow(2,h),c=1;c!=l;){r=g.val&g.position,g.position>>=1,0==g.position&&(g.position=a,g.val=n(g.index++)),s|=(r>0?1:0)*c,c<<=1}switch(u=s){case 0:for(s=0,l=Math.pow(2,8),c=1;c!=l;){r=g.val&g.position,g.position>>=1,0==g.position&&(g.position=a,g.val=n(g.index++)),s|=(r>0?1:0)*c,c<<=1}p[d++]=o(s),u=d-1,f--;break;case 1:for(s=0,l=Math.pow(2,16),c=1;c!=l;){r=g.val&g.position,g.position>>=1,0==g.position&&(g.position=a,g.val=n(g.index++)),s|=(r>0?1:0)*c,c<<=1}p[d++]=o(s),u=d-1,f--;break;case 2:return m}if(0==f&&(f=Math.pow(2,h),h++),p[u])v=p[u];else{if(u!==d)return"";v=t+t.charAt(0)}m+=v,p[d++]=t+v.charAt(0),t=v,0==--f&&(f=Math.pow(2,h),h++)}}};return e}();
 
 // ===================== WALLPAPER & SOUND =====================
 const WALLPAPERS = [
@@ -1262,6 +1271,7 @@ let state = null;
 
 function createState() {
   return {
+    saveVersion: 3,
     money: diffCfg.startMoney,
     reputation: 50,
     fbi: 0,
@@ -1281,6 +1291,8 @@ function createState() {
     wallpaper: 0,
     gameOver: false,
     eventTimer: 0,
+    exploitLogs: [],
+    lockout: { active: false, endTime: 0, count: 0 },
     wins: { terminal:false, browser:false, mail:false, projects:false, store:false, darknet:false, antivirus:false, settings:false },
     diff: selectedDiff,
     antivirusStock: 0,
@@ -1305,21 +1317,20 @@ function startGame() {
 }
 
 function loadGameFromTitle() {
-  const d = localStorage.getItem('linuxdev_save');
+  const d = localStorage.getItem(SAVE_KEY);
   if (!d) { alert('Нет сохранения!'); return; }
   try {
-    const p = JSON.parse(d, (k,v) => {
-      if (k==='deadline'||k==='date') return v?new Date(v):v;
-      return v;
-    });
-    state = p;
-    selectedDiff = state.diff || 'normal';
-    diffCfg = DIFFICULTY[selectedDiff] || DIFFICULTY.normal;
-    document.getElementById('title-screen').classList.add('hidden');
-    document.getElementById('desktop-layer').classList.add('active');
-    document.getElementById('top-diff').textContent = diffCfg.label;
-    initGame();
-  } catch(e) { alert('Ошибка загрузки!'); }
+    const p = JSON.parse(d);
+    state = createState(); // создаём базовый state, затем мигрируем
+    if (migrateAndLoad(p)) {
+      document.getElementById('title-screen').classList.add('hidden');
+      document.getElementById('desktop-layer').classList.add('active');
+      document.getElementById('top-diff').textContent = diffCfg.label;
+      initGame();
+    } else {
+      alert('Ошибка загрузки сохранения!');
+    }
+  } catch(e) { alert('Ошибка загрузки: ' + e.message); console.error(e); }
 }
 
 // ===================== WINDOW SYSTEM =====================
@@ -2459,57 +2470,258 @@ function tick() {
 }
 
 // ===================== SAVE/LOAD =====================
-function saveGame() {
-  const saveObj = { ...state, activeTaskId: state.activeTask ? state.activeTask.id : null };
-  delete saveObj.activeTask;
-  const data = JSON.stringify(saveObj, (k,v) => {
-    if (k==='deadline'||k==='date') return v?v.toISOString():v;
-    return v;
-  });
-  localStorage.setItem('linuxdev_save', data);
-  log('💾 Сохранено!', 'success');
-}
-function loadGame() {
-  const d = localStorage.getItem('linuxdev_save');
-  if (!d) { log('Нет сохранения.', 'warning'); return; }
+
+
+
+
+
+// ===================== SAVE SYSTEM 2.0 =====================
+var SAVE_KEY = 'linuxdev_save';
+var SAVE_KEY_LEGACY = 'linuxdev_save';
+
+function serializeState() {
   try {
-    const p = JSON.parse(d, (k,v) => {
-      if (k==='deadline'||k==='date') return v?new Date(v):v;
+    if (!state) return null;
+    var saveObj = {
+      saveVersion: state.saveVersion || 3,
+      money: state.money,
+      reputation: state.reputation,
+      fbi: state.fbi,
+      gameTime: state.gameTime,
+      hw: state.hw,
+      sw: state.sw,
+      net: state.net,
+      lang: state.lang,
+      projects: state.projects,
+      messages: state.messages,
+      hosts: state.hosts,
+      nextMsgId: state.nextMsgId,
+      nextProjId: state.nextProjId,
+      nextHostId: state.nextHostId,
+      showHints: state.showHints,
+      sound: state.sound,
+      soundVolume: state.soundVolume,
+      wallpaper: state.wallpaper,
+      gameOver: state.gameOver,
+      eventTimer: state.eventTimer,
+      wins: state.wins,
+      diff: state.diff,
+      antivirusStock: state.antivirusStock,
+      antivirusSold: state.antivirusSold,
+      totalEarned: state.totalEarned,
+      fs: state.fs,
+      achievements: state.achievements,
+      exploitLogs: state.exploitLogs,
+      exploitLogs: state.exploitLogs,
+      lockout: state.lockout,
+      activeTaskId: state.activeTask ? state.activeTask.id : null,
+      hackTaskId: state.hackTask ? state.hackTask.hostId : null
+    };
+    return JSON.stringify(saveObj, function(k, v) {
+      if ((k === 'deadline' || k === 'date' || k === 'gameTime') && v && typeof v === 'object' && typeof v.toISOString === 'function') return v.toISOString();
+      if (typeof v === 'function') return undefined;
       return v;
     });
-    Object.assign(state, p);
-    state.gameTime = new Date(state.gameTime);
-    state.projects.forEach(x=>{ if(x.deadline) x.deadline=new Date(x.deadline); });
-    state.messages.forEach(x=>{ x.date=new Date(x.date); });
-    // Восстановление activeTask по id (поддержка старых и новых сейвов)
-    if (p.activeTask && typeof p.activeTask === 'object' && p.activeTask.id) {
-      state.activeTask = state.projects.find(pr => pr.id === p.activeTask.id) || null;
-    } else if (p.activeTaskId) {
-      state.activeTask = state.projects.find(pr => pr.id === p.activeTaskId) || null;
-    } else {
-      state.activeTask = null;
+  } catch (e) {
+    console.error('serializeState error:', e);
+    log('❌ Ошибка сериализации: ' + (e.message || e), 'danger');
+    return null;
+  }
+}
+
+function saveGame(silent) {
+  try {
+    if (!state) { if (!silent) log('⚠️ Нет данных для сохранения.', 'warning'); return false; }
+    var raw = serializeState();
+    if (!raw) return false;
+    localStorage.setItem(SAVE_KEY, raw);
+    localStorage.setItem(SAVE_KEY + '_meta', JSON.stringify({
+      time: Date.now(),
+      version: state.saveVersion || 3,
+      money: state.money,
+      rep: state.reputation
+    }));
+    if (!silent) log('💾 Сохранено в локальное хранилище!', 'success');
+    return true;
+  } catch (e) {
+    console.error('saveGame error:', e);
+    log('❌ Ошибка сохранения: ' + (e.message || e), 'danger');
+    return false;
+  }
+}
+
+function autoSave() {
+  if (!state || state.gameOver) return;
+  saveGame(true);
+}
+
+function exportSaveToFile() {
+  try {
+    if (!state || !state.gameTime) {
+      log('⚠️ Нет активной игры для экспорта.', 'warning');
+      return;
     }
+    var raw = serializeState();
+    if (!raw) {
+      log('⚠️ Сериализация вернула пустоту.', 'warning');
+      return;
+    }
+    var blob = new Blob([raw], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    var fname = 'linuxdev_save';
+    try {
+      fname += '_' + fmtTime(state.gameTime).replace(/:/g, '-');
+    } catch (e2) {
+      fname += '_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    }
+    a.download = fname + '.json';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { URL.revokeObjectURL(url); if(a.parentNode) a.parentNode.removeChild(a); }, 100);
+    log('📤 Файл сохранения скачан: ' + a.download, 'success');
+  } catch (e) {
+    console.error('exportSaveToFile error:', e);
+    log('❌ Ошибка экспорта: ' + (e.message || e), 'danger');
+  }
+}
+
+function importSaveFromFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var text = e.target.result;
+      var parsed = JSON.parse(text);
+      if (migrateAndLoad(parsed)) {
+        log('📥 Сохранение загружено из файла!', 'success');
+        pushNotification('Система', 'Сохранение успешно импортировано');
+      }
+    } catch (err) {
+      log('❌ Неверный формат файла сохранения.', 'danger');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function exportSaveToClipboard() {
+  try {
+    var raw = serializeState();
+    if (!raw) { log('⚠️ Нечего экспортировать.', 'warning'); return; }
+    var compressed = LZString.compressToBase64(raw);
+    navigator.clipboard.writeText(compressed).then(function() {
+      log('📋 Код сохранения скопирован (' + compressed.length + ' симв).', 'success');
+      showDialog('Экспорт сохранения', 'Код скопирован в буфер обмена.<br>Длина: ' + compressed.length + ' симв.', [
+        { text: 'OK', action: closeDialog, primary: true }
+      ]);
+    }).catch(function() {
+      showDialog('Экспорт сохранения', '<textarea readonly style="width:100%;height:80px;background:#1e1e1e;color:#d4d4d4;border:1px solid #555;border-radius:4px;padding:6px;font-size:11px;">' + compressed + '</textarea>', [
+        { text: 'Закрыть', action: closeDialog }
+      ]);
+    });
+  } catch (e) {
+    log('❌ Ошибка сжатия: ' + (e.message || e), 'danger');
+  }
+}
+
+function importSaveFromString() {
+  showDialog('Импорт сохранения', '<p style="font-size:12px;margin-bottom:8px;">Вставьте код сохранения (base64) или загрузите файл:</p><input type="file" id="import-file" accept=".json" style="margin-bottom:8px;font-size:12px;color:var(--text);"><br><textarea id="import-paste" style="width:100%;height:80px;background:#1e1e1e;color:#d4d4d4;border:1px solid #555;border-radius:4px;padding:6px;font-size:11px;" placeholder="Или вставьте base64-код сюда..."></textarea>', [
+    { text: 'Загрузить', action: function() {
+      var file = document.getElementById('import-file').files[0];
+      var text = document.getElementById('import-paste').value.trim();
+      if (file) { importSaveFromFile(file); closeDialog(); }
+      else if (text) {
+        try {
+          var raw;
+          if (text.charAt(0) === '{') raw = text;
+          else raw = LZString.decompressFromBase64(text);
+          var parsed = JSON.parse(raw);
+          if (migrateAndLoad(parsed)) {
+            log('📥 Сохранение восстановлено из кода!', 'success');
+            closeDialog();
+          }
+        } catch (err) {
+          log('❌ Неверный код сохранения.', 'danger');
+        }
+      }
+    }, primary: true },
+    { text: 'Отмена', action: closeDialog }
+  ]);
+}
+
+function migrateSave(data) {
+  if (!data.saveVersion) {
+    data.saveVersion = 2;
+  }
+  if (data.saveVersion < 3) {
+    if (!data.antivirusStock) data.antivirusStock = 0;
+    if (!data.antivirusSold) data.antivirusSold = 0;
+    if (!data.totalEarned) data.totalEarned = 0;
+    if (!data.exploitLogs) data.exploitLogs = [];
+    if (!data.lockout) data.lockout = { active: false, endTime: 0, count: 0 };
+    if (!data.achievements) data.achievements = createAchievements();
+    if (!data.fs) data.fs = createDefaultFS();
+    if (!data.wallpaper && data.wallpaper !== 0) data.wallpaper = 0;
+    data.saveVersion = 3;
+  }
+  return data;
+}
+
+function migrateAndLoad(data) {
+  try {
+    data = migrateSave(data);
+    data.gameTime = new Date(data.gameTime);
+    if (data.projects) data.projects.forEach(function(x) { if (x.deadline) x.deadline = new Date(x.deadline); });
+    if (data.messages) data.messages.forEach(function(x) { x.date = new Date(x.date); });
+    if (data.exploitLogs) data.exploitLogs.forEach(function(x) { if (x.date && typeof x.date === 'string') x.date = new Date(x.date); });
+    var active = null;
+    if (data.activeTaskId) {
+      active = data.projects.find(function(pr) { return pr.id === data.activeTaskId; }) || null;
+    }
+    delete data.activeTaskId;
+    delete data.hackTaskId;
+    Object.assign(state, data);
+    state.activeTask = active;
     selectedDiff = state.diff || 'normal';
     diffCfg = DIFFICULTY[selectedDiff] || DIFFICULTY.normal;
-    document.getElementById('top-diff').textContent = diffCfg.label;
-    log('📂 Загружено!', 'success');
+    var diffEl = document.getElementById('top-diff');
+    if (diffEl) diffEl.textContent = diffCfg.label;
     if (typeof state.wallpaper === 'number') setWallpaper(state.wallpaper);
-    const soundCb = document.getElementById('set-sound');
+    var soundCb = document.getElementById('set-sound');
     if (soundCb) soundCb.checked = !!state.sound;
-    updateTopBar(); renderMail(); renderProjects(); renderStore(); renderDarkNet(); renderAntivirus();
-    updateTaskbar();
+    updateTopBar(); renderMail(); renderProjects(); renderStore(); renderDarkNet(); renderAntivirus(); renderFiles(); renderAchievements(); updateTaskbar();
     if (state.wins) {
-      Object.entries(state.wins).forEach(([name, open]) => {
-        const win = document.getElementById('win-' + name);
+      Object.entries(state.wins).forEach(function(entry) {
+        var name = entry[0], open = entry[1];
+        var win = document.getElementById('win-' + name);
         if (win) {
           if (open) win.classList.add('active');
           else win.classList.remove('active', 'focused');
         }
       });
     }
-  } catch(e) { log('Ошибка загрузки.', 'danger'); console.error(e); }
+    return true;
+  } catch (e) {
+    log('❌ Ошибка миграции сохранения: ' + (e.message || e), 'danger');
+    console.error(e);
+    return false;
+  }
 }
 
+function loadGame() {
+  var d = localStorage.getItem(SAVE_KEY);
+  if (!d) { log('Нет сохранения в локальном хранилище.', 'warning'); return; }
+  try {
+    var p = JSON.parse(d);
+    if (migrateAndLoad(p)) {
+      log('📂 Сохранение загружено из локального хранилища!', 'success');
+    }
+  } catch (e) {
+    log('❌ Ошибка загрузки: файл повреждён или устарел.', 'danger');
+    console.error(e);
+  }
+}
 
 // ===================== FILE SYSTEM =====================
 function createDefaultFS() {
@@ -2775,6 +2987,10 @@ function initGame() {
     });
   }
   if (!gameInterval) gameInterval = setInterval(tick, 1000);
+  // Автосейв каждые 30 секунд
+  if (!window._autoSaveInterval) window._autoSaveInterval = setInterval(autoSave, 30000);
+  // Сейв перед закрытием страницы
+  window.addEventListener('beforeunload', autoSave);
   setTimeout(() => generateMessage(), 3000);
   setTimeout(() => generateMessage(), 8000);
   document.getElementById('win-terminal').addEventListener('mousedown', () => {
