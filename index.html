@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Linux Dev OS</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -31,7 +31,6 @@
     width: 100vw;
     overflow: hidden;
     position: relative;
-    user-select: none;
   }
 
   /* ===== TITLE SCREEN ===== */
@@ -121,6 +120,7 @@
     top: 28px; left: 0; right: 0; bottom: 44px;
     padding: 20px;
     z-index: 1;
+    -webkit-touch-callout: none;
   }
   .desktop-icon {
     width: 80px;
@@ -513,16 +513,56 @@
   .desktop-icon {
     position: absolute;
     cursor: grab;
-    transition: transform 0.1s, box-shadow 0.2s, background 0.15s;
+    transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s, background 0.15s, left 0.15s ease-out, top 0.15s ease-out;
     -webkit-tap-highlight-color: transparent;
     touch-action: none;
+    user-select: none;
   }
   .desktop-icon:active { cursor: grabbing; }
   .desktop-icon.dragging {
     z-index: 1000;
-    transform: scale(1.1);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-    background: rgba(255,255,255,0.15);
+    transform: scale(1.12);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+    background: rgba(255,255,255,0.18);
+    transition: transform 0.08s, box-shadow 0.1s, background 0.1s;
+  }
+  .desktop-icon.snap {
+    transition: left 0.25s cubic-bezier(0.34,1.56,0.64,1), top 0.25s cubic-bezier(0.34,1.56,0.64,1), transform 0.2s, box-shadow 0.2s;
+  }
+
+  /* ===== ICON CONTEXT MENU ===== */
+  .icon-context {
+    position: absolute;
+    background: var(--window);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    display: none;
+    flex-direction: column;
+    z-index: 15000;
+    min-width: 160px;
+    backdrop-filter: blur(10px);
+    animation: slideIn 0.15s ease;
+  }
+  .icon-context.active { display: flex; }
+  .icon-context-item {
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.1s;
+  }
+  .icon-context-item:hover { background: rgba(255,255,255,0.08); }
+  .icon-context-item.danger { color: var(--danger); }
+  .icon-context-item.danger:hover { background: rgba(223,56,44,0.1); }
+  .icon-context-sep {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 4px 8px;
   }
 
 
@@ -903,7 +943,10 @@
         <button class="btn btn-secondary" onclick="exportSaveToClipboard()">📋 Копировать код</button>
       </div>
       <div style="margin-top:10px;">
-        <button class="btn btn-secondary" onclick="if(confirm('Сбросить прогресс?')){localStorage.removeItem('linuxdev_save');localStorage.removeItem('linuxdev_save_meta');location.reload();}">🗑️ Сброс прогресса</button>
+        <button class="btn btn-secondary" onclick="resetIconPositions()">🎯 Сбросить позиции иконок</button>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="btn btn-secondary" onclick="if(confirm('Сбросить прогресс?')){localStorage.removeItem('linuxdev_save');localStorage.removeItem('linuxdev_save_meta');localStorage.removeItem('linuxdev_icons_v4');location.reload();}">🗑️ Сброс прогресса</button>
       </div>
       <div style="margin-top:20px; font-size:12px; color:var(--text-dim);">
         Linux Dev OS v3.2<br>Сохранение в локальном хранилище браузера.
@@ -1338,7 +1381,10 @@ let zIndex = 200;
 let drag = null;
 
 function openWindow(name) {
-  if (window._iconDragging) return;
+  if (window._iconDragging) {
+    // Подавляем клик во время/сразу после drag
+    return;
+  }
   if (name === 'darknet' && isHackingLocked()) return;
   const win = document.getElementById('win-' + name);
   if (!win) return;
@@ -2968,6 +3014,8 @@ function initGame() {
   const soundCb = document.getElementById('set-sound');
   if (soundCb) soundCb.checked = !!state.sound;
   updateTopBar();
+  // Загружаем позиции иконок только когда desktop виден
+  if (typeof loadPositions === 'function') loadPositions();
   renderStore();
   renderBrowser();
   renderMail();
@@ -2999,58 +3047,148 @@ function initGame() {
 }
 
 
-// ===== DESKTOP ICON DRAG & DROP =====
+// ===== DESKTOP ICON DRAG & DROP 2.0 =====
 (function() {
-  let dragEl = null;
-  let dragOffsetX = 0;
-  let dragOffsetY = 0;
-  let startMouseX = 0;
-  let startMouseY = 0;
-  let hasDragged = false;
-  const SAVE_KEY = 'linuxdev_icons_v4';
-  const DRAG_THRESHOLD = 4;
-  const GRID_SIZE = 10;
+  var dragEl = null;
+  var dragOffsetX = 0, dragOffsetY = 0;
+  var startMouseX = 0, startMouseY = 0;
+  var hasDragged = false;
+  var SAVE_KEY = 'linuxdev_icons_v4';
+  var DRAG_THRESHOLD = 5;
+  var GRID_SIZE = 12;
+  var longPressTimer = null;
+  var longPressTriggered = false;
+  var ctxTarget = null;
+  var ctxMenu = document.getElementById('icon-context-menu');
 
-  const desktop = () => document.getElementById('desktop');
+  function desktop() { return document.getElementById('desktop'); }
 
   function getPoint(e) {
-    return e.touches && e.touches.length ? e.touches[0] : e;
+    if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0];
+    if (e.touches && e.touches.length) return e.touches[0];
+    return e;
   }
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(value, max));
   }
 
-  function loadPositions() {
+  function getDefaultGrid() {
+    var icons = document.querySelectorAll('.desktop-icon');
+    var grid = {};
+    for (var i = 0; i < icons.length; i++) {
+      var el = icons[i];
+      var col = i % 3;
+      var row = Math.floor(i / 3);
+      grid[el.id] = { x: 20 + col * 100, y: 20 + row * 90 };
+    }
+    return grid;
+  }
+
+  window.loadPositions = function() {
     try {
-      const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
-      Object.entries(saved).forEach(([id, pos]) => {
-        const el = document.getElementById(id);
-        if (el && typeof pos.x === 'number' && typeof pos.y === 'number') {
+      var raw = localStorage.getItem(SAVE_KEY);
+      var saved = raw ? JSON.parse(raw) : {};
+      var hasSaved = saved && typeof saved === 'object' && Object.keys(saved).length > 0;
+      var defaults = getDefaultGrid();
+      var icons = document.querySelectorAll('.desktop-icon');
+
+      for (var i = 0; i < icons.length; i++) {
+        var el = icons[i];
+        var id = el.id;
+        var pos = null;
+
+        if (hasSaved && saved[id] && typeof saved[id].x === 'number' && typeof saved[id].y === 'number') {
+          pos = saved[id];
+        } else if (defaults[id]) {
+          pos = defaults[id];
+        }
+
+        if (pos) {
           el.style.left = pos.x + 'px';
           el.style.top = pos.y + 'px';
         }
-      });
-    } catch (e) {}
+      }
+
+      if (!hasSaved) savePositions();
+    } catch (e) {
+      console.error('loadPositions', e);
+      try {
+        var fallback = getDefaultGrid();
+        var icons = document.querySelectorAll('.desktop-icon');
+        for (var j = 0; j < icons.length; j++) {
+          var el2 = icons[j];
+          var p = fallback[el2.id];
+          if (p) {
+            el2.style.left = p.x + 'px';
+            el2.style.top = p.y + 'px';
+          }
+        }
+        savePositions();
+      } catch (e2) {
+        console.error('loadPositions fallback', e2);
+      }
+    }
   }
 
   function savePositions() {
-    const pos = {};
-    document.querySelectorAll('.desktop-icon').forEach(el => {
+    var pos = {};
+    var icons = document.querySelectorAll('.desktop-icon');
+    for (var i = 0; i < icons.length; i++) {
+      var el = icons[i];
+      if (el.style.display === 'none') continue;
       pos[el.id] = {
         x: parseFloat(el.style.left) || 0,
         y: parseFloat(el.style.top) || 0
       };
-    });
+    }
     localStorage.setItem(SAVE_KEY, JSON.stringify(pos));
   }
 
+  function clampAllPositions() {
+    var desk = desktop();
+    if (!desk) return;
+    var maxX = desk.clientWidth - 80;
+    var maxY = desk.clientHeight - 80;
+    var icons = document.querySelectorAll('.desktop-icon');
+    for (var i = 0; i < icons.length; i++) {
+      var el = icons[i];
+      if (el.style.display === 'none') continue;
+      var x = parseFloat(el.style.left) || 0;
+      var y = parseFloat(el.style.top) || 0;
+      x = clamp(x, 0, maxX);
+      y = clamp(y, 0, maxY);
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+    }
+    savePositions();
+  }
+
+  function hideContext() {
+    if (ctxMenu) ctxMenu.classList.remove('active');
+    ctxTarget = null;
+  }
+
+  function showContext(el, clientX, clientY) {
+    if (!ctxMenu) return;
+    ctxTarget = el;
+    ctxMenu.style.left = clamp(clientX, 0, window.innerWidth - 170) + 'px';
+    ctxMenu.style.top = clamp(clientY, 0, window.innerHeight - 140) + 'px';
+    ctxMenu.classList.add('active');
+  }
+
   function onDown(e) {
+    hideContext();
+    if (e.button === 2) {
+      e.preventDefault();
+      showContext(e.currentTarget, e.clientX, e.clientY);
+      return;
+    }
     if (e.button !== undefined && e.button !== 0) return;
 
-    const el = e.currentTarget;
-    const p = getPoint(e);
-    const rect = el.getBoundingClientRect();
+    var el = e.currentTarget;
+    var p = getPoint(e);
+    var rect = el.getBoundingClientRect();
 
     dragEl = el;
     dragOffsetX = p.clientX - rect.left;
@@ -3058,59 +3196,79 @@ function initGame() {
     startMouseX = p.clientX;
     startMouseY = p.clientY;
     hasDragged = false;
+    longPressTriggered = false;
 
-    // prevent text selection & scrolling on touch
-    if (e.type === 'touchstart') e.preventDefault();
+    if (e.type === 'touchstart') {
+      longPressTimer = setTimeout(function() {
+        longPressTriggered = true;
+        dragEl = null;
+        showContext(el, p.clientX, p.clientY);
+      }, 600);
+    }
   }
 
   function onMove(e) {
     if (!dragEl) return;
+    var p = getPoint(e);
 
-    const p = getPoint(e);
-    const movedX = Math.abs(p.clientX - startMouseX);
-    const movedY = Math.abs(p.clientY - startMouseY);
+    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    if (longPressTriggered) return;
+
+    var movedX = Math.abs(p.clientX - startMouseX);
+    var movedY = Math.abs(p.clientY - startMouseY);
 
     if (!hasDragged && (movedX > DRAG_THRESHOLD || movedY > DRAG_THRESHOLD)) {
       hasDragged = true;
       dragEl.classList.add('dragging');
-      // suppress click on all icons during drag
+      dragEl.classList.remove('snap');
       window._iconDragging = true;
     }
     if (!hasDragged) return;
 
-    const desk = desktop();
-    const deskRect = desk.getBoundingClientRect();
-    const maxX = desk.clientWidth - dragEl.offsetWidth;
-    const maxY = desk.clientHeight - dragEl.offsetHeight;
+    var desk = desktop();
+    var deskRect = desk.getBoundingClientRect();
+    var maxX = desk.clientWidth - dragEl.offsetWidth;
+    var maxY = desk.clientHeight - dragEl.offsetHeight;
 
-    let nx = p.clientX - deskRect.left - dragOffsetX;
-    let ny = p.clientY - deskRect.top - dragOffsetY;
+    var nx = p.clientX - deskRect.left - dragOffsetX;
+    var ny = p.clientY - deskRect.top - dragOffsetY;
 
     nx = clamp(nx, 0, maxX);
     ny = clamp(ny, 0, maxY);
 
-    // snap to grid
-    nx = Math.round(nx / GRID_SIZE) * GRID_SIZE;
-    ny = Math.round(ny / GRID_SIZE) * GRID_SIZE;
-
     dragEl.style.left = nx + 'px';
     dragEl.style.top = ny + 'px';
 
-    if (e.type === 'touchmove') e.preventDefault();
+    if (e.type === 'touchmove' && hasDragged) e.preventDefault();
   }
 
   function onUp(e) {
-    if (!dragEl) return;
+    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    if (!dragEl) { hasDragged = false; return; }
 
-    const el = dragEl;
+    var el = dragEl;
     el.classList.remove('dragging');
 
     if (hasDragged) {
+      var x = parseFloat(el.style.left) || 0;
+      var y = parseFloat(el.style.top) || 0;
+      var nx = Math.round(x / GRID_SIZE) * GRID_SIZE;
+      var ny = Math.round(y / GRID_SIZE) * GRID_SIZE;
+      var desk = desktop();
+      var maxX = desk.clientWidth - el.offsetWidth;
+      var maxY = desk.clientHeight - el.offsetHeight;
+      nx = clamp(nx, 0, maxX);
+      ny = clamp(ny, 0, maxY);
+
+      el.classList.add('snap');
+      el.style.left = nx + 'px';
+      el.style.top = ny + 'px';
+      setTimeout(function() { el.classList.remove('snap'); }, 260);
+
       savePositions();
-      // keep suppression flag for a tick so inline onclick doesn't fire
       window._iconDragging = true;
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
           window._iconDragging = false;
         });
       });
@@ -3120,19 +3278,85 @@ function initGame() {
     hasDragged = false;
   }
 
-  function setup() {
-    loadPositions();
+  window.ctxOpen = function() {
+    if (!ctxTarget) return;
+    var winName = ctxTarget.id.replace('icon-', '');
+    openWindow(winName);
+    focusWindow(winName);
+    hideContext();
+  };
+  window.ctxResetPos = function() {
+    if (!ctxTarget) return;
+    var defaults = getDefaultGrid();
+    var def = defaults[ctxTarget.id];
+    if (def) {
+      ctxTarget.classList.add('snap');
+      ctxTarget.style.left = def.x + 'px';
+      ctxTarget.style.top = def.y + 'px';
+      setTimeout(function() { ctxTarget.classList.remove('snap'); }, 260);
+      savePositions();
+    }
+    hideContext();
+  };
+  window.ctxHide = function() {
+    if (!ctxTarget) return;
+    var label = ctxTarget.querySelector('.label');
+    var name = label ? label.textContent : 'иконку';
+    if (confirm('Убрать "' + name + '" с рабочего стола?')) {
+      ctxTarget.style.display = 'none';
+      savePositions();
+    }
+    hideContext();
+  };
+  window.resetIconPositions = function() {
+    if (!confirm('Сбросить все иконки на стандартные позиции?')) return;
+    localStorage.removeItem(SAVE_KEY);
+    var defaults = getDefaultGrid();
+    var icons = document.querySelectorAll('.desktop-icon');
+    for (var i = 0; i < icons.length; i++) {
+      var el = icons[i];
+      el.style.display = 'flex';
+      var def = defaults[el.id];
+      if (def) {
+        el.classList.add('snap');
+        el.style.left = def.x + 'px';
+        el.style.top = def.y + 'px';
+        setTimeout((function(e) { return function() { e.classList.remove('snap'); }; })(el), 260);
+      }
+    }
+    savePositions();
+    log('🎯 Позиции иконок сброшены.', 'info');
+  };
 
-    document.querySelectorAll('.desktop-icon').forEach(el => {
-      el.addEventListener('mousedown', onDown);
-      el.addEventListener('touchstart', onDown, { passive: false });
-    });
+  function setup() {
+    // Обработчики навешиваем сразу, но позиции загружаем в initGame
+    var icons = document.querySelectorAll('.desktop-icon');
+    for (var i = 0; i < icons.length; i++) {
+      (function(el) {
+        el.addEventListener('mousedown', onDown);
+        el.addEventListener('touchstart', onDown, { passive: false });
+        el.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+          showContext(el, e.clientX, e.clientY);
+        });
+      })(icons[i]);
+    }
 
     document.addEventListener('mousemove', onMove);
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('mouseup', onUp);
     document.addEventListener('touchend', onUp);
     document.addEventListener('touchcancel', onUp);
+
+    document.addEventListener('click', function(e) {
+      if (ctxMenu && !ctxMenu.contains(e.target)) hideContext();
+    });
+
+    var resizeTimer;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(clampAllPositions, 150);
+    });
   }
 
   if (document.readyState === 'loading') {
@@ -3141,7 +3365,6 @@ function initGame() {
     setup();
   }
 })();
-
 // ===================== BOOT / RECOVERY =====================
 // ===================== NOTIFICATIONS =====================
 function pushNotification(title, text) {
@@ -3229,5 +3452,11 @@ window.addEventListener('load', () => {
 
 <div id="notifications" style="position:fixed;top:40px;right:10px;z-index:99999;display:flex;flex-direction:column;gap:8px;"></div>
 
+<div id="icon-context-menu" class="icon-context">
+  <div class="icon-context-item" onclick="ctxOpen()">📂 Открыть</div>
+  <div class="icon-context-item" onclick="ctxResetPos()">🎯 Сбросить позицию</div>
+  <div class="icon-context-sep"></div>
+  <div class="icon-context-item danger" onclick="ctxHide()">🗑️ Убрать с рабочего стола</div>
+</div>
 </body>
 </html>
