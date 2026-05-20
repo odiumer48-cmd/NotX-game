@@ -790,6 +790,10 @@
     <div class="icon" style="background:linear-gradient(135deg,#ffd700,#ff8c00);">🏆</div>
     <div class="label">Ачивки</div>
   </div>
+  <div class="desktop-icon" id="icon-notxshop" style="left:220px;top:200px" onclick="openWindow('notxshop')">
+    <div class="icon" style="background:linear-gradient(135deg,#00c853,#64dd17);">🛍️</div>
+    <div class="label">NotX SHOP</div>
+  </div>
 </div>
 
 <!-- Taskbar -->
@@ -816,8 +820,13 @@
   <button class="start-menu-item" onclick="menuOpen('antivirus')"><span class="emoji">🛡️</span>Антивирус</button>
   <button class="start-menu-item" onclick="menuOpen('files')"><span class="emoji">📂</span>Файлы</button>
   <button class="start-menu-item" onclick="menuOpen('achievements')"><span class="emoji">🏆</span>Достижения</button>
+  <button class="start-menu-item" onclick="menuOpen('notxshop')"><span class="emoji">🛍️</span>NotX SHOP</button>
   <button class="start-menu-item" onclick="menuOpen('settings')"><span class="emoji">⚙️</span>Настройки</button>
 
+  <div class="start-menu-section" id="start-menu-apps" style="display:none;">
+    <div style="font-size:11px; color:var(--text-dim); margin-bottom:6px;">🎮 Установленные приложения</div>
+    <div id="start-menu-apps-list"></div>
+  </div>
   <div class="start-menu-section">
     <div class="start-menu-mini">
       <button class="btn btn-secondary" onclick="saveGame(); hideMenu();">💾 Сохранить</button>
@@ -969,6 +978,23 @@
       <h3 style="margin-bottom:10px; color:var(--accent);">🎨 Фон рабочего стола</h3>
       <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Выберите обои для рабочего стола:</p>
       <div class="wallpaper-grid" id="wallpaper-grid"></div>
+
+      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+        <h4 style="margin-bottom:10px; color:var(--info); font-size:13px;">📁 Свои обои</h4>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <label class="btn btn-secondary" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+            📤 Загрузить фото
+            <input type="file" id="custom-wallpaper-input" accept="image/*" style="display:none;" onchange="handleCustomWallpaper(this)">
+          </label>
+          <button class="btn btn-small btn-red" onclick="removeCustomWallpaper()" id="remove-custom-wp-btn" style="display:none;">🗑️ Удалить</button>
+        </div>
+        <div id="custom-wallpaper-preview" style="margin-top:10px; display:none;">
+          <div style="font-size:11px; color:var(--text-dim); margin-bottom:6px;">Предпросмотр:</div>
+          <img id="custom-wp-img" style="max-width:200px; max-height:120px; border-radius:8px; border:2px solid var(--border); object-fit:cover;">
+        </div>
+        <p style="font-size:11px; color:var(--text-dim); margin-top:8px;">💡 Поддерживаются JPG, PNG, GIF, WEBP. Макс. размер рекомендуется до 2 МБ.</p>
+      </div>
+
       <div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--border);">
         <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
           <input type="checkbox" id="set-anim-bg" onchange="toggleAnimBg(this.checked)"> Анимированный фон (слабые ПК — отключайте)
@@ -1044,6 +1070,100 @@
     <button class="window-btn btn-close" onclick="closeWindow('achievements')">×</button>
   </div>
   <div class="window-content" id="achievements-content"></div>
+</div>
+
+<!-- App Store -->
+<div class="window" id="win-notxshop" style="width:560px; height:480px; top:60px; left:200px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-notxshop')">
+    <span class="window-title">🛍️ NotX SHOP</span>
+    <button class="window-btn btn-min" onclick="minWindow('notxshop')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('notxshop')">×</button>
+  </div>
+  <div class="window-content" id="notxshop-content"></div>
+</div>
+
+<!-- Snake Game -->
+<div class="window" id="win-snake" style="width:420px; height:500px; top:60px; left:200px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-snake')">
+    <span class="window-title">🐍 Змейка</span>
+    <button class="window-btn btn-min" onclick="minWindow('snake')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('snake')">×</button>
+  </div>
+  <div class="window-content" id="snake-content" style="display:flex; flex-direction:column; align-items:center; padding:10px;">
+    <canvas id="snake-canvas" width="360" height="360" style="border:2px solid var(--border); border-radius:8px; background:#1a1a1a;"></canvas>
+    <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+      <span id="snake-score" style="font-size:16px; font-weight:bold;">Очки: 0</span>
+      <button class="btn" onclick="startSnake()">▶ Старт</button>
+      <button class="btn btn-secondary" onclick="stopSnake()">⏹ Стоп</button>
+    </div>
+    <div style="margin-top:6px; font-size:11px; color:var(--text-dim);">Управление: стрелки или WASD</div>
+  </div>
+</div>
+
+<!-- Yandex Music -->
+<div class="window" id="win-yandexmusic" style="width:400px; height:460px; top:60px; left:250px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-yandexmusic')">
+    <span class="window-title">🎵 Яндекс Музыка</span>
+    <button class="window-btn btn-min" onclick="minWindow('yandexmusic')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('yandexmusic')">×</button>
+  </div>
+  <div class="window-content" id="yandexmusic-content" style="display:flex; flex-direction:column; align-items:center; padding:14px;">
+    <canvas id="ym-visualizer" width="360" height="120" style="border-radius:8px; background:#1a0a2a; border:1px solid var(--border);"></canvas>
+    <div id="ym-track-name" style="margin-top:12px; font-size:14px; font-weight:bold; text-align:center;">🎵 Выберите трек</div>
+    <div id="ym-track-artist" style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">—</div>
+    <div style="display:flex; gap:8px; margin:10px 0;">
+      <button class="btn btn-small" onclick="ymPrev()">⏮</button>
+      <button class="btn" onclick="ymToggle()" id="ym-play-btn">▶ Играть</button>
+      <button class="btn btn-small" onclick="ymNext()">⏭</button>
+    </div>
+    <div style="width:100%; margin-top:10px;">
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:6px;">Плейлист:</div>
+      <div id="ym-playlist" style="max-height:160px; overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Casino -->
+<div class="window" id="win-casino" style="width:400px; height:440px; top:80px; left:220px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-casino')">
+    <span class="window-title">🎰 NotX Casino</span>
+    <button class="window-btn btn-min" onclick="minWindow('casino')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('casino')">×</button>
+  </div>
+  <div class="window-content" id="casino-content" style="display:flex; flex-direction:column; align-items:center; padding:14px;">
+    <div style="font-size:48px; margin:10px 0;">🎰</div>
+    <div id="casino-wheel" style="width:200px; height:200px; border-radius:50%; background:conic-gradient(var(--danger) 0deg 60deg, var(--warning) 60deg 120deg, var(--success) 120deg 180deg, var(--info) 180deg 240deg, var(--accent) 240deg 300deg, var(--danger) 300deg 360deg); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold; color:white; text-shadow:0 2px 4px rgba(0,0,0,0.5); transition:transform 2s cubic-bezier(0.25,0.1,0.25,1); border:4px solid var(--border);">?</div>
+    <div style="margin-top:14px; font-size:14px;">💰 Баланс: <b id="casino-balance">$0</b></div>
+    <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap; justify-content:center;">
+      <button class="btn btn-small" onclick="setCasinoBet(50)">$50</button>
+      <button class="btn btn-small" onclick="setCasinoBet(100)">$100</button>
+      <button class="btn btn-small" onclick="setCasinoBet(250)">$250</button>
+      <button class="btn btn-small" onclick="setCasinoBet(500)">$500</button>
+    </div>
+    <div style="margin-top:8px; font-size:13px;">Ставка: <b id="casino-bet" style="color:var(--accent);">$50</b></div>
+    <button class="btn" style="margin-top:12px;" onclick="spinCasino()">🎰 Крутить!</button>
+    <div id="casino-result" style="margin-top:10px; font-size:13px; min-height:20px; text-align:center;"></div>
+    <div style="margin-top:8px; font-size:11px; color:var(--text-dim); text-align:center;">🟢 ×2 | 🔴 ×0 | 🟡 ×1.5 | 🔵 ×1.2 | 🟠 ×0.5</div>
+  </div>
+</div>
+
+<!-- Tetris -->
+<div class="window" id="win-tetris" style="width:380px; height:520px; top:50px; left:200px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-tetris')">
+    <span class="window-title">🧱 Тетрис</span>
+    <button class="window-btn btn-min" onclick="minWindow('tetris')">−</button>
+    <button class="window-btn btn-close" onclick="closeWindow('tetris')">×</button>
+  </div>
+  <div class="window-content" id="tetris-content" style="display:flex; flex-direction:column; align-items:center; padding:10px;">
+    <canvas id="tetris-canvas" width="240" height="400" style="border:2px solid var(--border); border-radius:8px; background:#1a1a1a;"></canvas>
+    <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+      <span id="tetris-score" style="font-size:16px; font-weight:bold;">Очки: 0</span>
+      <span id="tetris-level" style="font-size:14px; color:var(--info);">Уровень: 1</span>
+      <button class="btn" onclick="startTetris()">▶ Старт</button>
+      <button class="btn btn-secondary" onclick="stopTetris()">⏹ Стоп</button>
+    </div>
+    <div style="margin-top:6px; font-size:11px; color:var(--text-dim);">← → движение | ↑ поворот | ↓ ускорение</div>
+  </div>
 </div>
 
 </div><!-- /desktop-layer -->
@@ -1137,7 +1257,10 @@ function setSoundTheme(theme) {
 }
 
 function setWallpaper(idx) {
-  if (state) state.wallpaper = idx;
+  if (state) {
+    state.wallpaper = idx;
+    state.customWallpaper = null; // clear custom when selecting preset
+  }
   const wp = WALLPAPERS[idx];
   if (wp) {
     stopBgAnim();
@@ -1147,6 +1270,80 @@ function setWallpaper(idx) {
     if (wp.anim && state && state.animBg !== false) startBgAnim(wp.anim);
   }
   renderWallpapers();
+  updateCustomWallpaperUI();
+}
+
+function handleCustomWallpaper(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    log('❌ Пожалуйста, выберите изображение.', 'danger');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    log('⚠️ Файл слишком большой (>5 МБ). Может тормозить.', 'warning');
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    if (state) {
+      state.customWallpaper = dataUrl;
+      state.wallpaper = -1; // mark as custom
+    }
+    stopBgAnim();
+    document.body.style.background = 'url(' + dataUrl + ')';
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    log('🖼️ Обои загружены!', 'success');
+    renderWallpapers();
+    updateCustomWallpaperUI();
+    pushNotification('Персонализация', 'Свои обои установлены');
+  };
+  reader.onerror = function() {
+    log('❌ Ошибка чтения файла.', 'danger');
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function removeCustomWallpaper() {
+  if (state) {
+    state.customWallpaper = null;
+    state.wallpaper = 0;
+  }
+  setWallpaper(0);
+  log('🗑️ Свои обои удалены. Установлен стандартный фон.', 'info');
+  updateCustomWallpaperUI();
+}
+
+function updateCustomWallpaperUI() {
+  const previewWrap = document.getElementById('custom-wallpaper-preview');
+  const img = document.getElementById('custom-wp-img');
+  const removeBtn = document.getElementById('remove-custom-wp-btn');
+  if (!previewWrap || !img || !removeBtn) return;
+
+  if (state && state.customWallpaper) {
+    img.src = state.customWallpaper;
+    previewWrap.style.display = 'block';
+    removeBtn.style.display = 'inline-flex';
+  } else {
+    previewWrap.style.display = 'none';
+    removeBtn.style.display = 'none';
+  }
+}
+
+function applyCustomWallpaper() {
+  if (state && state.customWallpaper) {
+    stopBgAnim();
+    document.body.style.background = 'url(' + state.customWallpaper + ')';
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
+    document.body.style.backgroundRepeat = 'no-repeat';
+  }
 }
 
 function renderWallpapers() {
@@ -1155,13 +1352,24 @@ function renderWallpapers() {
   grid.innerHTML = '';
   WALLPAPERS.forEach((wp, i) => {
     const tile = document.createElement('div');
-    tile.className = 'wp-tile' + ((state && state.wallpaper === i) ? ' selected' : '');
+    tile.className = 'wp-tile' + ((state && state.wallpaper === i && !state.customWallpaper) ? ' selected' : '');
     tile.style.background = wp.bg;
     var badge = wp.anim ? '<span style="position:absolute;top:4px;right:4px;background:rgba(233,84,32,0.9);color:white;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:bold;">✦ ANIM</span>' : '';
     tile.innerHTML = badge + '<div class="wp-name">' + wp.name + '</div>';
     tile.onclick = () => setWallpaper(i);
     grid.appendChild(tile);
   });
+  // Add custom wallpaper tile if exists
+  if (state && state.customWallpaper) {
+    const customTile = document.createElement('div');
+    customTile.className = 'wp-tile selected';
+    customTile.style.background = 'url(' + state.customWallpaper + ')';
+    customTile.style.backgroundSize = 'cover';
+    customTile.style.backgroundPosition = 'center';
+    customTile.innerHTML = '<span style="position:absolute;top:4px;right:4px;background:rgba(233,84,32,0.9);color:white;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:bold;">📁 CUSTOM</span><div class="wp-name">Мои обои</div>';
+    customTile.onclick = () => applyCustomWallpaper();
+    grid.appendChild(customTile);
+  }
 }
 
 let animBgInterval = null;
@@ -1511,7 +1719,7 @@ function switchSettingsTab(tab) {
   document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   document.getElementById('section-' + tab).classList.add('active');
-  if (tab === 'personal') renderWallpapers();
+  if (tab === 'personal') { renderWallpapers(); updateCustomWallpaperUI(); }
   if (tab === 'sound') {
     const slider = document.getElementById('volume-slider');
     const val = document.getElementById('volume-value');
@@ -1680,11 +1888,17 @@ function createState() {
     eventTimer: 0,
     exploitLogs: [],
     lockout: { active: false, endTime: 0, count: 0 },
-    wins: { terminal:false, browser:false, mail:false, projects:false, store:false, darknet:false, antivirus:false, settings:false },
+    wins: { terminal:false, browser:false, mail:false, projects:false, store:false, darknet:false, antivirus:false, settings:false, notxshop:false, snake:false, yandexmusic:false, casino:false, tetris:false },
     diff: selectedDiff,
     antivirusStock: 0,
     antivirusSold: 0,
-    totalEarned: 0
+    totalEarned: 0,
+    installedApps: [],
+    activeTask2: null,
+    bestSnake: 0,
+    bestTetris: 0,
+    casinoWon: 0,
+    customWallpaper: null
   };
 }
 
@@ -1730,6 +1944,13 @@ function openWindow(name) {
     return;
   }
   if (name === 'darknet' && isHackingLocked()) return;
+  if (name === 'notxshop') { renderNotxShop(); }
+  if (name === 'snake' && !hasApp('snake')) { log('Сначала купите Змейку в NotX SHOP!', 'warning'); return; }
+  if (name === 'yandexmusic' && !hasApp('yandex_music')) { log('Сначала купите Яндекс Музыку в NotX SHOP!', 'warning'); return; }
+  if (name === 'casino' && !hasApp('casino')) { log('Сначала купите NotX Casino в NotX SHOP!', 'warning'); return; }
+  if (name === 'tetris' && !hasApp('tetris')) { log('Сначала купите Тетрис в NotX SHOP!', 'warning'); return; }
+  if (name === 'yandexmusic') { setTimeout(ymRenderPlaylist, 100); }
+  if (name === 'casino') { setTimeout(() => { const el = document.getElementById('casino-balance'); if(el) el.textContent = '$' + (state ? state.money : 0); }, 100); }
   const win = document.getElementById('win-' + name);
   if (!win) return;
   win.classList.add('active', 'opening', 'focused');
@@ -1829,6 +2050,7 @@ function updateTaskbar() {
     {id:'antivirus', icon:'🛡️', label:'Антивирус'},
     {id:'files', icon:'📂', label:'Файлы'},
     {id:'achievements', icon:'🏆', label:'Ачивки'},
+    {id:'notxshop', icon:'🛍️', label:'App Store'},
     {id:'settings', icon:'⚙️', label:'Настройки'}
   ];
   apps.forEach(a => {
@@ -1969,9 +2191,10 @@ function updateHint() {
   const t = state.activeTask;
   if (t.progress >= t.code.length) { termHint.classList.remove('show'); return; }
   const before = t.code.substring(0, t.progress);
-  const ch = t.code[t.progress];
-  const after = t.code.substring(t.progress + 1);
-  termHint.innerHTML = `Подсказка: <code style="background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;">${before}<span style="background:var(--warning); color:#000; padding:0 3px; border-radius:2px;">${ch}</span>${after}</code>`;
+  const ahead = getCopilotBonus();
+  const highlight = t.code.substring(t.progress, t.progress + ahead);
+  const after = t.code.substring(t.progress + ahead);
+  termHint.innerHTML = `Подсказка: <code style="background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;">${before}<span style="background:var(--warning); color:#000; padding:0 3px; border-radius:2px;">${highlight}</span>${after}</code>`;
   termHint.classList.add('show');
 }
 
@@ -1983,17 +2206,18 @@ function updateHackHint() {
   const t = state.hackTask;
   if (t.progress >= t.code.length) { termHint.classList.remove('show'); return; }
   const before = t.code.substring(0, t.progress);
-  const ch = t.code[t.progress];
-  const after = t.code.substring(t.progress + 1);
-  termHint.innerHTML = `Эксплойт: <code style="background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;">${before}<span style="background:var(--warning); color:#000; padding:0 3px; border-radius:2px;">${ch}</span>${after}</code>`;
+  const ahead = getCopilotBonus();
+  const highlight = t.code.substring(t.progress, t.progress + ahead);
+  const after = t.code.substring(t.progress + ahead);
+  termHint.innerHTML = `Эксплойт: <code style="background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:4px;">${before}<span style="background:var(--warning); color:#000; padding:0 3px; border-radius:2px;">${highlight}</span>${after}</code>`;
   termHint.classList.add('show');
 }
 
 function generateHackCode(hostName) {
   const base = hostName.toLowerCase().replace(/[^a-z0-9]/g, '_');
   let code = `exploit_${base}_inject_payload`;
-  const mult = diffCfg.codeMult;
-  const targetLen = Math.max(20, Math.floor(code.length * mult * 0.8));
+  const mult = diffCfg.codeMult * (hasApp('metasploit') ? 0.7 : 1.0);
+  const targetLen = Math.max(12, Math.floor(code.length * mult * 0.8));
   while (code.length < targetLen) {
     code += '_' + Math.random().toString(36).substring(2, 5);
   }
@@ -2057,6 +2281,12 @@ function finishHackTask(success) {
 }
 
 function checkTraceComplaint(host) {
+  // Firewall Pro reduces complaint chance
+  if (hasApp('firewall') && Math.random() < 0.4) {
+    host.traceLevel = Math.max(0, host.traceLevel - 20);
+    log(`🧱 Firewall Pro заблокировал жалобу от ${host.name}!`, 'success');
+    return;
+  }
   if (host.traceLevel >= 100) {
     host.traceLevel = 100;
     state.lockout.count = (state.lockout.count || 0) + 1;
@@ -2219,7 +2449,7 @@ function cmdHelp() {
   scan              — показать сеть
   buy <item>        — купить (hw, sw, net, def)
   invest <name> <$$> — инвестировать
-  store/mail/projects/darknet/antivirus/browser — открыть окно
+  store/mail/projects/darknet/antivirus/browser/notxshop — открыть окно
   save/load         — сохранить/загрузить
   clear/exit`, 'info');
 }
@@ -2260,7 +2490,8 @@ function generateCode(type, name, lang) {
 }
 
 function cmdDevelop(argsStr) {
-  if (state.activeTask) { log('Уже есть активный проект. Используйте cancel.', 'warning'); return; }
+  const activeCount = (state.activeTask ? 1 : 0) + (state.activeTask2 ? 1 : 0);
+  if (activeCount >= getMaxActiveProjects()) { log(`Уже ${activeCount}/${getMaxActiveProjects()} активных проектов. Используйте cancel.`, 'warning'); return; }
   const type = argsStr.split(/\s+/)[0];
   if (!['game','virus','antivirus','web'].includes(type)) { log('Типы: game, virus, antivirus, web', 'warning'); return; }
   let name = null, lang = state.lang;
@@ -2308,16 +2539,22 @@ function cmdUpload(id) {
   state.reputation = Math.min(100, state.reputation + (proj.type==='virus'?-3:8));
   log(`📦 "${proj.name}" сдан! +$${proj.reward}`, 'success');
   if (proj.fbiRisk > 5) log(`🚔 Внимание FBI +${proj.fbiRisk}%`, 'danger');
-  state.activeTask = null;
+  if (state.activeTask && state.activeTask.id === proj.id) state.activeTask = null;
+  if (state.activeTask2 && state.activeTask2.id === proj.id) state.activeTask2 = null;
   updateHint();
   renderProjects();
   updateTopBar();
 }
 
 function cmdCancel() {
-  if (!state.activeTask) { log('Нет активного проекта.', 'warning'); return; }
-  state.activeTask = null;
-  log('Проект отменён.', 'warning');
+  if (!state.activeTask && !state.activeTask2) { log('Нет активного проекта.', 'warning'); return; }
+  if (state.activeTask) {
+    state.activeTask = null;
+    log('Проект 1 отменён.', 'warning');
+  } else if (state.activeTask2) {
+    state.activeTask2 = null;
+    log('Проект 2 отменён.', 'warning');
+  }
   updateHint();
 }
 
@@ -2435,11 +2672,19 @@ function cmdNmap(ip) {
   const h = state.hosts.find(x => x.ip === ip);
   if (!h) { log('Хост не найден.', 'warning'); return; }
   h.scanned = true;
-  h.traceLevel += Math.floor(Math.random() * 6) + 2;
+  const traceAdd = Math.floor((Math.random() * 6) + 2) * getTraceMult();
+  h.traceLevel += traceAdd;
   log(`🔍 ${ip} — ${h.name}`, 'info');
   log(`   Защита: ${h.security}% | Порты: ${h.ports.map(p=>p+'('+PORT_SERVICES[p]+')').join(', ')}`);
-  log(`   💡 Совет: порт ${h.vulnPort} (${PORT_SERVICES[h.vulnPort]}) выглядит уязвимым`);
-  state.fbi = Math.min(100, state.fbi + 1.5);
+  if (hasApp('burp')) {
+    log(`   🕵️ Burp Suite: уязвимый порт ${h.vulnPort} (${PORT_SERVICES[h.vulnPort]}) обнаружен мгновенно!`);
+  } else {
+    log(`   💡 Совет: порт ${h.vulnPort} (${PORT_SERVICES[h.vulnPort]}) выглядит уязвимым`);
+  }
+  if (hasApp('wireshark')) {
+    log(`   📡 Wireshark: уровень слежки ${h.traceLevel}%`);
+  }
+  state.fbi = Math.min(100, state.fbi + 1.5 * getFbiMult());
   checkTraceComplaint(h);
   renderDarkNet();
 }
@@ -2454,7 +2699,7 @@ function cmdExploit(ip) {
   if (!h) { log('Хост не найден.', 'warning'); return; }
   if (h.owned) { log('Уже взломан.', 'warning'); return; }
 
-  let chance = 30 + state.sw*8 + state.net*4 - h.security;
+  let chance = 30 + state.sw*8 + state.net*4 - h.security + getHackBonus();
   if (targetPort && targetPort === h.vulnPort) {
     chance += 25;
     log(`🎯 Целевой порт ${targetPort} — уязвимость подтверждена!`, 'info');
@@ -2464,6 +2709,10 @@ function cmdExploit(ip) {
   }
   if (!h.scanned) chance -= 15;
   chance = Math.max(5, Math.min(95, chance));
+
+  if (hasApp('sysmon')) {
+    log(`📊 System Monitor: точный шанс взлома — ${Math.floor(chance)}%`);
+  }
 
   const code = generateHackCode(h.name);
   state.hackTask = {
@@ -2596,13 +2845,14 @@ function cmdBuy(item) {
   const prices = { hw:200, sw:300, net:250, def:150 };
   const names = { hw:'железо', sw:'софт', net:'сеть', def:'защиту' };
   if (!prices[item]) { log('Товары: hw, sw, net, def', 'info'); return; }
-  if (state.money < prices[item]) { log('Недостаточно средств.', 'warning'); return; }
-  state.money -= prices[item];
+  const price = Math.floor(prices[item] * getStoreDiscount());
+  if (state.money < price) { log('Недостаточно средств.', 'warning'); return; }
+  state.money -= price;
   if (item==='hw') state.hw++;
   if (item==='sw') state.sw++;
   if (item==='net') state.net++;
   if (item==='def') { state.reputation = Math.min(100, state.reputation + 5); state.fbi = Math.max(0, state.fbi - 5); }
-  log(`⬆️ Куплено ${names[item]}!`, 'success');
+  log(`⬆️ Куплено ${names[item]}! ${hasApp('dark_market') ? '(со скидкой 20%)' : ''}`, 'success');
   renderStore();
   updateTopBar();
 }
@@ -2798,11 +3048,13 @@ function tick() {
   state.gameTime = new Date(state.gameTime.getTime() + 120000);
   updateTopBar();
 
-  // Auto-progress active project
+  // Auto-progress active projects with editor bonus
+  const editorMult = getEditorBonus();
   state.projects.forEach(p => {
     if (p.completed || p.failed) return;
-    if (!state.activeTask || state.activeTask.id !== p.id) {
-      p.progress = Math.min(p.code.length, p.progress + diffCfg.autoProgress * state.hw);
+    const isActive = (state.activeTask && state.activeTask.id === p.id) || (state.activeTask2 && state.activeTask2.id === p.id);
+    if (!isActive) {
+      p.progress = Math.min(p.code.length, p.progress + diffCfg.autoProgress * state.hw * editorMult);
     }
     if (p.progress >= p.code.length && !p.completed) {
       p.completed = true;
@@ -2824,6 +3076,25 @@ function tick() {
     const income = state.antivirusStock * 5;
     state.money += income;
     state.totalEarned += income;
+  }
+  // Passive income from installed apps
+  if (hasApp('cryptominer')) {
+    state.money += 8;
+    state.totalEarned += 8;
+  }
+  if (hasApp('adbot')) {
+    state.money += 18;
+    state.totalEarned += 18;
+    if (Math.random() < 0.05) state.fbi = Math.min(100, state.fbi + 1);
+  }
+  // Freelance bot auto-accept
+  if (hasApp('freelance_bot') && state.eventTimer % 15 === 0) {
+    const unaccepted = state.messages.filter(m => !m.accepted);
+    if (unaccepted.length > 0) {
+      const msg = unaccepted[0];
+      msg.accepted = true;
+      log('📬 Freelance Bot принял заказ: ' + msg.subject, 'info');
+    }
   }
 
   // FBI decay
@@ -2905,7 +3176,9 @@ function serializeState() {
       exploitLogs: state.exploitLogs,
       lockout: state.lockout,
       activeTaskId: state.activeTask ? state.activeTask.id : null,
-      hackTaskId: state.hackTask ? state.hackTask.hostId : null
+      activeTask2Id: state.activeTask2 ? state.activeTask2.id : null,
+      hackTaskId: state.hackTask ? state.hackTask.hostId : null,
+      customWallpaper: state.customWallpaper || null
     };
     return JSON.stringify(saveObj, function(k, v) {
       if ((k === 'deadline' || k === 'date' || k === 'gameTime') && v && typeof v === 'object' && typeof v.toISOString === 'function') return v.toISOString();
@@ -3054,6 +3327,17 @@ function migrateSave(data) {
     if (!data.fs) data.fs = createDefaultFS();
     if (!data.wallpaper && data.wallpaper !== 0) data.wallpaper = 0;
     if (typeof data.animBg === 'undefined') data.animBg = true;
+    if (!data.installedApps) data.installedApps = [];
+    if (typeof data.activeTask2 === 'undefined') data.activeTask2 = null;
+    if (!data.wins.notxshop && data.wins.notxshop !== false) data.wins.notxshop = false;
+    if (typeof data.wins.snake === 'undefined') data.wins.snake = false;
+    if (typeof data.wins.yandexmusic === 'undefined') data.wins.yandexmusic = false;
+    if (typeof data.wins.casino === 'undefined') data.wins.casino = false;
+    if (typeof data.wins.tetris === 'undefined') data.wins.tetris = false;
+    if (typeof data.bestSnake === 'undefined') data.bestSnake = 0;
+    if (typeof data.bestTetris === 'undefined') data.bestTetris = 0;
+    if (typeof data.casinoWon === 'undefined') data.casinoWon = 0;
+    if (typeof data.customWallpaper === 'undefined') data.customWallpaper = null;
     data.saveVersion = 3;
   }
   return data;
@@ -3070,10 +3354,16 @@ function migrateAndLoad(data) {
     if (data.activeTaskId) {
       active = data.projects.find(function(pr) { return pr.id === data.activeTaskId; }) || null;
     }
+    var active2 = null;
+    if (data.activeTask2Id) {
+      active2 = data.projects.find(function(pr) { return pr.id === data.activeTask2Id; }) || null;
+    }
     delete data.activeTaskId;
+    delete data.activeTask2Id;
     delete data.hackTaskId;
     Object.assign(state, data);
     state.activeTask = active;
+    state.activeTask2 = active2;
     selectedDiff = state.diff || 'normal';
     diffCfg = DIFFICULTY[selectedDiff] || DIFFICULTY.normal;
     var diffEl = document.getElementById('top-diff');
@@ -3083,7 +3373,7 @@ function migrateAndLoad(data) {
     if (soundCb) soundCb.checked = !!state.sound;
     var animCb = document.getElementById('set-anim-bg');
     if (animCb) animCb.checked = state.animBg !== false;
-    updateTopBar(); renderMail(); renderProjects(); renderStore(); renderDarkNet(); renderAntivirus(); renderFiles(); renderAchievements(); updateTaskbar();
+    updateTopBar(); renderMail(); renderProjects(); renderStore(); renderDarkNet(); renderAntivirus(); renderFiles(); renderAchievements(); renderNotxShop(); updateStartMenuApps(); syncDesktopIcons(); updateTaskbar(); updateCustomWallpaperUI();
     if (state.wins) {
       Object.entries(state.wins).forEach(function(entry) {
         var name = entry[0], open = entry[1];
@@ -3290,7 +3580,13 @@ function createAchievements() {
     bankrupt:      { id:'bankrupt',      title:'Банкрот', desc:'Деньги упали ниже $0', icon:'📉', unlocked:false },
     collector:     { id:'collector',     title:'Коллекционер', desc:'Написать 5 файлов в Файлах', icon:'📂', unlocked:false },
     hacker_pro:    { id:'hacker_pro',    title:'Hackerman', desc:'Взломать 5 хостов', icon:'🕶️', unlocked:false },
-    reputation:    { id:'reputation',    title:'Легенда', desc:'Достичь 100 репутации', icon:'⭐', unlocked:false }
+    reputation:    { id:'reputation',    title:'Легенда', desc:'Достичь 100 репутации', icon:'⭐', unlocked:false },
+    notx_collector: { id:'notx_collector', title:'Коллекционер ПО', desc:'Установить 5 приложений из App Store', icon:'🛍️', unlocked:false },
+    power_user:    { id:'power_user',    title:'Power User', desc:'Купить IntelliJ Ultimate', icon:'☕', unlocked:false },
+    gamer:         { id:'gamer',         title:'Геймер', desc:'Купить 3 игры в NotX SHOP', icon:'🎮', unlocked:false },
+    high_roller:   { id:'high_roller',   title:'High Roller', desc:'Выиграть $500+ в казино за один спин', icon:'🎰', unlocked:false },
+    snake_master:  { id:'snake_master',  title:'Змей Уроборос', desc:'Набрать 100+ очков в Змейке', icon:'🐍', unlocked:false },
+    tetris_pro:    { id:'tetris_pro',    title:'Тетрис-про', desc:'Достичь 5 уровня в Тетрисе', icon:'🧱', unlocked:false }
   };
 }
 
@@ -3344,6 +3640,414 @@ function checkAchievements() {
   if (fileCount >= 5 && !a.collector.unlocked) unlockAchievement('collector');
   if (ownedHosts >= 5 && !a.hacker_pro.unlocked) unlockAchievement('hacker_pro');
   if (state.reputation >= 100 && !a.reputation.unlocked) unlockAchievement('reputation');
+  if (state.installedApps && state.installedApps.length >= 5 && !a.notx_collector.unlocked) unlockAchievement('notx_collector');
+  if (hasApp('intellij') && !a.power_user.unlocked) unlockAchievement('power_user');
+  const funAppsCount = ['snake','yandex_music','casino','tetris'].filter(id => hasApp(id)).length;
+  if (funAppsCount >= 3 && !a.gamer.unlocked) unlockAchievement('gamer');
+}
+
+
+// ===================== APP STORE =====================
+const NOTX_SHOP = [
+  {
+    id: 'vim_pro',
+    name: 'Vim Pro',
+    emoji: '📟',
+    category: 'dev',
+    price: 80,
+    desc: 'Авто-прогресс ×1.2. Терминал с цветной подсветкой.',
+    installed: false
+  },
+  {
+    id: 'vscode',
+    name: 'VS Code',
+    emoji: '💻',
+    category: 'dev',
+    price: 150,
+    desc: 'Авто-прогресс ×1.5. Подсказки показывают 2 символа вперёд.',
+    installed: false
+  },
+  {
+    id: 'intellij',
+    name: 'IntelliJ Ultimate',
+    emoji: '☕',
+    category: 'dev',
+    price: 300,
+    desc: 'Авто-прогресс ×2.0. Можно иметь 2 активных проекта одновременно.',
+    installed: false
+  },
+  {
+    id: 'copilot',
+    name: 'GitHub Copilot',
+    emoji: '🤖',
+    category: 'dev',
+    price: 100,
+    desc: 'Подсказка показывает 3 следующих символа вместо 1.',
+    installed: false
+  },
+  {
+    id: 'nmap_pro',
+    name: 'Nmap Pro',
+    emoji: '🔍',
+    category: 'hack',
+    price: 80,
+    desc: 'Сканирование не даёт слежку. Показывает все порты сразу.',
+    installed: false
+  },
+  {
+    id: 'burp',
+    name: 'Burp Suite',
+    emoji: '🕵️',
+    category: 'hack',
+    price: 200,
+    desc: 'Видно уязвимый порт без скана. +15% к шансу взлома.',
+    installed: false
+  },
+  {
+    id: 'metasploit',
+    name: 'Metasploit',
+    emoji: '⚡',
+    category: 'hack',
+    price: 350,
+    desc: '+25% шанс взлома. Длина эксплойт-кода −30%.',
+    installed: false
+  },
+  {
+    id: 'wireshark',
+    name: 'Wireshark',
+    emoji: '📡',
+    category: 'hack',
+    price: 120,
+    desc: 'Видишь уровень слежки хоста до начала взлома.',
+    installed: false
+  },
+  {
+    id: 'tor',
+    name: 'Tor Browser',
+    emoji: '🧅',
+    category: 'sec',
+    price: 120,
+    desc: 'Рост FBI при взломе и скане в 2 раза медленнее.',
+    installed: false
+  },
+  {
+    id: 'firewall',
+    name: 'Firewall Pro',
+    emoji: '🧱',
+    category: 'sec',
+    price: 180,
+    desc: 'Хосты жалуются в FBI реже (−40% шанс жалобы).',
+    installed: false
+  },
+  {
+    id: 'vpn',
+    name: 'VPN Unlimited',
+    emoji: '🔐',
+    category: 'sec',
+    price: 100,
+    desc: 'Сканирование и взлом не повышают traceLevel.',
+    installed: false
+  },
+  {
+    id: 'cryptominer',
+    name: 'CryptoMiner',
+    emoji: '⛏️',
+    category: 'passive',
+    price: 250,
+    desc: 'Пассивный доход +$8/час.',
+    installed: false
+  },
+  {
+    id: 'adbot',
+    name: 'AdBot Network',
+    emoji: '🤖',
+    category: 'passive',
+    price: 400,
+    desc: 'Пассивный доход +$18/час. +5% риск FBI.',
+    installed: false
+  },
+  {
+    id: 'freelance_bot',
+    name: 'Freelance Bot',
+    emoji: '📬',
+    category: 'passive',
+    price: 200,
+    desc: 'Авто-принимает заказы из почты раз в 15 мин.',
+    installed: false
+  },
+  {
+    id: 'sysmon',
+    name: 'System Monitor',
+    emoji: '📊',
+    category: 'sys',
+    price: 50,
+    desc: 'Показывает точный шанс взлома до начала в терминале.',
+    installed: false
+  },
+  {
+    id: 'dark_market',
+    name: 'Dark Market',
+    emoji: '🌑',
+    category: 'sys',
+    price: 50,
+    desc: 'Скидка 20% на всё в обычном магазине улучшений.',
+    installed: false
+  },
+  {
+    id: 'snake',
+    name: 'Змейка',
+    emoji: '🐍',
+    category: 'fun',
+    price: 50,
+    desc: 'Классическая игра Змейка. Собирай яблоки, расти, не врезайся!',
+    installed: false
+  },
+  {
+    id: 'yandex_music',
+    name: 'Яндекс Музыка',
+    emoji: '🎵',
+    category: 'fun',
+    price: 80,
+    desc: 'Музыкальный плеер с 8-бит треками и визуализатором.',
+    installed: false
+  },
+  {
+    id: 'casino',
+    name: 'NotX Casino',
+    emoji: '🎰',
+    category: 'fun',
+    price: 100,
+    desc: 'Рулетка на деньги. Ставь $50-$500 и крути! Шанс ×2 или ×0.',
+    installed: false
+  },
+  {
+    id: 'tetris',
+    name: 'Тетрис',
+    emoji: '🧱',
+    category: 'fun',
+    price: 60,
+    desc: 'Классический Тетрис. Управление стрелками.',
+    installed: false
+  }
+];
+
+function hasApp(id) {
+  return state && state.installedApps && state.installedApps.includes(id);
+}
+
+function getEditorBonus() {
+  if (hasApp('intellij')) return 2.0;
+  if (hasApp('vscode')) return 1.5;
+  if (hasApp('vim_pro')) return 1.2;
+  return 1.0;
+}
+
+function getCopilotBonus() {
+  if (hasApp('copilot')) return 3;
+  if (hasApp('vscode')) return 2;
+  return 1;
+}
+
+function getHackBonus() {
+  let bonus = 0;
+  if (hasApp('burp')) bonus += 15;
+  if (hasApp('metasploit')) bonus += 25;
+  return bonus;
+}
+
+function getFbiMult() {
+  if (hasApp('tor')) return 0.5;
+  return 1.0;
+}
+
+function getTraceMult() {
+  if (hasApp('vpn')) return 0;
+  if (hasApp('nmap_pro')) return 0.5;
+  return 1.0;
+}
+
+function getStoreDiscount() {
+  if (hasApp('dark_market')) return 0.8;
+  return 1.0;
+}
+
+function getMaxActiveProjects() {
+  if (hasApp('intellij')) return 2;
+  return 1;
+}
+
+function buyNotxApp(id) {
+  const app = NOTX_SHOP.find(a => a.id === id);
+  if (!app) return;
+  if (hasApp(id)) { log('Приложение уже установлено.', 'warning'); return; }
+  const price = Math.floor(app.price * getStoreDiscount());
+  if (state.money < price) { log('Недостаточно средств. Нужно $' + price, 'warning'); return; }
+  state.money -= price;
+  state.installedApps.push(id);
+  log('✅ Установлено: ' + app.name + ' ($' + price + ')', 'success');
+  renderNotxShop();
+  updateTopBar();
+  updateStartMenuApps();
+  // Special install effects
+  if (id === 'cryptominer') log('⛏️ CryptoMiner запущен. Доход +$8/час.', 'info');
+  if (id === 'adbot') log('🤖 AdBot Network активирован. Доход +$18/час.', 'info');
+  if (id === 'freelance_bot') log('📬 Freelance Bot ожидает заказы...', 'info');
+  if (id === 'snake') { log('🐍 Змейка установлена! Иконка добавлена на рабочий стол.', 'success'); createDesktopIcon('snake', '🐍', 'Змейка', 'linear-gradient(135deg,#4caf50,#2e7d32)', 'snake'); }
+  if (id === 'yandex_music') { log('🎵 Яндекс Музыка установлена! Иконка добавлена на рабочий стол.', 'success'); createDesktopIcon('yandexmusic', '🎵', 'Яндекс Музыка', 'linear-gradient(135deg,#ff0000,#cc0000)', 'yandexmusic'); }
+  if (id === 'casino') { log('🎰 NotX Casino установлено! Удачи!', 'success'); createDesktopIcon('casino', '🎰', 'NotX Casino', 'linear-gradient(135deg,#ffd700,#ff8c00)', 'casino'); }
+  if (id === 'tetris') { log('🧱 Тетрис установлен! Иконка добавлена на рабочий стол.', 'success'); createDesktopIcon('tetris', '🧱', 'Тетрис', 'linear-gradient(135deg,#9c27b0,#673ab7)', 'tetris'); }
+}
+
+function updateStartMenuApps() {
+  const section = document.getElementById('start-menu-apps');
+  const list = document.getElementById('start-menu-apps-list');
+  if (!section || !list) return;
+  const funApps = [
+    {id:'snake', icon:'🐍', label:'Змейка', req:'snake'},
+    {id:'yandexmusic', icon:'🎵', label:'Яндекс Музыка', req:'yandex_music'},
+    {id:'casino', icon:'🎰', label:'NotX Casino', req:'casino'},
+    {id:'tetris', icon:'🧱', label:'Тетрис', req:'tetris'}
+  ];
+  const installed = funApps.filter(a => hasApp(a.req));
+  if (installed.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = '';
+  installed.forEach(a => {
+    const btn = document.createElement('button');
+    btn.className = 'start-menu-item';
+    btn.innerHTML = '<span class="emoji">' + a.icon + '</span>' + a.label;
+    btn.onclick = function() { menuOpen(a.id); };
+    list.appendChild(btn);
+  });
+}
+
+function createDesktopIcon(id, icon, label, bg, winName) {
+  const desktop = document.getElementById('desktop');
+  if (!desktop) return;
+  if (document.getElementById('icon-' + id)) return; // already exists
+
+  const el = document.createElement('div');
+  el.className = 'desktop-icon';
+  el.id = 'icon-' + id;
+  el.style.left = '20px';
+  el.style.top = '380px';
+  el.innerHTML = '<div class="icon" style="background:' + bg + '">' + icon + '</div><div class="label">' + label + '</div>';
+  el.onclick = function(e) {
+    if (window._iconDragging) return;
+    openWindow(winName);
+  };
+
+  // Add drag handlers (same as setup() in icon drag system)
+  el.addEventListener('mousedown', function(e) {
+    // Reuse the global onDown from icon drag system
+    // But that onDown uses closure variables. Let's dispatch a custom approach.
+    // Actually, the icon drag system uses document-level listeners and checks e.currentTarget.
+    // We need to add the same pattern.
+    window._iconOnDown && window._iconOnDown(e, el);
+  });
+  el.addEventListener('touchstart', function(e) {
+    window._iconOnDown && window._iconOnDown(e, el);
+  }, { passive: false });
+  el.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    window._iconShowContext && window._iconShowContext(el, e.clientX, e.clientY);
+  });
+
+  desktop.appendChild(el);
+
+  // Position it in an empty spot
+  positionNewIcon(el);
+
+  // Save position
+  if (typeof savePositions === 'function') savePositions();
+}
+
+function positionNewIcon(el) {
+  const desktop = document.getElementById('desktop');
+  const icons = desktop.querySelectorAll('.desktop-icon');
+  const gridSize = 12;
+  const iconW = 80;
+  const iconH = 80;
+  const deskW = desktop.clientWidth;
+  const deskH = desktop.clientHeight;
+
+  // Try to find empty spot starting from top-left
+  for (let y = 20; y < deskH - iconH; y += 90) {
+    for (let x = 20; x < deskW - iconW; x += 100) {
+      let overlap = false;
+      for (const other of icons) {
+        if (other === el) continue;
+        const ox = parseFloat(other.style.left) || 0;
+        const oy = parseFloat(other.style.top) || 0;
+        if (Math.abs(ox - x) < iconW && Math.abs(oy - y) < iconH) {
+          overlap = true;
+          break;
+        }
+      }
+      if (!overlap) {
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        return;
+      }
+    }
+  }
+  // Fallback
+  el.style.left = '20px';
+  el.style.top = '380px';
+}
+
+function removeDesktopIcon(id) {
+  const el = document.getElementById('icon-' + id);
+  if (el) el.remove();
+}
+
+function syncDesktopIcons() {
+  // Create icons for installed fun apps
+  if (hasApp('snake')) createDesktopIcon('snake', '🐍', 'Змейка', 'linear-gradient(135deg,#4caf50,#2e7d32)', 'snake');
+  if (hasApp('yandex_music')) createDesktopIcon('yandexmusic', '🎵', 'Яндекс Музыка', 'linear-gradient(135deg,#ff0000,#cc0000)', 'yandexmusic');
+  if (hasApp('casino')) createDesktopIcon('casino', '🎰', 'NotX Casino', 'linear-gradient(135deg,#ffd700,#ff8c00)', 'casino');
+  if (hasApp('tetris')) createDesktopIcon('tetris', '🧱', 'Тетрис', 'linear-gradient(135deg,#9c27b0,#673ab7)', 'tetris');
+}
+
+function renderNotxShop() {
+  const el = document.getElementById('notxshop-content');
+  if (!el) return;
+  const cats = {
+    dev: '💻 Разработка',
+    hack: '🕵️ Хакинг',
+    sec: '🛡️ Защита',
+    passive: '⛏️ Пассивный доход',
+    sys: '⚙️ Системные',
+    fun: '🎮 Развлечения'
+  };
+  let html = '<h3 style="margin-bottom:10px; color:var(--accent);">🛍️ NotX SHOP</h3>';
+  html += '<p style="color:var(--text-dim); font-size:12px; margin-bottom:12px;">Установлено: ' + (state.installedApps ? state.installedApps.length : 0) + ' | Баланс: <b style="color:var(--success);">$' + state.money + '</b>' + (hasApp('dark_market') ? ' <span class="tag tag-green">Скидка 20%</span>' : '') + '</p>';
+
+  Object.entries(cats).forEach(([cat, label]) => {
+    html += '<h4 style="margin:14px 0 8px; color:var(--info); font-size:13px; border-bottom:1px solid var(--border); padding-bottom:4px;">' + label + '</h4>';
+    html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap:10px;">';
+    NOTX_SHOP.filter(a => a.category === cat).forEach(app => {
+      const owned = hasApp(app.id);
+      const price = Math.floor(app.price * getStoreDiscount());
+      html += `
+        <div style="background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:10px; ${owned ? 'opacity:0.6; border-color:var(--success);' : ''}">
+          <div style="font-size:24px; margin-bottom:4px;">${app.emoji}</div>
+          <div style="font-weight:bold; font-size:13px; margin-bottom:4px;">${app.name}</div>
+          <div style="font-size:11px; color:var(--text-dim); margin-bottom:8px; min-height:44px;">${app.desc}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:bold; color:${owned ? 'var(--success)' : 'var(--accent)'};">${owned ? '✅ Установлено' : '$' + price}</span>
+            ${!owned ? `<button class="btn btn-small" onclick="buyNotxApp('${app.id}')">Купить</button>` : '<span style="font-size:11px; color:var(--success);">🚀 Активно</span>'}
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+  });
+
+  html += '<div style="margin-top:16px; padding-top:10px; border-top:1px solid var(--border); font-size:12px; color:var(--text-dim);">';
+  html += '💡 Совет: приложения из категории <b>Разработка</b> стакаются по принципу "лучший бонус", остальные — суммируются.';
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 // ===================== INIT =====================
@@ -3355,8 +4059,13 @@ function initGame() {
   if (!state.exploitLogs) state.exploitLogs = [];
   if (!state.lockout) state.lockout = { active: false, endTime: 0, count: 0 };
   // Apply wallpaper
-  if (typeof state.wallpaper === 'number') setWallpaper(state.wallpaper);
-  else setWallpaper(0);
+  if (state.customWallpaper) {
+    applyCustomWallpaper();
+  } else if (typeof state.wallpaper === 'number') {
+    setWallpaper(state.wallpaper);
+  } else {
+    setWallpaper(0);
+  }
   // Apply sound checkbox
   const soundCb = document.getElementById('set-sound');
   if (soundCb) soundCb.checked = !!state.sound;
@@ -3374,6 +4083,9 @@ function initGame() {
   renderAntivirus();
   renderFiles();
   renderAchievements();
+  renderNotxShop();
+  updateStartMenuApps();
+  syncDesktopIcons();
   updateTaskbar();
   if (state.wins) {
     Object.entries(state.wins).forEach(([name, open]) => {
@@ -3434,7 +4146,8 @@ function initGame() {
       'icon-antivirus': { x: 120, y: 200 },
       'icon-settings': { x: 120, y: 290 },
       'icon-files': { x: 220, y: 20 },
-      'icon-achievements': { x: 220, y: 110 }
+      'icon-achievements': { x: 220, y: 110 },
+      'icon-notxshop': { x: 220, y: 200 }
     };
   }
 
@@ -3553,6 +4266,35 @@ function initGame() {
       }, 600);
     }
   }
+  // Expose for dynamically created icons
+  window._iconOnDown = function(e, el) {
+    hideContext();
+    if (e.button === 2) {
+      e.preventDefault();
+      showContext(el, e.clientX, e.clientY);
+      return;
+    }
+    if (e.button !== undefined && e.button !== 0) return;
+    var p = getPoint(e);
+    var rect = el.getBoundingClientRect();
+    dragEl = el;
+    dragOffsetX = p.clientX - rect.left;
+    dragOffsetY = p.clientY - rect.top;
+    startMouseX = p.clientX;
+    startMouseY = p.clientY;
+    hasDragged = false;
+    longPressTriggered = false;
+    if (e.type === 'touchstart') {
+      longPressTimer = setTimeout(function() {
+        longPressTriggered = true;
+        dragEl = null;
+        showContext(el, p.clientX, p.clientY);
+      }, 600);
+    }
+  };
+  window._iconShowContext = function(el, x, y) {
+    showContext(el, x, y);
+  };
 
   function onMove(e) {
     if (!dragEl) return;
@@ -3655,6 +4397,11 @@ function initGame() {
     }
     hideContext();
   };
+  // Also expose removeDesktopIcon for dynamic cleanup
+  window.removeDesktopIcon = function(id) {
+    var el = document.getElementById('icon-' + id);
+    if (el) { el.remove(); savePositions(); }
+  };
   window.resetIconPositions = function() {
     if (!confirm('Сбросить все иконки на стандартные позиции?')) return;
     localStorage.removeItem(SAVE_KEY);
@@ -3712,6 +4459,459 @@ function initGame() {
     setup();
   }
 })();
+
+// ===================== SNAKE GAME =====================
+var snakeGame = null;
+var snakeInterval = null;
+
+function startSnake() {
+  stopSnake();
+  const canvas = document.getElementById('snake-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const size = 20;
+  const cols = canvas.width / size;
+  const rows = canvas.height / size;
+  snakeGame = {
+    snake: [{x: Math.floor(cols/2), y: Math.floor(rows/2)}],
+    dir: {x: 0, y: 0},
+    nextDir: {x: 0, y: 0},
+    apple: {x: Math.floor(Math.random()*cols), y: Math.floor(Math.random()*rows)},
+    score: 0,
+    over: false,
+    cols, rows, size, ctx
+  };
+  document.getElementById('snake-score').textContent = 'Очки: 0';
+  snakeInterval = setInterval(snakeTick, 120);
+}
+
+function stopSnake() {
+  if (snakeInterval) { clearInterval(snakeInterval); snakeInterval = null; }
+  snakeGame = null;
+}
+
+function snakeTick() {
+  if (!snakeGame || snakeGame.over) return;
+  const g = snakeGame;
+  g.dir = {...g.nextDir};
+  if (g.dir.x === 0 && g.dir.y === 0) return;
+  const head = {...g.snake[0]};
+  head.x += g.dir.x;
+  head.y += g.dir.y;
+  if (head.x < 0 || head.x >= g.cols || head.y < 0 || head.y >= g.rows) {
+    snakeGameOver();
+    return;
+  }
+  for (const s of g.snake) {
+    if (s.x === head.x && s.y === head.y) { snakeGameOver(); return; }
+  }
+  g.snake.unshift(head);
+  if (head.x === g.apple.x && head.y === g.apple.y) {
+    g.score += 10;
+    document.getElementById('snake-score').textContent = 'Очки: ' + g.score;
+    g.apple = {x: Math.floor(Math.random()*g.cols), y: Math.floor(Math.random()*g.rows)};
+    // Prevent apple on snake
+    while (g.snake.some(s => s.x === g.apple.x && s.y === g.apple.y)) {
+      g.apple = {x: Math.floor(Math.random()*g.cols), y: Math.floor(Math.random()*g.rows)};
+    }
+  } else {
+    g.snake.pop();
+  }
+  snakeDraw();
+}
+
+function snakeDraw() {
+  const g = snakeGame;
+  if (!g) return;
+  g.ctx.fillStyle = '#1a1a1a';
+  g.ctx.fillRect(0, 0, g.cols*g.size, g.rows*g.size);
+  // Apple
+  g.ctx.fillStyle = '#ff4444';
+  g.ctx.beginPath();
+  g.ctx.arc(g.apple.x*g.size + g.size/2, g.apple.y*g.size + g.size/2, g.size/2-2, 0, Math.PI*2);
+  g.ctx.fill();
+  // Snake
+  g.snake.forEach((s, i) => {
+    g.ctx.fillStyle = i === 0 ? '#44ff44' : '#22aa22';
+    g.ctx.fillRect(s.x*g.size+1, s.y*g.size+1, g.size-2, g.size-2);
+  });
+}
+
+function snakeGameOver() {
+  const score = snakeGame ? snakeGame.score : 0;
+  if (snakeGame) snakeGame.over = true;
+  stopSnake();
+  if (state && score > state.bestSnake) state.bestSnake = score;
+  log('🐍 Game Over! Очки: ' + score, 'warning');
+  if (score >= 100) unlockAchievement('snake_master');
+}
+
+// Snake keyboard
+window.addEventListener('keydown', function(e) {
+  if (!snakeGame || snakeGame.over) return;
+  switch(e.key) {
+    case 'ArrowUp': case 'w': case 'W': if (snakeGame.dir.y !== 1) snakeGame.nextDir = {x:0,y:-1}; e.preventDefault(); break;
+    case 'ArrowDown': case 's': case 'S': if (snakeGame.dir.y !== -1) snakeGame.nextDir = {x:0,y:1}; e.preventDefault(); break;
+    case 'ArrowLeft': case 'a': case 'A': if (snakeGame.dir.x !== 1) snakeGame.nextDir = {x:-1,y:0}; e.preventDefault(); break;
+    case 'ArrowRight': case 'd': case 'D': if (snakeGame.dir.x !== -1) snakeGame.nextDir = {x:1,y:0}; e.preventDefault(); break;
+  }
+});
+
+// ===================== YANDEX MUSIC =====================
+var ymPlaying = false;
+var ymCurrent = 0;
+var ymInterval = null;
+var ymOsc = null;
+
+const YM_TRACKS = [
+  { name: 'Cyberpunk Dreams', artist: 'Neon Synth', freq: [220, 261, 329, 392, 440, 523, 659, 784] },
+  { name: 'Deep Focus', artist: 'LoFi Beats', freq: [130, 164, 196, 261, 329, 392, 523, 659] },
+  { name: 'Hacker Mode', artist: 'Glitch Corp', freq: [110, 146, 174, 220, 293, 349, 440, 587] },
+  { name: 'Night City', artist: 'Retro Wave', freq: [165, 196, 233, 293, 349, 440, 523, 659] },
+  { name: 'Terminal Jazz', artist: 'Root User', freq: [174, 220, 261, 311, 392, 466, 587, 698] }
+];
+
+function ymRenderPlaylist() {
+  const el = document.getElementById('ym-playlist');
+  if (!el) return;
+  let html = '';
+  YM_TRACKS.forEach((t, i) => {
+    const active = i === ymCurrent ? 'background:rgba(233,84,32,0.2); border-color:var(--accent);' : '';
+    html += `<div onclick="ymPlay(${i})" style="padding:8px 10px; margin-bottom:4px; border-radius:6px; cursor:pointer; background:rgba(255,255,255,0.03); border:1px solid transparent; ${active} font-size:12px;">
+      <div style="font-weight:${i===ymCurrent?'bold':'normal'};">${i===ymCurrent?'▶ ':'  '}${t.name}</div>
+      <div style="color:var(--text-dim); font-size:11px;">${t.artist}</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function ymPlay(idx) {
+  ymCurrent = idx;
+  ymPlaying = true;
+  const t = YM_TRACKS[idx];
+  document.getElementById('ym-track-name').textContent = '🎵 ' + t.name;
+  document.getElementById('ym-track-artist').textContent = t.artist;
+  document.getElementById('ym-play-btn').textContent = '⏸ Пауза';
+  ymRenderPlaylist();
+  ymStartAudio();
+}
+
+function ymToggle() {
+  if (ymPlaying) { ymPause(); }
+  else { ymPlay(ymCurrent); }
+}
+
+function ymPause() {
+  ymPlaying = false;
+  document.getElementById('ym-play-btn').textContent = '▶ Играть';
+  if (ymOsc) { ymOsc.stop(); ymOsc = null; }
+  if (ymInterval) { clearInterval(ymInterval); ymInterval = null; }
+}
+
+function ymNext() {
+  ymCurrent = (ymCurrent + 1) % YM_TRACKS.length;
+  ymPlay(ymCurrent);
+}
+
+function ymPrev() {
+  ymCurrent = (ymCurrent - 1 + YM_TRACKS.length) % YM_TRACKS.length;
+  ymPlay(ymCurrent);
+}
+
+function ymStartAudio() {
+  if (!state || !state.sound) return;
+  ensureAudio();
+  if (ymOsc) { ymOsc.stop(); }
+  if (ymInterval) clearInterval(ymInterval);
+  const t = YM_TRACKS[ymCurrent];
+  let noteIdx = 0;
+  ymOsc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  ymOsc.type = 'sine';
+  ymOsc.frequency.setValueAtTime(t.freq[0], audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  ymOsc.connect(gain);
+  gain.connect(masterGain);
+  ymOsc.start();
+  ymInterval = setInterval(() => {
+    if (!ymPlaying || !ymOsc) return;
+    noteIdx = (noteIdx + 1) % t.freq.length;
+    ymOsc.frequency.setValueAtTime(t.freq[noteIdx], audioCtx.currentTime + 0.05);
+  }, 400);
+  ymVisualizer();
+}
+
+function ymVisualizer() {
+  const canvas = document.getElementById('ym-visualizer');
+  if (!canvas || !ymPlaying) return;
+  const ctx = canvas.getContext('2d');
+  const bars = 30;
+  const barW = canvas.width / bars;
+  function draw() {
+    if (!ymPlaying) { ctx.fillStyle = '#1a0a2a'; ctx.fillRect(0,0,canvas.width,canvas.height); return; }
+    ctx.fillStyle = 'rgba(26,10,42,0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < bars; i++) {
+      const h = Math.random() * canvas.height * 0.8;
+      const hue = 280 + (i / bars) * 60;
+      ctx.fillStyle = `hsla(${hue}, 80%, 60%, 0.7)`;
+      ctx.fillRect(i * barW, canvas.height - h, barW - 2, h);
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ===================== CASINO =====================
+var casinoBet = 50;
+var casinoSpinning = false;
+
+function setCasinoBet(amount) {
+  casinoBet = amount;
+  document.getElementById('casino-bet').textContent = '$' + amount;
+}
+
+function spinCasino() {
+  if (casinoSpinning) return;
+  if (state.money < casinoBet) { log('Недостаточно денег для ставки!', 'danger'); return; }
+  state.money -= casinoBet;
+  updateTopBar();
+  document.getElementById('casino-balance').textContent = '$' + state.money;
+  casinoSpinning = true;
+  const wheel = document.getElementById('casino-wheel');
+  const result = document.getElementById('casino-result');
+  result.textContent = 'Крутим...';
+  result.style.color = 'var(--text)';
+
+  const outcomes = [
+    { label: '×2', mult: 2, color: '#38b44a', angle: 30 },
+    { label: '×0', mult: 0, color: '#df382c', angle: 90 },
+    { label: '×1.5', mult: 1.5, color: '#efb73e', angle: 150 },
+    { label: '×1.2', mult: 1.2, color: '#19b6ee', angle: 210 },
+    { label: '×0.5', mult: 0.5, color: '#e95420', angle: 270 },
+    { label: '×0', mult: 0, color: '#df382c', angle: 330 }
+  ];
+  const roll = Math.random();
+  let pick;
+  if (roll < 0.15) pick = outcomes[0];      // ×2  (15%)
+  else if (roll < 0.40) pick = outcomes[1];  // ×0  (25%)
+  else if (roll < 0.60) pick = outcomes[2];  // ×1.5 (20%)
+  else if (roll < 0.80) pick = outcomes[3];  // ×1.2 (20%)
+  else if (roll < 0.95) pick = outcomes[4]; // ×0.5 (15%)
+  else pick = outcomes[5];                   // ×0  (5%)
+
+  const spins = 3 + Math.floor(Math.random() * 3);
+  const targetAngle = spins * 360 + pick.angle;
+  wheel.style.transform = 'rotate(0deg)';
+  requestAnimationFrame(() => {
+    wheel.style.transform = `rotate(${targetAngle}deg)`;
+  });
+
+  setTimeout(() => {
+    casinoSpinning = false;
+    const win = Math.floor(casinoBet * pick.mult);
+    state.money += win;
+    if (win > casinoBet) {
+      result.innerHTML = `<span style="color:var(--success);">🎉 Выигрыш $${win}!</span>`;
+      log(`🎰 Casino: +$${win} (${pick.label})`, 'success');
+    } else if (win === casinoBet) {
+      result.innerHTML = `<span style="color:var(--warning);">↩️ Возврат $${win}</span>`;
+    } else {
+      result.innerHTML = `<span style="color:var(--danger);">💸 Проигрыш $${casinoBet}</span>`;
+      log(`🎰 Casino: -$${casinoBet} (${pick.label})`, 'warning');
+    }
+    updateTopBar();
+    document.getElementById('casino-balance').textContent = '$' + state.money;
+  }, 2200);
+}
+
+// ===================== TETRIS =====================
+var tetrisGame = null;
+var tetrisInterval = null;
+const TETROMINOES = {
+  I: { shape: [[1,1,1,1]], color: '#00f0f0' },
+  O: { shape: [[1,1],[1,1]], color: '#f0f000' },
+  T: { shape: [[0,1,0],[1,1,1]], color: '#a000f0' },
+  S: { shape: [[0,1,1],[1,1,0]], color: '#00f000' },
+  Z: { shape: [[1,1,0],[0,1,1]], color: '#f00000' },
+  J: { shape: [[1,0,0],[1,1,1]], color: '#0000f0' },
+  L: { shape: [[0,0,1],[1,1,1]], color: '#f0a000' }
+};
+
+function startTetris() {
+  stopTetris();
+  const canvas = document.getElementById('tetris-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cols = 10, rows = 20, size = 24;
+  const board = Array(rows).fill(null).map(() => Array(cols).fill(0));
+  const keys = Object.keys(TETROMINOES);
+  const type = keys[Math.floor(Math.random() * keys.length)];
+  const piece = {
+    type,
+    shape: TETROMINOES[type].shape,
+    color: TETROMINOES[type].color,
+    x: Math.floor(cols/2) - 1,
+    y: 0
+  };
+  tetrisGame = { board, piece, cols, rows, size, ctx, score: 0, level: 1, lines: 0, over: false };
+  document.getElementById('tetris-score').textContent = 'Очки: 0';
+  document.getElementById('tetris-level').textContent = 'Уровень: 1';
+  tetrisInterval = setInterval(tetrisTick, 800);
+}
+
+function stopTetris() {
+  if (tetrisInterval) { clearInterval(tetrisInterval); tetrisInterval = null; }
+  tetrisGame = null;
+}
+
+function tetrisTick() {
+  if (!tetrisGame || tetrisGame.over) return;
+  if (!tetrisMove(0, 1)) {
+    tetrisLock();
+    tetrisClearLines();
+    tetrisSpawn();
+  }
+  tetrisDraw();
+}
+
+function tetrisMove(dx, dy) {
+  const g = tetrisGame;
+  const newX = g.piece.x + dx;
+  const newY = g.piece.y + dy;
+  if (tetrisCollision(newX, newY, g.piece.shape)) return false;
+  g.piece.x = newX;
+  g.piece.y = newY;
+  return true;
+}
+
+function tetrisRotate() {
+  const g = tetrisGame;
+  const rows = g.piece.shape.length;
+  const cols = g.piece.shape[0].length;
+  const rotated = Array(cols).fill(null).map(() => Array(rows).fill(0));
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      rotated[c][rows - 1 - r] = g.piece.shape[r][c];
+    }
+  }
+  if (!tetrisCollision(g.piece.x, g.piece.y, rotated)) {
+    g.piece.shape = rotated;
+  }
+}
+
+function tetrisCollision(x, y, shape) {
+  const g = tetrisGame;
+  for (let r = 0; r < shape.length; r++) {
+    for (let c = 0; c < shape[r].length; c++) {
+      if (!shape[r][c]) continue;
+      const nx = x + c, ny = y + r;
+      if (nx < 0 || nx >= g.cols || ny >= g.rows) return true;
+      if (ny >= 0 && g.board[ny][nx]) return true;
+    }
+  }
+  return false;
+}
+
+function tetrisLock() {
+  const g = tetrisGame;
+  for (let r = 0; r < g.piece.shape.length; r++) {
+    for (let c = 0; c < g.piece.shape[r].length; c++) {
+      if (g.piece.shape[r][c]) {
+        const ny = g.piece.y + r;
+        if (ny >= 0) g.board[ny][g.piece.x + c] = g.piece.color;
+      }
+    }
+  }
+}
+
+function tetrisClearLines() {
+  const g = tetrisGame;
+  let cleared = 0;
+  for (let r = g.rows - 1; r >= 0; r--) {
+    if (g.board[r].every(cell => cell !== 0)) {
+      g.board.splice(r, 1);
+      g.board.unshift(Array(g.cols).fill(0));
+      cleared++;
+      r++;
+    }
+  }
+  if (cleared > 0) {
+    g.lines += cleared;
+    g.score += cleared * 100 * g.level;
+    g.level = Math.floor(g.lines / 10) + 1;
+    document.getElementById('tetris-score').textContent = 'Очки: ' + g.score;
+    document.getElementById('tetris-level').textContent = 'Уровень: ' + g.level;
+    clearInterval(tetrisInterval);
+    tetrisInterval = setInterval(tetrisTick, Math.max(150, 800 - g.level * 60));
+  }
+}
+
+function tetrisSpawn() {
+  const g = tetrisGame;
+  const keys = Object.keys(TETROMINOES);
+  const type = keys[Math.floor(Math.random() * keys.length)];
+  g.piece = {
+    type,
+    shape: TETROMINOES[type].shape,
+    color: TETROMINOES[type].color,
+    x: Math.floor(g.cols/2) - 1,
+    y: 0
+  };
+  if (tetrisCollision(g.piece.x, g.piece.y, g.piece.shape)) {
+    g.over = true;
+    stopTetris();
+    if (state && g.level > state.bestTetris) state.bestTetris = g.level;
+    log('🧱 Тетрис: Game Over! Очки: ' + g.score, 'warning');
+    if (g.level >= 5) unlockAchievement('tetris_pro');
+  }
+}
+
+function tetrisDraw() {
+  const g = tetrisGame;
+  if (!g) return;
+  g.ctx.fillStyle = '#1a1a1a';
+  g.ctx.fillRect(0, 0, g.cols*g.size, g.rows*g.size);
+  // Board
+  for (let r = 0; r < g.rows; r++) {
+    for (let c = 0; c < g.cols; c++) {
+      if (g.board[r][c]) {
+        g.ctx.fillStyle = g.board[r][c];
+        g.ctx.fillRect(c*g.size+1, r*g.size+1, g.size-2, g.size-2);
+      }
+    }
+  }
+  // Piece
+  g.ctx.fillStyle = g.piece.color;
+  for (let r = 0; r < g.piece.shape.length; r++) {
+    for (let c = 0; c < g.piece.shape[r].length; c++) {
+      if (g.piece.shape[r][c]) {
+        g.ctx.fillRect((g.piece.x+c)*g.size+1, (g.piece.y+r)*g.size+1, g.size-2, g.size-2);
+      }
+    }
+  }
+  // Grid lines
+  g.ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  g.ctx.lineWidth = 1;
+  for (let x = 0; x <= g.cols; x++) {
+    g.ctx.beginPath(); g.ctx.moveTo(x*g.size, 0); g.ctx.lineTo(x*g.size, g.rows*g.size); g.ctx.stroke();
+  }
+  for (let y = 0; y <= g.rows; y++) {
+    g.ctx.beginPath(); g.ctx.moveTo(0, y*g.size); g.ctx.lineTo(g.cols*g.size, y*g.size); g.ctx.stroke();
+  }
+}
+
+// Tetris keyboard
+window.addEventListener('keydown', function(e) {
+  if (!tetrisGame || tetrisGame.over) return;
+  switch(e.key) {
+    case 'ArrowLeft': tetrisMove(-1, 0); e.preventDefault(); break;
+    case 'ArrowRight': tetrisMove(1, 0); e.preventDefault(); break;
+    case 'ArrowDown': tetrisMove(0, 1); e.preventDefault(); break;
+    case 'ArrowUp': tetrisRotate(); e.preventDefault(); break;
+  }
+});
+
 // ===================== BOOT / RECOVERY =====================
 // ===================== NOTIFICATIONS =====================
 function pushNotification(title, text) {
