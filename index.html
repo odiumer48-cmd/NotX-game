@@ -1,10 +1,23 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+<!-- Yandex Games SDK -->
+<!-- Yandex Games SDK v2 -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Linux Dev OS</title>
 <style>
+/* Отключаем контекстное меню во всей игре */
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Для мобильных устройств - отключаем масштабирование двойным тапом */
+body {
+    touch-action: manipulation;
+}
   * { margin:0; padding:0; box-sizing:border-box; }
   :root {
     --bg: #2d2d2d;
@@ -91,7 +104,7 @@
   .diff-btn .diff-label { font-weight: bold; display: block; margin-bottom: 4px; }
   .diff-btn .diff-desc { font-size: 11px; color: var(--text-dim); }
   .title-actions {
-    display: flex; gap: 12px;
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
   }
   .title-btn {
     padding: 12px 36px;
@@ -106,6 +119,15 @@
   }
   .title-btn:hover { filter: brightness(1.2); }
   .title-btn.secondary { background: var(--panel); border: 1px solid var(--border); }
+  .title-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(0.6);
+  }
+  .title-btn:disabled:hover {
+    filter: grayscale(0.6);
+  }
+
 
   /* ===== DESKTOP ===== */
   #top-bar {
@@ -194,12 +216,14 @@
     border-radius: 50%;
     border: none;
     cursor: pointer;
-    font-size: 10px;
+    font-size: 9px;
     display: flex; align-items: center; justify-content: center;
-    color: transparent;
+    color: rgba(0,0,0,0.35);
     transition: color 0.15s;
+    font-weight: bold;
+    line-height: 1;
   }
-  .window-btn:hover { color: rgba(0,0,0,0.6); }
+  .window-btn:hover { color: rgba(0,0,0,0.75); }
   .btn-close { background: var(--danger); }
   .btn-min { background: var(--warning); }
   .btn-max { background: var(--success); }
@@ -365,6 +389,8 @@
     transition: filter 0.15s;
   }
   .btn:hover { filter: brightness(1.15); }
+  .top-menu-btn { padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); color: var(--text); cursor:pointer; font-size:12px; }
+  .top-menu-btn:hover { background: rgba(255,255,255,0.12); }
   .btn-secondary { background: var(--panel); border: 1px solid var(--border); }
   .btn-secondary:hover { background: #4a4a4a; }
   .btn-small { padding: 3px 10px; font-size: 11px; }
@@ -477,7 +503,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 20000;
+    z-index: 60000; /* выше title-screen (50000), чтобы диалог восстановления был виден */
   }
   #overlay.active { display: flex; }
   .dialog {
@@ -515,10 +541,52 @@
     .btn-small { padding: 6px 12px; font-size: 12px; }
     .diff-btn { min-width: 180px; padding: 10px 20px; }
     .title-logo { font-size: 36px; }
+    .boot-panel {
+      width: 94vw !important;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .sys-grid {
+      grid-template-columns: 1fr !important;
+      gap: 8px;
+    }
+    .sys-card {
+      padding: 10px;
+    }
+    .sys-card .value {
+      font-size: 13px;
+    }
+    .title-logo {
+      font-size: 32px;
+    }
+    .title-sub {
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .difficulty-select {
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .diff-btn {
+      min-width: 240px;
+      padding: 12px 20px;
+    }
+
   }
 
   /* ===== ICON DRAG ===== */
-  #desktop { position: relative; }
+  #desktop {
+    position: absolute;
+    top: 28px;
+    left: 0;
+    right: 0;
+    bottom: 44px;
+    padding: 20px;
+    z-index: 1;
+    -webkit-touch-callout: none;
+    overflow: hidden;
+  }
   .desktop-icon {
     position: absolute;
     cursor: grab;
@@ -697,12 +765,166 @@
   .ach-card .ach-title { font-size:12px; font-weight:bold; margin-bottom:4px; }
   .ach-card .ach-desc { font-size:10px; color:var(--text-dim); }
 
+  /* App Detail Tabs */
+  .app-tab {
+    padding: 10px 16px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-dim);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .app-tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .app-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .app-tab-content { display: none; }
+  .app-tab-content.active { display: block; }
+
+  /* ===== BOOT / SYSTEM PANEL ===== */
+  .boot-panel {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .boot-card {
+    background: rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .boot-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .boot-pill {
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 12px;
+  }
+  .boot-small { font-size: 11px; color: var(--text-dim); }
+  .sys-grid {
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap:10px;
+    margin-top:12px;
+  }
+  .sys-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .sys-card .label { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+  .sys-card .value { font-size: 15px; font-weight: 700; }
+  .sys-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    gap: 8px;
+  }
+  .sys-row:last-child { border-bottom:0; }
+  .sys-toggle {
+    display:flex; align-items:center; gap:8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .sys-toggle input { transform: scale(1.1); }
+  .sys-bar {
+    height: 10px; border-radius: 999px; overflow:hidden; background: rgba(0,0,0,0.35); margin-top: 6px;
+  }
+  .sys-bar > span { display:block; height:100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+
+  /* ===== FULLSCREEN WINDOWS ===== */
+  .window.fullscreen {
+    position: fixed !important;
+    top: 28px !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: calc(100vh - 72px) !important;
+    border-radius: 0 !important;
+    z-index: 9999 !important;
+    transform: none !important;
+  }
+  .window.fullscreen .window-titlebar {
+    border-radius: 0 !important;
+    cursor: default !important;
+  }
+  .window.fullscreen .window-content {
+    height: calc(100% - 32px) !important;
+    max-height: none !important;
+  }
+
+  /* ===== BOOT SCREEN ===== */
+  #boot-screen {
+    position: fixed;
+    inset: 0;
+    background: #0c0c0c;
+    color: #38b44a; /* Classic green terminal text */
+    font-family: var(--font-mono);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    z-index: 100000; /* Over everything */
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  .boot-terminal {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    margin-bottom: 20px;
+    font-family: var(--font-mono);
+    text-align: left;
+  }
+  .boot-progress-container {
+    height: 24px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+  .boot-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--success));
+    transition: width 0.1s linear;
+  }
+  .boot-percentage {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+    text-shadow: 1px 1px 2px black;
+  }
 </style>
 <base target="_blank">
 </head>
 <body>
 
-<<canvas id="bg-canvas"></canvas>
+<canvas id="bg-canvas"></canvas>
+
+<!-- ==================== BOOT SCREEN ==================== -->
+<div id="boot-screen" style="display: none;">
+  <div class="boot-terminal" id="boot-log"></div>
+  <div class="boot-progress-container">
+    <div class="boot-progress-bar" id="boot-progress"></div>
+    <div class="boot-percentage" id="boot-percentage">0%</div>
+  </div>
+</div>
 
 <!-- ==================== TITLE SCREEN ==================== -->
 <div id="title-screen">
@@ -727,7 +949,33 @@
 
   <div class="title-actions">
     <button class="title-btn" onclick="startGame()">▶ Новая игра</button>
+    <button class="title-btn secondary" id="boot-continue-btn" onclick="continueLastSession()" disabled>▶ Продолжить</button>
     <button class="title-btn secondary" onclick="loadGameFromTitle()">📂 Загрузить</button>
+    <button class="title-btn secondary" onclick="openRecoveryMode()">🛠️ Восстановление</button>
+  </div>
+
+  <div class="boot-panel" style="margin-top:16px; width:min(620px, 94vw); max-height:40vh; overflow-y:auto;">
+    <div class="boot-small" id="boot-save-info" style="margin-bottom:10px; text-align:center; font-size:12px; padding:6px; border-radius:6px; background:rgba(255,255,255,0.03); transition:color 0.3s;">
+      ⏳ Проверяем сохранение…
+    </div>
+    <div class="sys-grid">
+      <div class="sys-card">
+        <div class="label">Сюжет</div>
+        <div class="value">Студент IT → системный разработчик</div>
+      </div>
+      <div class="sys-card">
+        <div class="label">Режим восстановления</div>
+        <div class="value">Доступен из главного меню</div>
+      </div>
+      <div class="sys-card">
+        <div class="label">Секретный диск</div>
+        <div class="value">/home/совершенно секретный</div>
+      </div>
+      <div class="sys-card">
+        <div class="label">Подсказка</div>
+        <div class="value">Откройте Kiwi Draw, затем перенесите файл</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -786,11 +1034,15 @@
     <div class="icon" style="background:linear-gradient(135deg,#ff9800,#f57c00);">📂</div>
     <div class="label">Файлы</div>
   </div>
-  <div class="desktop-icon" id="icon-achievements" style="left:220px;top:110px" onclick="openWindow('achievements')">
+  <div class="desktop-icon" id="icon-kiwidraw" style="left:220px;top:110px" onclick="openWindow('kiwidraw')">
+    <div class="icon" style="background:linear-gradient(135deg,#00c853,#2bb673);">🎨</div>
+    <div class="label">Kiwi Draw</div>
+  </div>
+  <div class="desktop-icon" id="icon-achievements" style="left:220px;top:200px" onclick="openWindow('achievements')">
     <div class="icon" style="background:linear-gradient(135deg,#ffd700,#ff8c00);">🏆</div>
     <div class="label">Ачивки</div>
   </div>
-  <div class="desktop-icon" id="icon-notxshop" style="left:220px;top:200px" onclick="openWindow('notxshop')">
+  <div class="desktop-icon" id="icon-notxshop" style="left:220px;top:290px" onclick="openWindow('notxshop')">
     <div class="icon" style="background:linear-gradient(135deg,#00c853,#64dd17);">🛍️</div>
     <div class="label">NotX SHOP</div>
   </div>
@@ -819,8 +1071,10 @@
   <button class="start-menu-item" onclick="menuOpen('darknet')"><span class="emoji">💀</span>DarkNet</button>
   <button class="start-menu-item" onclick="menuOpen('antivirus')"><span class="emoji">🛡️</span>Антивирус</button>
   <button class="start-menu-item" onclick="menuOpen('files')"><span class="emoji">📂</span>Файлы</button>
+  <button class="start-menu-item" onclick="menuOpen('kiwidraw')"><span class="emoji">🎨</span>Kiwi Draw</button>
   <button class="start-menu-item" onclick="menuOpen('achievements')"><span class="emoji">🏆</span>Достижения</button>
   <button class="start-menu-item" onclick="menuOpen('notxshop')"><span class="emoji">🛍️</span>NotX SHOP</button>
+  <button class="start-menu-item" onclick="menuOpen('crypto')"><span class="emoji">💰</span>Crypto Wallet</button>
   <button class="start-menu-item" onclick="menuOpen('settings')"><span class="emoji">⚙️</span>Настройки</button>
 
   <div class="start-menu-section" id="start-menu-apps" style="display:none;">
@@ -831,6 +1085,7 @@
     <div class="start-menu-mini">
       <button class="btn btn-secondary" onclick="saveGame(); hideMenu();">💾 Сохранить</button>
       <button class="btn btn-secondary" onclick="loadGame(); hideMenu();">📂 Загрузить</button>
+      <button class="btn btn-secondary" onclick="returnToMainMenu()">🏠 Главное меню</button>
       <button class="btn btn-red" onclick="if(confirm('Перезапустить игру?')) location.reload();">🔄 Рестарт</button>
     </div>
   </div>
@@ -843,6 +1098,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-terminal')">
     <span class="window-title">🖥️ Терминал</span>
     <button class="window-btn btn-min" onclick="minWindow('terminal')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('terminal')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('terminal')">×</button>
   </div>
   <div class="window-content" style="display:flex; flex-direction:column;">
@@ -853,6 +1109,7 @@
     <div class="term-input-line">
       <span class="term-prompt" id="term-prompt">neo@dev:~$</span>
       <input type="text" class="term-input" id="term-in" autocomplete="off" spellcheck="false">
+      <button class="btn btn-small btn-secondary" onclick="submitTerminalInput()">↵</button>
     </div>
   </div>
 </div>
@@ -862,6 +1119,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-browser')">
     <span class="window-title">🌐 Googie Browser</span>
     <button class="window-btn btn-min" onclick="minWindow('browser')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('browser')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('browser')">×</button>
   </div>
   <div class="window-content">
@@ -883,6 +1141,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-mail')">
     <span class="window-title">📧 Почта</span>
     <button class="window-btn btn-min" onclick="minWindow('mail')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('mail')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('mail')">×</button>
   </div>
   <div class="window-content" id="mail-content">
@@ -895,6 +1154,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-projects')">
     <span class="window-title">📁 Проекты</span>
     <button class="window-btn btn-min" onclick="minWindow('projects')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('projects')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('projects')">×</button>
   </div>
   <div class="window-content" id="projects-content">
@@ -907,6 +1167,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-store')">
     <span class="window-title">🛒 Магазин</span>
     <button class="window-btn btn-min" onclick="minWindow('store')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('store')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('store')">×</button>
   </div>
   <div class="window-content" id="store-content"></div>
@@ -917,6 +1178,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-darknet')">
     <span class="window-title">💀 DarkNet Scanner</span>
     <button class="window-btn btn-min" onclick="minWindow('darknet')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('darknet')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('darknet')">×</button>
   </div>
   <div class="window-content" id="darknet-content"></div>
@@ -927,6 +1189,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-antivirus')">
     <span class="window-title">🛡️ Antivirus Lab</span>
     <button class="window-btn btn-min" onclick="minWindow('antivirus')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('antivirus')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('antivirus')">×</button>
   </div>
   <div class="window-content" id="antivirus-content"></div>
@@ -937,6 +1200,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-settings')">
     <span class="window-title">⚙️ Параметры системы</span>
     <button class="window-btn btn-min" onclick="minWindow('settings')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('settings')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('settings')">×</button>
   </div>
   <div class="window-content" id="settings-content">
@@ -969,10 +1233,24 @@
       <div style="margin-top:10px;">
         <button class="btn btn-secondary" onclick="if(confirm('Сбросить прогресс?')){localStorage.removeItem('linuxdev_save');localStorage.removeItem('linuxdev_save_meta');localStorage.removeItem('linuxdev_icons_v4');location.reload();}">🗑️ Сброс прогресса</button>
       </div>
+      <div style="margin-top:16px; padding:12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px;">
+        <div style="font-size:13px; font-weight:bold; color:var(--accent); margin-bottom:8px;">⭐ Оценить игру</div>
+        <div style="font-size:12px; color:var(--text-dim); margin-bottom:10px;">Ваша оценка помогает развитию Linux Dev OS на Яндекс.Играх!</div>
+        <button class="btn" onclick="requestGameReview()">⭐ Оценить на Яндекс.Играх</button>
+      </div>
       <div style="margin-top:20px; font-size:12px; color:var(--text-dim);">
         Linux Dev OS v3.2<br>Сохранение в локальном хранилище браузера.
       </div>
-    </div>
+          <div style="margin-top:16px; padding:12px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px;">
+        <div style="font-size:12px; color:var(--text-dim); line-height:1.6;">
+          <div style="margin-bottom:6px;"><b style="color:var(--accent);">© 2026 Linux Dev OS</b></div>
+          <div>👨‍💻 <b>Разработчики:</b> Odium and Stepin by Gcorp</div>
+          <div>🔞 <b>Возрастной рейтинг:</b> 16+</div>
+          <div>🎮 <b>Платформа:</b> Яндекс.Игры</div>
+          <div style="margin-top:6px; font-size:11px; color:var(--text-dim);">Игра создана специально для платформы Яндекс.Игры</div>
+        </div>
+      </div>
+</div>
 
     <div class="settings-section" id="section-personal">
       <h3 style="margin-bottom:10px; color:var(--accent);">🎨 Фон рабочего стола</h3>
@@ -1031,6 +1309,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-files')">
     <span class="window-title">📂 Файловый менеджер</span>
     <button class="window-btn btn-min" onclick="minWindow('files')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('files')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('files')">×</button>
   </div>
   <div class="window-content" id="files-content" style="display:flex; flex-direction:column;">
@@ -1038,6 +1317,7 @@
       <button class="btn btn-small" onclick="fmUp()">⬆️</button>
       <button class="btn btn-small" onclick="fmNewFolder()">📁 Новая папка</button>
       <button class="btn btn-small" onclick="fmNewFile()">📄 Новый файл</button>
+      <button class="btn btn-small" onclick="fmMove()">📦 Переместить</button>
       <button class="btn btn-small btn-red" onclick="fmDelete()">🗑️ Удалить</button>
       <div class="fm-breadcrumb" id="fm-path">/home</div>
     </div>
@@ -1050,6 +1330,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-editor')">
     <span class="window-title">📝 Текстовый редактор</span>
     <button class="window-btn btn-min" onclick="minWindow('editor')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('editor')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('editor')">×</button>
   </div>
   <div class="window-content" style="display:flex; flex-direction:column;">
@@ -1062,24 +1343,64 @@
   </div>
 </div>
 
+<!-- Kiwi Draw -->
+<div class="window" id="win-kiwidraw" style="width:560px; height:500px; top:70px; left:220px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-kiwidraw')">
+    <span class="window-title">🎨 Kiwi Draw</span>
+    <button class="window-btn btn-min" onclick="minWindow('kiwidraw')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('kiwidraw')">□</button>
+    <button class="window-btn btn-close" onclick="closeWindow('kiwidraw')">×</button>
+  </div>
+  <div class="window-content" id="kiwidraw-content" style="display:flex; flex-direction:column; gap:8px;">
+    <div class="fm-toolbar" style="flex-wrap:wrap;">
+      <button class="btn btn-small" onclick="kiwiSetColor('#ff6b6b')">🔴</button>
+      <button class="btn btn-small" onclick="kiwiSetColor('#ffd93d')">🟡</button>
+      <button class="btn btn-small" onclick="kiwiSetColor('#6bcb77')">🟢</button>
+      <button class="btn btn-small" onclick="kiwiSetColor('#4d96ff')">🔵</button>
+      <button class="btn btn-small" onclick="kiwiSetColor('#ffffff')">⚪</button>
+      <button class="btn btn-small btn-secondary" onclick="kiwiSetErase()">🧽 Ластик</button>
+      <button class="btn btn-small btn-secondary" onclick="kiwiUndo()">↩ Отменить</button>
+      <button class="btn btn-small btn-red" onclick="kiwiClear()">🗑️ Очистить</button>
+      <button class="btn btn-small" onclick="kiwiExport()">💾 Экспорт</button>
+    </div>
+    <canvas id="kiwi-canvas" width="500" height="320" style="border:2px solid var(--border); border-radius:8px; background:#f7f7f7; touch-action:none;"></canvas>
+    <div style="font-size:12px; color:var(--text-dim); line-height:1.4;">
+      Рисуйте мышью или пальцем. Экспорт создаст файл для переноса в Файлах.
+    </div>
+  </div>
+</div>
+
 <!-- Achievements -->
 <div class="window" id="win-achievements" style="width:520px; height:460px; top:60px; left:260px;">
   <div class="window-titlebar" onmousedown="startDrag(event,'win-achievements')">
     <span class="window-title">🏆 Достижения</span>
     <button class="window-btn btn-min" onclick="minWindow('achievements')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('achievements')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('achievements')">×</button>
   </div>
   <div class="window-content" id="achievements-content"></div>
 </div>
 
-<!-- App Store -->
-<div class="window" id="win-notxshop" style="width:560px; height:480px; top:60px; left:200px;">
+<!-- NotX SHOP -->
+<div class="window" id="win-notxshop" style="width:640px; height:540px; top:40px; left:180px;">
   <div class="window-titlebar" onmousedown="startDrag(event,'win-notxshop')">
     <span class="window-title">🛍️ NotX SHOP</span>
     <button class="window-btn btn-min" onclick="minWindow('notxshop')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('notxshop')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('notxshop')">×</button>
   </div>
-  <div class="window-content" id="notxshop-content"></div>
+  <div class="window-content" id="notxshop-content" style="padding:0;"></div>
+</div>
+
+<!-- NotX SHOP App Detail -->
+<div class="window" id="win-appdetail" style="width:600px; height:520px; top:50px; left:200px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-appdetail')">
+    <span class="window-title" id="appdetail-title">📱 Приложение</span>
+    <button class="window-btn btn-min" onclick="minWindow('appdetail')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('appdetail')">□</button>
+    <button class="window-btn btn-close" onclick="closeWindow('appdetail')">×</button>
+  </div>
+  <div class="window-content" id="appdetail-content" style="padding:0;"></div>
 </div>
 
 <!-- Snake Game -->
@@ -1087,6 +1408,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-snake')">
     <span class="window-title">🐍 Змейка</span>
     <button class="window-btn btn-min" onclick="minWindow('snake')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('snake')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('snake')">×</button>
   </div>
   <div class="window-content" id="snake-content" style="display:flex; flex-direction:column; align-items:center; padding:10px;">
@@ -1105,6 +1427,7 @@
   <div class="window-titlebar" onmousedown="startDrag(event,'win-yandexmusic')">
     <span class="window-title">🎵 Яндекс Музыка</span>
     <button class="window-btn btn-min" onclick="minWindow('yandexmusic')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('yandexmusic')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('yandexmusic')">×</button>
   </div>
   <div class="window-content" id="yandexmusic-content" style="display:flex; flex-direction:column; align-items:center; padding:14px;">
@@ -1123,35 +1446,14 @@
   </div>
 </div>
 
-<!-- Casino -->
-<div class="window" id="win-casino" style="width:400px; height:440px; top:80px; left:220px;">
-  <div class="window-titlebar" onmousedown="startDrag(event,'win-casino')">
-    <span class="window-title">🎰 NotX Casino</span>
-    <button class="window-btn btn-min" onclick="minWindow('casino')">−</button>
-    <button class="window-btn btn-close" onclick="closeWindow('casino')">×</button>
-  </div>
-  <div class="window-content" id="casino-content" style="display:flex; flex-direction:column; align-items:center; padding:14px;">
-    <div style="font-size:48px; margin:10px 0;">🎰</div>
-    <div id="casino-wheel" style="width:200px; height:200px; border-radius:50%; background:conic-gradient(var(--danger) 0deg 60deg, var(--warning) 60deg 120deg, var(--success) 120deg 180deg, var(--info) 180deg 240deg, var(--accent) 240deg 300deg, var(--danger) 300deg 360deg); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold; color:white; text-shadow:0 2px 4px rgba(0,0,0,0.5); transition:transform 2s cubic-bezier(0.25,0.1,0.25,1); border:4px solid var(--border);">?</div>
-    <div style="margin-top:14px; font-size:14px;">💰 Баланс: <b id="casino-balance">$0</b></div>
-    <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap; justify-content:center;">
-      <button class="btn btn-small" onclick="setCasinoBet(50)">$50</button>
-      <button class="btn btn-small" onclick="setCasinoBet(100)">$100</button>
-      <button class="btn btn-small" onclick="setCasinoBet(250)">$250</button>
-      <button class="btn btn-small" onclick="setCasinoBet(500)">$500</button>
-    </div>
-    <div style="margin-top:8px; font-size:13px;">Ставка: <b id="casino-bet" style="color:var(--accent);">$50</b></div>
-    <button class="btn" style="margin-top:12px;" onclick="spinCasino()">🎰 Крутить!</button>
-    <div id="casino-result" style="margin-top:10px; font-size:13px; min-height:20px; text-align:center;"></div>
-    <div style="margin-top:8px; font-size:11px; color:var(--text-dim); text-align:center;">🟢 ×2 | 🔴 ×0 | 🟡 ×1.5 | 🔵 ×1.2 | 🟠 ×0.5</div>
-  </div>
-</div>
+
 
 <!-- Tetris -->
 <div class="window" id="win-tetris" style="width:380px; height:520px; top:50px; left:200px;">
   <div class="window-titlebar" onmousedown="startDrag(event,'win-tetris')">
     <span class="window-title">🧱 Тетрис</span>
     <button class="window-btn btn-min" onclick="minWindow('tetris')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('tetris')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('tetris')">×</button>
   </div>
   <div class="window-content" id="tetris-content" style="display:flex; flex-direction:column; align-items:center; padding:10px;">
@@ -1166,6 +1468,16 @@
   </div>
 </div>
 
+<!-- Crypto Wallet -->
+<div class="window" id="win-crypto" style="width:560px; height:560px; top:50px; left:180px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-crypto')">
+    <span class="window-title">💰 Crypto Wallet</span>
+    <button class="window-btn btn-min" onclick="minWindow('crypto')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('crypto')">□</button>
+    <button class="window-btn btn-close" onclick="closeWindow('crypto')">×</button>
+  </div>
+  <div class="window-content" style="padding:12px; overflow-y:auto;"></div>
+</div>
 </div><!-- /desktop-layer -->
 
 <!-- Overlay Dialog -->
@@ -1729,6 +2041,95 @@ function switchSettingsTab(tab) {
   }
 }
 
+function renderSystemSettings() {
+  const el = document.getElementById('settings-content');
+  if (!el || !state) return;
+  const protection = Math.max(0, Math.min(100, ((state.def || 1) * 12) - Math.floor(state.fbi || 0)));
+  const virusState = state.virusActive ? 'Активен' : (state.virusQuarantined ? 'В карантине' : 'Чисто');
+  el.innerHTML = `
+    <div class="boot-panel">
+      <h3 style="margin:0 0 10px;color:var(--accent);">Параметры системы</h3>
+      <div class="sys-grid">
+        <div class="sys-card"><div class="label">ОС</div><div class="value">Linux Dev OS v3.2</div></div>
+        <div class="sys-card"><div class="label">Пользователь</div><div class="value">student@it</div></div>
+        <div class="sys-card"><div class="label">Статус</div><div class="value">${state.gameOver ? 'Завершение' : 'Работает'}</div></div>
+        <div class="sys-card"><div class="label">Защита</div><div class="value">${protection}%</div><div class="sys-bar"><span style="width:${protection}%;"></span></div></div>
+        <div class="sys-card"><div class="label">Вирус</div><div class="value">${virusState}</div></div>
+        <div class="sys-card"><div class="label">Хранилище</div><div class="value">${state.customWallpaper ? 'Свои обои' : 'Стандартные обои'}</div></div>
+      </div>
+
+      <div style="margin-top:14px;display:grid;gap:8px;">
+        <div class="sys-toggle"><input type="checkbox" ${state.showHints ? 'checked' : ''} onchange="state.showHints=this.checked"><div><b>Подсказки обучения</b><div class="boot-small">Подсказки по терминалу, файлам и сюжету</div></div></div>
+        <div class="sys-toggle"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="state.sound=this.checked"><div><b>Системные звуки</b><div class="boot-small">Клики, уведомления и запуск окон</div></div></div>
+        <div class="sys-toggle"><input type="checkbox" ${state.animBg !== false ? 'checked' : ''} onchange="toggleAnimBg(this.checked)"><div><b>Анимированный фон</b><div class="boot-small">Сделайте фон живым или отключите на слабом устройстве</div></div></div>
+      </div>
+
+      <div class="sys-card" style="margin-top:14px;">
+        <div class="sys-row"><span>Сохранение</span><button class="btn btn-small btn-secondary" onclick="saveGame()">Сохранить</button></div>
+        <div class="sys-row"><span>Загрузка</span><button class="btn btn-small btn-secondary" onclick="loadGame()">Загрузить</button></div>
+        <div class="sys-row"><span>Экспорт</span><button class="btn btn-small btn-secondary" onclick="exportSaveToClipboard()">Код</button></div>
+        <div class="sys-row"><span>Импорт</span><button class="btn btn-small btn-secondary" onclick="importSaveFromString()">Файл / код</button></div>
+        <div class="sys-row"><span>Главное меню</span><button class="btn btn-small" onclick="returnToMainMenu()">Выход</button></div>
+        <div class="sys-row"><span>Антивирус</span><button class="btn btn-small btn-green" onclick="installKiwiAntivirus()">Kiwi Antivirus</button></div>
+      </div>
+
+      <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+        <h4 style="margin-bottom:10px; color:var(--info); font-size:13px;">🎨 Персонализация</h4>
+        <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Фон рабочего стола и свои обои остаются здесь же.</p>
+        <div class="wallpaper-grid" id="wallpaper-grid"></div>
+        <div style="margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <label class="btn btn-secondary" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+            📤 Загрузить фото
+            <input type="file" id="custom-wallpaper-input" accept="image/*" style="display:none;" onchange="handleCustomWallpaper(this)">
+          </label>
+          <button class="btn btn-small btn-red" onclick="removeCustomWallpaper()" id="remove-custom-wp-btn" style="display:none;">🗑️ Удалить</button>
+        </div>
+        <div id="custom-wallpaper-preview" style="margin-top:10px; display:none;">
+          <div style="font-size:11px; color:var(--text-dim); margin-bottom:6px;">Предпросмотр:</div>
+          <img id="custom-wp-img" style="max-width:200px; max-height:120px; border-radius:8px; border:2px solid var(--border); object-fit:cover;">
+        </div>
+        <p style="font-size:11px; color:var(--text-dim); margin-top:8px;">💡 Поддерживаются JPG, PNG, GIF, WEBP. Макс. размер рекомендуется до 2 МБ.</p>
+      </div>
+
+      <div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--border);">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
+          <input type="checkbox" id="set-anim-bg" onchange="toggleAnimBg(this.checked)"> Анимированный фон (слабые ПК — отключайте)
+        </label>
+      </div>
+
+      <div style="margin-top:16px; font-size:12px; color:var(--text-dim); line-height:1.6;">
+        <div style="margin-bottom:6px;"><b style="color:var(--accent);">© 2026 Linux Dev OS</b></div>
+        <div>👨‍💻 <b>Разработчики:</b> Odium and Stepin by Gcorp</div>
+        <div>🔞 <b>Возрастной рейтинг:</b> 16+</div>
+        <div>🎮 <b>Платформа:</b> Яндекс.Игры</div>
+      </div>
+    </div>`;
+  renderWallpapers();
+  updateCustomWallpaperUI();
+}
+
+
+function scanForVirus() {
+  if (!state) return;
+  log(state.virusActive ? ('🔍 Найдена инфекция: ' + (state.virusSource || 'unknown')) : '🔍 Система чиста.', state.virusActive ? 'warning' : 'success');
+}
+
+function installKiwiAntivirus() {
+  if (!state) return;
+  if (!hasApp('kiwi_antivirus')) {
+    log('Сначала установите Kiwi Antivirus в NotX SHOP.', 'warning');
+    return;
+  }
+  state.virusActive = false;
+  state.virusLevel = 0;
+  state.virusSource = '';
+  state.virusTicks = 0;
+  state.virusQuarantined = true;
+  state.def = Math.max(state.def || 1, 2);
+  log('🛡️ Kiwi Antivirus обезвредил вирус.', 'success');
+  updateTopBar();
+}
+
 // ===================== EASTER EGGS & EXTRA COMMANDS =====================
 const fortunes = [
   "Смысл жизни — в коде.",
@@ -1804,6 +2205,7 @@ function cmdNeofetch() {
     "🐚 Shell: bash 5.1.16",
     "🎨 DE: Custom Wayland",
     "🖥️ Theme: Ubuntu Dark",
+    "🛡️ Defense: " + (state.def || 1) + "/67",
     "🔤 Terminal: tty1",
     "💰 Money: $" + state.money,
     "⭐ Reputation: " + state.reputation,
@@ -1865,12 +2267,12 @@ let state = null;
 
 function createState() {
   return {
-    saveVersion: 3,
+    saveVersion: 4,
     money: diffCfg.startMoney,
     reputation: 50,
     fbi: 0,
     gameTime: new Date(2026, 4, 9, 9, 0),
-    hw: 1, sw: 1, net: 1,
+    hw: 1, sw: 1, net: 1, def: 1,
     lang: 'python',
     projects: [],
     messages: [],
@@ -1888,7 +2290,7 @@ function createState() {
     eventTimer: 0,
     exploitLogs: [],
     lockout: { active: false, endTime: 0, count: 0 },
-    wins: { terminal:false, browser:false, mail:false, projects:false, store:false, darknet:false, antivirus:false, settings:false, notxshop:false, snake:false, yandexmusic:false, casino:false, tetris:false },
+    wins: { terminal:false, browser:false, mail:false, projects:false, store:false, darknet:false, antivirus:false, settings:false, notxshop:false, appdetail:false, snake:false, yandexmusic:false, tetris:false, crypto:false },
     diff: selectedDiff,
     antivirusStock: 0,
     antivirusSold: 0,
@@ -1897,9 +2299,298 @@ function createState() {
     activeTask2: null,
     bestSnake: 0,
     bestTetris: 0,
-    casinoWon: 0,
-    customWallpaper: null
+    customWallpaper: null,
+    storyStage: 0,
+    storySeeded: false,
+    virusActive: false,
+    virusLevel: 0,
+    virusSource: '',
+    virusTicks: 0,
+    virusQuarantined: false,
+    crypto: createCryptoState()
   };
+}
+
+// ===================== CRYPTO MODULE =====================
+const CRYPTO_COINS = [
+  { id:'btc',  name:'Bitcoin',  symbol:'BTC',  emoji:'₿', color:'#f7931a', base: 65000, vol: 0.04, minerRate: 0.00012 }, // монет/час
+  { id:'eth',  name:'Ethereum', symbol:'ETH',  emoji:'Ξ', color:'#627eea', base:  3200, vol: 0.05, minerRate: 0.0025 },
+  { id:'ltc',  name:'Litecoin', symbol:'LTC',  emoji:'Ł', color:'#bfbbbb', base:    85, vol: 0.06, minerRate: 0.09 },
+  { id:'doge', name:'Dogecoin', symbol:'DOGE', emoji:'Ɖ', color:'#c2a633', base:  0.15, vol: 0.10, minerRate: 60 },
+  { id:'usdt', name:'Tether',   symbol:'USDT', emoji:'₮', color:'#26a17b', base:  1.00, vol: 0.002, minerRate: 9 }
+];
+
+function createCryptoState() {
+  const holdings = {};
+  const prices = {};
+  const history = {};
+  CRYPTO_COINS.forEach(c => {
+    holdings[c.id] = 0;
+    prices[c.id] = c.base;
+    // 30 точек истории для мини-графика
+    history[c.id] = [];
+    let p = c.base;
+    for (let i = 0; i < 30; i++) {
+      p = Math.max(c.base * 0.5, p * (1 + (Math.random() - 0.5) * c.vol * 0.5));
+      history[c.id].push(p);
+    }
+    prices[c.id] = history[c.id][history[c.id].length - 1];
+  });
+  return {
+    holdings,
+    prices,
+    history,
+    selectedMiner: 'btc',  // какую монету майнит CryptoMiner
+    lastUpdate: Date.now(),
+    totalSold: 0,
+    totalBought: 0
+  };
+}
+
+function cryptoCoin(id) { return CRYPTO_COINS.find(c => c.id === id); }
+
+function fmtCrypto(amount, id) {
+  if (id === 'btc') return amount.toFixed(6);
+  if (id === 'eth' || id === 'ltc') return amount.toFixed(4);
+  if (id === 'usdt') return amount.toFixed(2);
+  return amount.toFixed(2);
+}
+
+function fmtPrice(price) {
+  if (price >= 1000) return '$' + price.toFixed(0);
+  if (price >= 1)    return '$' + price.toFixed(2);
+  return '$' + price.toFixed(4);
+}
+
+function updateCryptoPrices() {
+  if (!state || !state.crypto) return;
+  CRYPTO_COINS.forEach(c => {
+    const prev = state.crypto.prices[c.id];
+    // Случайное блуждание с возвратом к базовой цене
+    const drift = (c.base - prev) / c.base * 0.02;
+    const shock = (Math.random() - 0.5) * c.vol;
+    let next = prev * (1 + drift + shock);
+    next = Math.max(c.base * 0.3, Math.min(c.base * 3, next));
+    state.crypto.prices[c.id] = next;
+    state.crypto.history[c.id].push(next);
+    if (state.crypto.history[c.id].length > 60) state.crypto.history[c.id].shift();
+  });
+  if (state.wins && state.wins.crypto) renderCrypto();
+}
+
+function minerProduce() {
+  if (!state || !state.crypto) return;
+  if (!hasApp('cryptominer')) return;
+  const coinId = state.crypto.selectedMiner || 'btc';
+  const c = cryptoCoin(coinId);
+  if (!c) return;
+  // Бонус от железа
+  const hwBonus = 1 + (state.hw - 1) * 0.25;
+  const amount = c.minerRate * hwBonus;
+  state.crypto.holdings[coinId] += amount;
+  if (state.wins && state.wins.crypto) renderCrypto();
+}
+
+function buyCrypto(coinId, dollars) {
+  const c = cryptoCoin(coinId);
+  if (!c || !state) return;
+  dollars = Number(dollars);
+  if (!isFinite(dollars) || dollars <= 0) { log('Введите корректную сумму', 'warning'); return; }
+  if (state.money < dollars) { log('Недостаточно $', 'danger'); return; }
+  const price = state.crypto.prices[coinId];
+  const amount = dollars / price;
+  state.money -= dollars;
+  state.crypto.holdings[coinId] += amount;
+  state.crypto.totalBought += dollars;
+  log('💱 Куплено ' + fmtCrypto(amount, coinId) + ' ' + c.symbol + ' за $' + dollars, 'success');
+  renderCrypto();
+  updateTopBar && updateTopBar();
+}
+
+function sellCrypto(coinId, amount) {
+  const c = cryptoCoin(coinId);
+  if (!c || !state) return;
+  amount = Number(amount);
+  if (!isFinite(amount) || amount <= 0) { log('Введите корректное количество', 'warning'); return; }
+  if (state.crypto.holdings[coinId] < amount - 1e-9) { log('Недостаточно ' + c.symbol, 'danger'); return; }
+  const price = state.crypto.prices[coinId];
+  const dollars = amount * price;
+  state.crypto.holdings[coinId] -= amount;
+  state.money += dollars;
+  state.totalEarned += dollars;
+  state.crypto.totalSold += dollars;
+  log('💵 Продано ' + fmtCrypto(amount, coinId) + ' ' + c.symbol + ' за $' + dollars.toFixed(2), 'success');
+  renderCrypto();
+  updateTopBar && updateTopBar();
+}
+
+function sellAllCrypto(coinId) {
+  if (!state || !state.crypto) return;
+  sellCrypto(coinId, state.crypto.holdings[coinId]);
+}
+
+function setMinerCoin(coinId) {
+  if (!state || !state.crypto) return;
+  const c = cryptoCoin(coinId);
+  if (!c) return;
+  state.crypto.selectedMiner = coinId;
+  log('⛏️ CryptoMiner переключён на ' + c.symbol, 'info');
+  renderCrypto();
+}
+
+function cryptoPortfolioValue() {
+  if (!state || !state.crypto) return 0;
+  let v = 0;
+  CRYPTO_COINS.forEach(c => { v += state.crypto.holdings[c.id] * state.crypto.prices[c.id]; });
+  return v;
+}
+
+function renderCrypto() {
+  const win = document.getElementById('win-crypto');
+  if (!win) return;
+  const body = win.querySelector('.window-content');
+  if (!body) return;
+  const cr = state.crypto;
+  const portfolio = cryptoPortfolioValue();
+  const minerSel = cr.selectedMiner;
+  const minerInstalled = hasApp('cryptominer');
+
+  // Check if we already have the structure (not first render)
+  const existingCoins = body.querySelectorAll('.crypto-coin');
+  const isFirstRender = existingCoins.length === 0;
+
+  if (isFirstRender) {
+    // First render - build everything
+    let coinsHtml = CRYPTO_COINS.map(c => {
+      const price = cr.prices[c.id];
+      const hist = cr.history[c.id];
+      const first = hist[0], last = hist[hist.length-1];
+      const change = ((last - first) / first) * 100;
+      const changeColor = change >= 0 ? 'var(--success)' : 'var(--danger)';
+      const changeSign = change >= 0 ? '▲' : '▼';
+      const w = 120, h = 36;
+      const mn = Math.min(...hist), mx = Math.max(...hist);
+      const range = mx - mn || 1;
+      const pts = hist.map((p,i) => (i/(hist.length-1)*w).toFixed(1) + ',' + (h - (p-mn)/range*h).toFixed(1)).join(' ');
+      const holding = cr.holdings[c.id];
+      const holdValue = holding * price;
+      const isMining = minerInstalled && minerSel === c.id;
+
+      return '<div class="crypto-coin" data-coin-id="' + c.id + '" style="border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:8px; background:rgba(255,255,255,0.03);">' +
+        '<div class="crypto-header" style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">' +
+          '<div class="crypto-icon" style="font-size:22px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; background:'+c.color+'; color:#fff; border-radius:50%; font-weight:bold;">'+c.emoji+'</div>' +
+          '<div style="flex:1;">' +
+            '<div class="crypto-name" style="font-weight:bold; font-size:14px;">'+c.name+' <span style="color:var(--text-dim); font-size:11px;">'+c.symbol+'</span>'+(isMining?' <span class="crypto-mining" style="color:var(--warning); font-size:11px;">⛏️ майнится</span>':'')+'</div>' +
+            '<div class="crypto-holding" style="font-size:12px; color:var(--text-dim);">У вас: <b style="color:var(--text);">'+fmtCrypto(holding, c.id)+' '+c.symbol+'</b> ≈ $'+holdValue.toFixed(2)+'</div>' +
+          '</div>' +
+          '<div class="crypto-price-wrap" style="text-align:right;">' +
+            '<div class="crypto-price" style="font-weight:bold; font-size:14px;">'+fmtPrice(price)+'</div>' +
+            '<div class="crypto-change" style="font-size:11px; color:'+changeColor+';">'+changeSign+' '+Math.abs(change).toFixed(2)+'%</div>' +
+          '</div>' +
+          '<svg class="crypto-sparkline" width="'+w+'" height="'+h+'" style="display:block;"><polyline points="'+pts+'" fill="none" stroke="'+c.color+'" stroke-width="1.5"/></svg>' +
+        '</div>' +
+        '<div class="crypto-actions" style="display:flex; gap:6px; flex-wrap:wrap;">' +
+          '<input type="number" id="crypto-buy-'+c.id+'" placeholder="$ для покупки" min="1" step="1" style="flex:1; min-width:100px; padding:5px 8px; background:#1e1e1e; color:#d4d4d4; border:1px solid var(--border); border-radius:4px; font-size:12px;">' +
+          '<button class="btn btn-small" onclick="buyCrypto(\''+c.id+'\', document.getElementById(\'crypto-buy-'+c.id+'\').value)">Купить</button>' +
+          '<input type="number" id="crypto-sell-'+c.id+'" placeholder="кол-во '+c.symbol+'" min="0" step="any" style="flex:1; min-width:100px; padding:5px 8px; background:#1e1e1e; color:#d4d4d4; border:1px solid var(--border); border-radius:4px; font-size:12px;">' +
+          '<button class="btn btn-small btn-secondary" onclick="sellCrypto(\''+c.id+'\', document.getElementById(\'crypto-sell-'+c.id+'\').value)">Продать</button>' +
+          '<button class="btn btn-small btn-secondary" onclick="sellAllCrypto(\''+c.id+'\')" title="Продать всё">Всё</button>' +
+          (minerInstalled && !isMining ? '<button class="btn btn-small btn-secondary crypto-miner-btn" onclick="setMinerCoin(\''+c.id+'\')" title="Майнить эту монету">⛏️</button>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    body.innerHTML =
+      '<div class="crypto-portfolio" style="margin-bottom:10px; padding:10px; background:linear-gradient(135deg, #1a1a2e, #2c001e); border-radius:8px; border:1px solid var(--border);">' +
+        '<div style="font-size:12px; color:var(--text-dim);">Портфель</div>' +
+        '<div class="crypto-portfolio-value" style="font-size:22px; font-weight:bold; color:var(--accent);">$'+portfolio.toFixed(2)+'</div>' +
+        '<div class="crypto-portfolio-info" style="font-size:11px; color:var(--text-dim); margin-top:4px;">Куплено: $'+cr.totalBought.toFixed(0)+' · Продано: $'+cr.totalSold.toFixed(0)+(minerInstalled?' · ⛏️ Майнер: <b style="color:var(--warning);">'+cryptoCoin(minerSel).symbol+'</b>':'')+'</div>' +
+        (!minerInstalled?'<div style="font-size:11px; color:var(--text-dim); margin-top:4px;">💡 Купите <b>CryptoMiner</b> в NotX SHOP для пассивного майнинга.</div>':'') +
+      '</div>' +
+      coinsHtml +
+      '<div style="font-size:10px; color:var(--text-dim); text-align:center; margin-top:8px;">Цены обновляются автоматически каждые ~5 секунд</div>';
+  } else {
+    // Update-only mode: update only prices, holdings, sparklines, portfolio
+    // without touching input fields
+
+    // Update portfolio value
+    const portfolioEl = body.querySelector('.crypto-portfolio-value');
+    if (portfolioEl) portfolioEl.textContent = '$' + portfolio.toFixed(2);
+
+    // Update portfolio info
+    const portfolioInfoEl = body.querySelector('.crypto-portfolio-info');
+    if (portfolioInfoEl) {
+      portfolioInfoEl.innerHTML = 'Куплено: $' + cr.totalBought.toFixed(0) + ' · Продано: $' + cr.totalSold.toFixed(0) + (minerInstalled ? ' · ⛏️ Майнер: <b style="color:var(--warning);">' + cryptoCoin(minerSel).symbol + '</b>' : '');
+    }
+
+    // Update each coin's price, change, holding, sparkline
+    CRYPTO_COINS.forEach(c => {
+      const coinEl = body.querySelector('.crypto-coin[data-coin-id="' + c.id + '"]');
+      if (!coinEl) return;
+
+      const price = cr.prices[c.id];
+      const hist = cr.history[c.id];
+      const first = hist[0], last = hist[hist.length-1];
+      const change = ((last - first) / first) * 100;
+      const changeColor = change >= 0 ? 'var(--success)' : 'var(--danger)';
+      const changeSign = change >= 0 ? '▲' : '▼';
+      const holding = cr.holdings[c.id];
+      const holdValue = holding * price;
+      const isMining = minerInstalled && minerSel === c.id;
+
+      // Update price
+      const priceEl = coinEl.querySelector('.crypto-price');
+      if (priceEl) priceEl.textContent = fmtPrice(price);
+
+      // Update change
+      const changeEl = coinEl.querySelector('.crypto-change');
+      if (changeEl) {
+        changeEl.textContent = changeSign + ' ' + Math.abs(change).toFixed(2) + '%';
+        changeEl.style.color = changeColor;
+      }
+
+      // Update holding
+      const holdingEl = coinEl.querySelector('.crypto-holding');
+      if (holdingEl) {
+        holdingEl.innerHTML = 'У вас: <b style="color:var(--text);">' + fmtCrypto(holding, c.id) + ' ' + c.symbol + '</b> ≈ $' + holdValue.toFixed(2);
+      }
+
+      // Update mining badge in header
+      const nameEl = coinEl.querySelector('.crypto-name');
+      if (nameEl) {
+        const baseHtml = c.name + ' <span style="color:var(--text-dim); font-size:11px;">' + c.symbol + '</span>';
+        const miningBadge = isMining ? ' <span class="crypto-mining" style="color:var(--warning); font-size:11px;">⛏️ майнится</span>' : '';
+        nameEl.innerHTML = baseHtml + miningBadge;
+      }
+
+      // Update sparkline
+      const w = 120, h = 36;
+      const mn = Math.min(...hist), mx = Math.max(...hist);
+      const range = mx - mn || 1;
+      const pts = hist.map((p,i) => (i/(hist.length-1)*w).toFixed(1) + ',' + (h - (p-mn)/range*h).toFixed(1)).join(' ');
+      const sparklineEl = coinEl.querySelector('.crypto-sparkline polyline');
+      if (sparklineEl) sparklineEl.setAttribute('points', pts);
+
+      // Update miner button visibility
+      const btnContainer = coinEl.querySelector('.crypto-actions');
+      if (btnContainer) {
+        if (minerInstalled && !isMining) {
+          const existingMinerBtn = btnContainer.querySelector('.crypto-miner-btn');
+          if (!existingMinerBtn) {
+            const minerBtn = document.createElement('button');
+            minerBtn.className = 'btn btn-small btn-secondary crypto-miner-btn';
+            minerBtn.setAttribute('onclick', "setMinerCoin('" + c.id + "')");
+            minerBtn.setAttribute('title', 'Майнить эту монету');
+            minerBtn.textContent = '⛏️';
+            btnContainer.appendChild(minerBtn);
+          }
+        } else {
+          const existingMinerBtn = btnContainer.querySelector('.crypto-miner-btn');
+          if (existingMinerBtn) existingMinerBtn.remove();
+        }
+      }
+    });
+  }
 }
 
 const langs = {
@@ -1908,13 +2599,127 @@ const langs = {
   js: { name:'JavaScript', speed:1.1, reward:1.1 }
 };
 
+// ===================== SYSTEM BOOT SEQUENCE =====================
+function runBootSequence(isNewGame, onComplete) {
+  const bootScreen = document.getElementById('boot-screen');
+  const bootLog = document.getElementById('boot-log');
+  const bootProgress = document.getElementById('boot-progress');
+  const bootPercentage = document.getElementById('boot-percentage');
+
+  if (!bootScreen || !bootLog || !bootProgress || !bootPercentage) {
+    onComplete();
+    return;
+  }
+
+  // Show boot screen and ensure it's fully opaque
+  bootScreen.style.opacity = '1';
+  bootScreen.style.display = 'flex';
+  bootLog.innerHTML = `<div style="color: var(--accent); font-weight: bold; margin-bottom: 15px; font-size: 11px; line-height: 1.2; white-space: pre;">  _      _                    _____                 ____   _____ \n | |    (_)                  |  __ \\               / __ \\ / ____|\n | |     _ _ __  _   ___  __ | |  | | ___ _   _   | |  | | (___  \n | |    | | '\''_ \\| | | \\ \\/ / | |  | |/ _ \\ \\ / /  | |  | |\\___ \\ \n | |____| | | | | |_| |>  <  | |__| |  __\\\\ V /   | |__| |____) |\n |______|_|_| |_|\\__,_/_/\\_\\ |_____/ \\___| \\_/     \\____/|_____/ </div>`;
+  bootProgress.style.width = '0%';
+  bootPercentage.textContent = '0%';
+
+  const logs = isNewGame ? [
+    "[  0.000000] Linux version 5.15.0-dev-os (gcc version 11.2.0)",
+    "[  0.082512] Booting Linux Dev OS on quantum processor...",
+    "[  0.154124] Detecting available core modules...",
+    "[  0.221015] Memory: 32GB RAM detected, allocation table verified.",
+    "[  0.312411] Mounting system partition (Ext4 on sda1)...",
+    "[  0.412014] Initializing sound servers and graphics pipeline...",
+    "[  0.584214] Starting network interfaces (Wi-Fi 802.11ax)...",
+    "[  0.724512] Creating directory /home/neo ... Done.",
+    "[  0.865123] Setting up workspace for hacker trainee...",
+    "[  1.024151] Generating educational hints...",
+    "[  1.184512] Loading NotX SHOP catalogue...",
+    "[  1.324512] Generating initial freelance jobs...",
+    "[  1.484214] Syncing local environment config...",
+    "[  1.612014] Starting DE (Custom Wayland Compositor)...",
+    "[  1.784214] Checking credentials... Access Granted.",
+    "[  1.924512] Welcome to Linux Dev OS! Launching Desktop..."
+  ] : [
+    "[  0.000000] Linux version 5.15.0-dev-os (gcc version 11.2.0)",
+    "[  0.072512] Initializing boot sequence from save state...",
+    "[  0.144124] Loading system settings and preferences...",
+    "[  0.221015] Restoring file system: /home/documents, /home/notes...",
+    "[  0.312411] Decrypting home directory partitions... Done.",
+    "[  0.424151] Rebuilding network topology...",
+    "[  0.552014] Restoring active freelance projects and emails...",
+    "[  0.684214] Syncing achievements database with local storage...",
+    "[  0.812411] Loading installed packages: VS Code, Vim, Copilot...",
+    "[  0.942512] Verifying connection integrity with Googie Freelance...",
+    "[  1.104214] Restoring FBI risk factors and surveillance levels...",
+    "[  1.284512] Loading crypto wallet data and historical chart...",
+    "[  1.424512] Initializing system visual themes and custom wallpapers...",
+    "[  1.594214] Relaunching background daemon services...",
+    "[  1.724512] Verification success. Restoring your session...",
+    "[  1.904512] Welcome back, developer! Boot complete."
+  ];
+
+  let currentLine = 0;
+  const totalLines = logs.length;
+  const intervalTime = 100; // fast but readable, total 1.6s
+
+  // Try to unlock Web Audio context on load
+  try {
+    ensureAudio();
+  } catch(e) {}
+
+  const interval = setInterval(() => {
+    if (currentLine < totalLines) {
+      const line = document.createElement('div');
+      line.textContent = logs[currentLine];
+      bootLog.appendChild(line);
+      bootLog.scrollTop = bootLog.scrollHeight;
+
+      currentLine++;
+      const percent = Math.min(100, Math.floor((currentLine / totalLines) * 100));
+      bootProgress.style.width = percent + '%';
+      bootPercentage.textContent = percent + '%';
+
+      // Small high-pitch keyboard terminal click
+      try {
+        ensureAudio();
+        playTone(800 + Math.random() * 200, 'sine', 0.02, 0.03);
+      } catch(e) {}
+    } else {
+      clearInterval(interval);
+      // Play system start noise
+      try {
+        ensureAudio();
+        playTone(523.25, 'sine', 0.15, 0.1);
+        setTimeout(() => playTone(659.25, 'sine', 0.15, 0.1), 80);
+        setTimeout(() => playTone(783.99, 'sine', 0.25, 0.15), 160);
+      } catch(e) {}
+      
+      // Fade out boot screen
+      bootScreen.style.transition = 'opacity 0.5s ease-out';
+      bootScreen.style.opacity = '0';
+      setTimeout(() => {
+        bootScreen.style.display = 'none';
+        onComplete();
+      }, 500);
+    }
+  }, intervalTime);
+}
+
 // ===================== TITLE SCREEN =====================
 function startGame() {
   state = createState();
-  document.getElementById('title-screen').classList.add('hidden');
-  document.getElementById('desktop-layer').classList.add('active');
-  document.getElementById('top-diff').textContent = diffCfg.label;
-  initGame();
+  runBootSequence(true, () => {
+    document.getElementById('title-screen').classList.add('hidden');
+    document.getElementById('desktop-layer').classList.add('active');
+    document.getElementById('top-diff').textContent = diffCfg.label;
+    initGame();
+    // Сообщаем платформе что игра готова к взаимодействию
+    if (ysdk && ysdk.features && ysdk.features.LoadingAPI) {
+      try { ysdk.features.LoadingAPI.ready(); } catch(e) {}
+    }
+    // Запускаем геймплей
+    if (ysdk && ysdk.features && ysdk.features.GameplayAPI) {
+      try { ysdk.features.GameplayAPI.start(); } catch(e) {}
+    }
+    // Показываем рекламу при старте новой игры
+    setTimeout(() => showInterstitialAd(), 2000);
+  });
 }
 
 function loadGameFromTitle() {
@@ -1923,14 +2728,25 @@ function loadGameFromTitle() {
   try {
     const p = JSON.parse(d);
     state = createState(); // создаём базовый state, затем мигрируем
-    if (migrateAndLoad(p)) {
-      document.getElementById('title-screen').classList.add('hidden');
-      document.getElementById('desktop-layer').classList.add('active');
-      document.getElementById('top-diff').textContent = diffCfg.label;
-      initGame();
-    } else {
-      alert('Ошибка загрузки сохранения!');
-    }
+    if (p && p.sound !== undefined) state.sound = p.sound;
+    runBootSequence(false, () => {
+      if (migrateAndLoad(p)) {
+        document.getElementById('title-screen').classList.add('hidden');
+        document.getElementById('desktop-layer').classList.add('active');
+        document.getElementById('top-diff').textContent = diffCfg.label;
+        initGame();
+        // Сообщаем платформе что игра готова к взаимодействию
+        if (ysdk && ysdk.features && ysdk.features.LoadingAPI) {
+          try { ysdk.features.LoadingAPI.ready(); } catch(e) {}
+        }
+        // Запускаем геймплей
+        if (ysdk && ysdk.features && ysdk.features.GameplayAPI) {
+          try { ysdk.features.GameplayAPI.start(); } catch(e) {}
+        }
+      } else {
+        alert('Ошибка загрузки сохранения!');
+      }
+    });
   } catch(e) { alert('Ошибка загрузки: ' + e.message); console.error(e); }
 }
 
@@ -1947,10 +2763,9 @@ function openWindow(name) {
   if (name === 'notxshop') { renderNotxShop(); }
   if (name === 'snake' && !hasApp('snake')) { log('Сначала купите Змейку в NotX SHOP!', 'warning'); return; }
   if (name === 'yandexmusic' && !hasApp('yandex_music')) { log('Сначала купите Яндекс Музыку в NotX SHOP!', 'warning'); return; }
-  if (name === 'casino' && !hasApp('casino')) { log('Сначала купите NotX Casino в NotX SHOP!', 'warning'); return; }
+  
   if (name === 'tetris' && !hasApp('tetris')) { log('Сначала купите Тетрис в NotX SHOP!', 'warning'); return; }
   if (name === 'yandexmusic') { setTimeout(ymRenderPlaylist, 100); }
-  if (name === 'casino') { setTimeout(() => { const el = document.getElementById('casino-balance'); if(el) el.textContent = '$' + (state ? state.money : 0); }, 100); }
   const win = document.getElementById('win-' + name);
   if (!win) return;
   win.classList.add('active', 'opening', 'focused');
@@ -1966,7 +2781,10 @@ function openWindow(name) {
   if (name === 'antivirus') renderAntivirus();
   if (name === 'browser') renderBrowser();
   if (name === 'files') renderFiles();
+  if (name === 'kiwidraw') renderKiwiDraw();
   if (name === 'achievements') renderAchievements();
+  if (name === 'settings') renderSystemSettings();
+  if (name === 'crypto') renderCrypto();
 }
 
 function closeWindow(name) {
@@ -1991,6 +2809,44 @@ function focusWindow(name) {
   win.classList.add('focused');
   if (name === 'terminal') setTimeout(() => document.getElementById('term-in').focus(), 50);
 }
+
+// ===================== WINDOW FULLSCREEN =====================
+let windowStates = {};
+
+function toggleWindowFullscreen(name) {
+  const win = document.getElementById('win-' + name);
+  if (!win) return;
+
+  const isFullscreen = win.classList.contains('fullscreen');
+
+  if (isFullscreen) {
+    // Restore
+    const s = windowStates[name];
+    if (s) {
+      win.classList.remove('fullscreen');
+      win.style.width = s.width;
+      win.style.height = s.height;
+      win.style.top = s.top;
+      win.style.left = s.left;
+    }
+  } else {
+    // Save current state and maximize
+    windowStates[name] = {
+      width: win.style.width,
+      height: win.style.height,
+      top: win.style.top,
+      left: win.style.left
+    };
+    win.classList.add('fullscreen');
+  }
+
+  // Trigger resize for canvases
+  setTimeout(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, 100);
+}
+
+
 
 
 function showMenu() {
@@ -2024,6 +2880,101 @@ function menuOpen(name) {
   hideMenu();
 }
 
+function continueLastSession() {
+  try {
+    const d = localStorage.getItem(SAVE_KEY);
+    if (d) {
+      const parsed = JSON.parse(d);
+      if (parsed && (parsed.money !== undefined || parsed.saveVersion)) {
+        loadGameFromTitle();
+        return;
+      }
+    }
+  } catch (e) {
+    console.error('Ошибка проверки сохранения:', e);
+  }
+  log('📭 Сохранение не найдено или повреждено. Начинаем новую игру.', 'warning');
+  startGame();
+}
+
+function openRecoveryMode() {
+  // Подстраховка: убеждаемся, что элементы диалога есть в DOM и оверлей виден поверх title-screen
+  var ov = document.getElementById('overlay');
+  if (!ov || !document.getElementById('dialog-title')) {
+    // Fallback на случай отсутствия DOM-элементов
+    if (confirm('Восстановление\n\nOK — продолжить последнюю сессию\nОтмена — импорт сохранения')) {
+      continueLastSession();
+    } else {
+      importSaveFromString();
+    }
+    return;
+  }
+  // Принудительно поднимаем оверлей над title-screen
+  ov.style.zIndex = '99999';
+  showDialog('🛠️ Восстановление', 
+    '<p style="font-size:12px;line-height:1.6;">Здесь можно вернуть прогресс, если главное меню не открывается или файл сохранения повреждён. Ничего не удаляется без вашего подтверждения.</p>' +
+    '<ul style="font-size:11px;line-height:1.6;color:var(--text-dim);margin:6px 0 0 18px;">' +
+    '<li><b>Продолжить</b> — загрузить последнее сохранение</li>' +
+    '<li><b>Импорт</b> — восстановить из кода/файла</li>' +
+    '<li><b>Очистить</b> — удалить битое сохранение и начать заново</li>' +
+    '</ul>', [
+    { text: '▶ Продолжить', action: function(){ closeDialog(); continueLastSession(); }, primary: true },
+    { text: '📥 Импорт', action: function(){ closeDialog(); importSaveFromString(); } },
+    { text: '🗑️ Очистить', action: function(){
+        if (confirm('Удалить сохранение и начать новую игру?')) {
+          try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+          try { localStorage.removeItem('linuxdev_save_backup'); } catch(e) {}
+          closeDialog();
+          refreshBootMenu();
+          alert('Сохранение удалено. Можно начинать новую игру.');
+        }
+      } },
+    { text: '🏠 Главное меню', action: function(){ closeDialog(); returnToMainMenu(); } },
+    { text: 'Закрыть', action: closeDialog }
+  ]);
+}
+
+function refreshBootMenu() {
+  const info = document.getElementById('boot-save-info');
+  const continueBtn = document.getElementById('boot-continue-btn');
+  let hasSave = false;
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      hasSave = !!(parsed && (parsed.money !== undefined || parsed.saveVersion));
+    }
+  } catch (e) {
+    hasSave = false;
+  }
+  if (info) {
+    info.textContent = hasSave 
+      ? '💾 Сохранение найдено. Можно продолжить сюжет или открыть восстановление.' 
+      : '📭 Сохранение не найдено. Начните новую игру или используйте восстановление.';
+    info.style.color = hasSave ? 'var(--success)' : 'var(--text-dim)';
+  }
+  if (continueBtn) {
+    continueBtn.disabled = !hasSave;
+    continueBtn.style.opacity = hasSave ? '1' : '0.4';
+  }
+}
+
+function returnToMainMenu() {
+  try { saveGame(true); } catch (e) {}
+  hideMenu();
+  try { clearInterval(gameInterval); gameInterval = null; } catch (e) {}
+  try { if (window._autoSaveInterval) { clearInterval(window._autoSaveInterval); window._autoSaveInterval = null; } } catch (e) {}
+  if (ysdk && ysdk.features && ysdk.features.GameplayAPI) {
+    try { ysdk.features.GameplayAPI.stop(); } catch(e) {}
+  }
+  state = null;
+  const desktopLayer = document.getElementById('desktop-layer');
+  const titleScreen = document.getElementById('title-screen');
+  if (desktopLayer) desktopLayer.classList.remove('active');
+  if (titleScreen) titleScreen.classList.remove('hidden');
+  refreshBootMenu();
+}
+
 document.addEventListener('click', (e) => {
   const menu = document.getElementById('start-menu');
   const btn = document.getElementById('start-btn');
@@ -2036,6 +2987,19 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') hideMenu();
 });
+
+// Fullscreen toggle with F11 on focused windows
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'F11') {
+    e.preventDefault();
+    const focused = document.querySelector('.window.focused');
+    if (focused) {
+      const name = focused.id.replace('win-', '');
+      toggleWindowFullscreen(name);
+    }
+  }
+});
+
 
 function updateTaskbar() {
   const bar = document.getElementById('taskbar-apps');
@@ -2050,7 +3014,12 @@ function updateTaskbar() {
     {id:'antivirus', icon:'🛡️', label:'Антивирус'},
     {id:'files', icon:'📂', label:'Файлы'},
     {id:'achievements', icon:'🏆', label:'Ачивки'},
-    {id:'notxshop', icon:'🛍️', label:'App Store'},
+    {id:'notxshop', icon:'🛍️', label:'NotX SHOP'},
+    {id:'snake', icon:'🐍', label:'Змейка'},
+    {id:'yandexmusic', icon:'🎵', label:'Яндекс Музыка'},
+    
+    {id:'tetris', icon:'🧱', label:'Тетрис'},
+    {id:'crypto', icon:'💰', label:'Crypto Wallet'},
     {id:'settings', icon:'⚙️', label:'Настройки'}
   ];
   apps.forEach(a => {
@@ -2094,92 +3063,226 @@ const termIn = document.getElementById('term-in');
 const termHint = document.getElementById('term-hint');
 
 function log(text, type='info') {
-  const div = document.createElement('div');
-  const colors = { info:'#d4d4d4', success:'#38b44a', warning:'#efb73e', danger:'#df382c', system:'#19b6ee' };
-  div.style.color = colors[type] || colors.info;
-  div.textContent = text;
-  termOut.appendChild(div);
-  termOut.scrollTop = termOut.scrollHeight;
+  try {
+    const div = document.createElement('div');
+    const colors = { info:'#d4d4d4', success:'#38b44a', warning:'#efb73e', danger:'#df382c', system:'#19b6ee' };
+    div.style.color = colors[type] || colors.info;
+    div.textContent = text;
+    const out = termOut || document.getElementById('term-out');
+    if (out) {
+      out.appendChild(div);
+      out.scrollTop = out.scrollHeight;
+    } else {
+      console.log('[' + type + '] ' + text);
+    }
+  } catch (e) {
+    try { console.log('[' + type + '] ' + text); } catch(_) {}
+  }
+}
+
+function submitTerminalInput() {
+  if (!termIn) return;
+  const val = termIn.value.trim();
+  termIn.value = '';
+  if (val) {
+    log('neo@dev:~$ ' + val, 'system');
+    execCmd(val);
+  }
 }
 
 termIn.addEventListener('keydown', e => {
-  if (state.gameOver) return;
+  // Не обрабатываем если игра окончена
+  if (state && state.gameOver) return;
+  // Не перехватываем если активна игра змейка или тетрис
+  const snakeWinActive = document.getElementById('win-snake') && document.getElementById('win-snake').classList.contains('active');
+  const tetrisWinActive = document.getElementById('win-tetris') && document.getElementById('win-tetris').classList.contains('active');
+  if (typeof snakeGame !== 'undefined' && snakeGame && !snakeGame.over && snakeWinActive) return;
+  if (typeof tetrisGame !== 'undefined' && tetrisGame && !tetrisGame.over && tetrisWinActive) return;
+
+  // === ENTER: отправка команды / завершение задачи ===
   if (e.key === 'Enter') {
-    if (state.hackTask) {
+    e.preventDefault();
+    // Если активен взлом
+    if (state && state.hackTask) {
       if (state.hackTask.progress >= state.hackTask.code.length) {
         const h = state.hosts.find(x => x.id === state.hackTask.hostId);
         const chance = state.hackTask.chance;
         const roll = Math.random() * 100;
         log(`⚡ Запуск эксплойта... Ролл: ${Math.floor(roll)} vs ${Math.floor(chance)}%`, 'system');
         finishHackTask(roll < chance);
-        return;
       } else {
-        e.preventDefault();
-        return;
+        log(`⚠️ Эксплойт не завершён! Введено ${state.hackTask.progress}/${state.hackTask.code.length} символов.`, 'warning');
       }
-    }
-    const val = termIn.value.trim();
-    termIn.value = '';
-    if (val) {
-      log('neo@dev:~$ ' + val, 'system');
-      execCmd(val);
-    }
-    return;
-  }
-  // Handle hack task typing (same mechanic as coding)
-  if (state.hackTask) {
-    if (e.key === 'Backspace') {
-      if (state.hackTask.progress > 0) {
-        state.hackTask.progress--;
-        updateHackHint();
-      }
-      e.preventDefault();
       return;
     }
-    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    // Если активен проект
+    if (state && state.activeTask) {
+      if (state.activeTask.progress >= state.activeTask.code.length) {
+        log('✅ Код завершён! Введите upload ' + state.activeTask.id + ' для сдачи.', 'success');
+      } else {
+        log(`⚠️ Код не завершён! Введено ${state.activeTask.progress}/${state.activeTask.code.length} символов.`, 'warning');
+      }
+      return;
+    }
+    // Обычная отправка команды
+    submitTerminalInput();
+    return;
+  }
+
+  // === BACKSPACE ===
+  if (e.key === 'Backspace') {
+    // Если активен взлом — управляем прогрессом
+    if (state && state.hackTask) {
+      e.preventDefault();
+      if (state.hackTask.progress > 0) {
+        state.hackTask.progress--;
+        termIn.value = state.hackTask.code.substring(0, state.hackTask.progress);
+        updateHackHint();
+      }
+      return;
+    }
+    // Если активен проект — управляем прогрессом
+    if (state && state.activeTask) {
+      e.preventDefault();
+      if (state.activeTask.progress > 0) {
+        state.activeTask.progress--;
+        termIn.value = state.activeTask.code.substring(0, state.activeTask.progress);
+        updateHint();
+      }
+      return;
+    }
+    // Обычный backspace — позволяем браузеру обработать
+    return;
+  }
+
+  // === ОБЫЧНЫЕ СИМВОЛЫ ===
+  if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    // Если активен взлом — проверяем ввод
+    if (state && state.hackTask) {
+      e.preventDefault();
       const task = state.hackTask;
       if (task.progress < task.code.length) {
         const expected = task.code[task.progress];
         if (e.key === expected) {
           task.progress++;
+          termIn.value = task.code.substring(0, task.progress);
           updateHackHint();
+          const progress = task.progress;
+          const total = task.code.length;
+          const percent = Math.floor((progress / total) * 100);
+          if (progress % 5 === 0 || progress === total) {
+            log(`   ⌨️ Прогресс: ${progress}/${total} (${percent}%)`, 'info');
+          }
           if (task.progress === task.code.length) {
             log('⚡ Эксплойт завершён! Нажмите Enter для запуска.', 'success');
           }
         } else {
           log(`❌ Ошибка ввода: ожидался '${expected}', введён '${e.key}'`, 'warning');
+          termIn.value = task.code.substring(0, task.progress);
         }
-        e.preventDefault();
       }
-    }
-    return;
-  }
-  // Handle active project coding
-  if (state.activeTask) {
-    if (e.key === 'Backspace') {
-      if (state.activeTask.progress > 0) {
-        state.activeTask.progress--;
-        updateHint();
-      }
-      e.preventDefault();
       return;
     }
-    if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    // Если активен проект — проверяем ввод
+    if (state && state.activeTask) {
+      e.preventDefault();
       const task = state.activeTask;
       if (task.progress < task.code.length) {
         const expected = task.code[task.progress];
         if (e.key === expected) {
           task.progress++;
+          termIn.value = task.code.substring(0, task.progress);
           updateHint();
           if (task.progress === task.code.length) {
             log('✅ Код завершён! Нажмите Enter для сдачи проекта.', 'success');
           }
         } else {
           log(`❌ Ошибка: ожидался '${expected}', введён '${e.key}'`, 'warning');
+          termIn.value = task.code.substring(0, task.progress);
         }
-        e.preventDefault();
       }
+      return;
     }
+    // Обычный ввод — позволяем браузеру обработать (символ вставится сам)
+    return;
+  }
+
+  // Все остальные клавиши при активных задачах блокируем
+  if ((state && state.hackTask) || (state && state.activeTask)) {
+    e.preventDefault();
+  }
+});
+
+// === INPUT fallback для мобильных устройств ===
+// На мобильных keydown часто возвращает keyCode=229 / key="Unidentified",
+// поэтому используем событие input как fallback.
+termIn.addEventListener('input', e => {
+  if (!state || state.gameOver) return;
+  const snakeWinActive = document.getElementById('win-snake') && document.getElementById('win-snake').classList.contains('active');
+  const tetrisWinActive = document.getElementById('win-tetris') && document.getElementById('win-tetris').classList.contains('active');
+  if (snakeGame && !snakeGame.over && snakeWinActive) return;
+  if (tetrisGame && !tetrisGame.over && tetrisWinActive) return;
+
+  // Если активен взлом — синхронизируем прогресс с содержимым поля
+  if (state && state.hackTask) {
+    const task = state.hackTask;
+    const val = termIn.value;
+    // Считаем сколько символов совпадает с началом кода
+    let matchLen = 0;
+    for (let i = 0; i < Math.min(val.length, task.code.length); i++) {
+      if (val[i] === task.code[i]) matchLen++;
+      else break;
+    }
+    if (matchLen > task.progress) {
+      // Пользователь ввёл правильные символы
+      task.progress = matchLen;
+      updateHackHint();
+      if (task.progress % 5 === 0 || task.progress === task.code.length) {
+        const percent = Math.floor((task.progress / task.code.length) * 100);
+        log(`   ⌨️ Прогресс: ${task.progress}/${task.code.length} (${percent}%)`, 'info');
+      }
+      if (task.progress === task.code.length) {
+        log('⚡ Эксплойт завершён! Нажмите Enter для запуска.', 'success');
+      }
+    } else if (matchLen < task.progress) {
+      // Пользователь удалил символы (backspace через input)
+      task.progress = matchLen;
+      updateHackHint();
+    } else if (val.length > task.progress) {
+      // Пользователь ввёл неправильный символ
+      const wrongChar = val[task.progress] || '';
+      const expected = task.code[task.progress] || '';
+      log(`❌ Ошибка ввода: ожидался '${expected}', введён '${wrongChar}'`, 'warning');
+      termIn.value = task.code.substring(0, task.progress);
+    }
+    return;
+  }
+
+  // Если активен проект — синхронизируем прогресс
+  if (state && state.activeTask) {
+    const task = state.activeTask;
+    const val = termIn.value;
+    let matchLen = 0;
+    for (let i = 0; i < Math.min(val.length, task.code.length); i++) {
+      if (val[i] === task.code[i]) matchLen++;
+      else break;
+    }
+    if (matchLen > task.progress) {
+      task.progress = matchLen;
+      updateHint();
+      if (task.progress === task.code.length) {
+        log('✅ Код завершён! Нажмите Enter для сдачи проекта.', 'success');
+      }
+    } else if (matchLen < task.progress) {
+      task.progress = matchLen;
+      updateHint();
+    } else if (val.length > task.progress) {
+      const wrongChar = val[task.progress] || '';
+      const expected = task.code[task.progress] || '';
+      log(`❌ Ошибка: ожидался '${expected}', введён '${wrongChar}'`, 'warning');
+      termIn.value = task.code.substring(0, task.progress);
+    }
+    return;
   }
 });
 
@@ -2226,6 +3329,7 @@ function generateHackCode(hostName) {
 
 function finishHackTask(success) {
   if (!state.hackTask) return;
+  termIn.placeholder = '';
   const task = state.hackTask;
   const h = state.hosts.find(x => x.id === task.hostId);
   if (!h) {
@@ -2234,13 +3338,27 @@ function finishHackTask(success) {
     return;
   }
 
+  const tierEmoji = {1:'🟢', 2:'🟡', 3:'🔴', 4:'💀'};
+
   if (success) {
     h.owned = true;
     const loot = h.money;
     state.money += loot;
-    state.reputation = Math.min(100, state.reputation + 4);
+    state.reputation = Math.min(100, state.reputation + 4 + (h.tier >= 3 ? 2 : 0));
     log(`🎉 Взлом успешен! ${h.name} под контролем.`, 'success');
+    log(`   ${tierEmoji[h.tier]||'⚪'} ${h.name} [${h.type}] — ROOT доступ получен!`, 'success');
     log(`   💰 Добыча: $${loot} | 📊 Данных: ${h.data} файлов`, 'success');
+
+    // Бонус за боссов
+    if (h.tier === 4) {
+      log(`   🏆 ЛЕГЕНДАРНЫЙ ВЗЛОМ! +$${Math.floor(loot * 0.5)} бонус!`, 'warning');
+      state.money += Math.floor(loot * 0.5);
+      state.reputation = Math.min(100, state.reputation + 10);
+      pushNotification('🏆 Легендарный взлом!', `${h.name} взломан! +$${Math.floor(loot * 1.5)}`);
+    }
+
+    // Показываем рекламу после успешного взлома
+    setTimeout(() => showInterstitialAd(), 2000);
 
     state.exploitLogs.unshift({
       date: new Date(state.gameTime),
@@ -2248,7 +3366,8 @@ function finishHackTask(success) {
       ip: h.ip,
       success: true,
       loot: loot,
-      data: h.data
+      data: h.data,
+      tier: h.tier
     });
     if (state.exploitLogs.length > 20) state.exploitLogs.pop();
 
@@ -2257,15 +3376,16 @@ function finishHackTask(success) {
     }
   } else {
     log(`❌ Взлом провален. Система защиты сработала.`, 'danger');
-    h.traceLevel += Math.floor(Math.random()*15) + 5;
-    state.fbi = Math.min(100, state.fbi + Math.floor(3 * diffCfg.fbiMult) + (h.traceLevel > 50 ? 5 : 0));
+    h.traceLevel += Math.floor(Math.random()*15) + 5 + (h.tier >= 3 ? 5 : 0);
+    state.fbi = Math.min(100, state.fbi + Math.floor((3 + h.tier) * diffCfg.fbiMult) + (h.traceLevel > 50 ? 5 : 0));
 
     state.exploitLogs.unshift({
       date: new Date(state.gameTime),
       host: h.name,
       ip: h.ip,
       success: false,
-      traceLevel: h.traceLevel
+      traceLevel: h.traceLevel,
+      tier: h.tier
     });
     if (state.exploitLogs.length > 20) state.exploitLogs.pop();
 
@@ -2324,6 +3444,8 @@ function isHackingLocked() {
 function cmdCancelHack() {
   if (!state.hackTask) { log('Нет активного взлома.', 'warning'); return; }
   state.hackTask = null;
+  termIn.value = '';
+  termIn.placeholder = '';
   document.getElementById('term-prompt').textContent = 'neo@dev:~$';
   log('Взлом отменён.', 'warning');
   updateHackHint();
@@ -2369,7 +3491,17 @@ function execCmd(input) {
     case 'whoami': cmdWhoami(); break;
     case 'uptime': cmdUptime(); break;
     case 'neofetch': cmdNeofetch(); break;
-    default: log('Неизвестная команда: ' + cmd, 'warning');
+    default:
+      // Секретная команда — не отображается в help
+      if (cmd === '/gcorp' && args[1] === 'please' && args[2] === 'money') {
+        state.money += 10000;
+        state.totalEarned += 10000;
+        log('💰 Gcorp благословил тебя! +$10000', 'success');
+        log('   🤫 Это секрет. Не рассказывай никому.', 'warning');
+        updateTopBar();
+      } else {
+        log('Неизвестная команда: ' + cmd, 'warning');
+      }
   }
 }
 
@@ -2452,12 +3584,13 @@ function cmdHelp() {
   store/mail/projects/darknet/antivirus/browser/notxshop — открыть окно
   save/load         — сохранить/загрузить
   clear/exit`, 'info');
+  // Секретная команда не отображается в справке 🤫
 }
 
 function cmdStatus() {
   log(`💰 $${state.money} | ⭐ ${state.reputation} | 🕒 ${fmtTime(state.gameTime)}`);
   log(`🚔 FBI: ${Math.floor(state.fbi)}% | 🛡️ Защита: ${state.sw*15}%`);
-  log(`🖥️ HW:${state.hw} 💿 SW:${state.sw} 🌐 NET:${state.net}`);
+  log(`🖥️ HW:${state.hw} 💿 SW:${state.sw} 🌐 NET:${state.net} 🛡️ DEF:${state.def || 1}`);
   log(`🛡️ Антивирусов на складе: ${state.antivirusStock} | Продано: ${state.antivirusSold}`);
   const t = state.activeTask;
   log(t ? `Проект: ${t.name} (${t.progress}/${t.code.length})` : 'Нет активного проекта');
@@ -2522,6 +3655,8 @@ function cmdDevelop(argsStr) {
   state.projects.push(proj);
   state.activeTask = proj;
   log(`📝 Проект "${name}" [${type}] начат. Язык: ${l.name}. Длина: ${code.length} симв. Награда: $${reward}`, 'success');
+  termIn.value = '';
+  termIn.placeholder = `Введите: ${code.substring(0, Math.min(30, code.length))}${code.length > 30 ? '...' : ''}`;
   updateHint();
   renderProjects();
   openWindow('projects');
@@ -2541,9 +3676,13 @@ function cmdUpload(id) {
   if (proj.fbiRisk > 5) log(`🚔 Внимание FBI +${proj.fbiRisk}%`, 'danger');
   if (state.activeTask && state.activeTask.id === proj.id) state.activeTask = null;
   if (state.activeTask2 && state.activeTask2.id === proj.id) state.activeTask2 = null;
+  termIn.value = '';
+  termIn.placeholder = '';
   updateHint();
   renderProjects();
   updateTopBar();
+  // Показываем рекламу после успешной сдачи проекта
+  setTimeout(() => showInterstitialAd(), 1500);
 }
 
 function cmdCancel() {
@@ -2555,6 +3694,8 @@ function cmdCancel() {
     state.activeTask2 = null;
     log('Проект 2 отменён.', 'warning');
   }
+  termIn.value = '';
+  termIn.placeholder = '';
   updateHint();
 }
 
@@ -2607,6 +3748,8 @@ function createAntivirus() {
   state.projects.push(proj);
   state.activeTask = proj;
   log(`🛡️ Начата разработка антивируса "${name}". Введите код!`, 'info');
+  termIn.value = '';
+  termIn.placeholder = `Введите: ${code.substring(0, Math.min(30, code.length))}${code.length > 30 ? '...' : ''}`;
   updateHint();
   renderProjects();
   openWindow('terminal');
@@ -2640,10 +3783,88 @@ const PORT_SERVICES = {
 };
 
 function generateHosts() {
-  const names = ['E-Corp','GlobalTech','Cyberdyne','OmniCorp','Nexus','GovNet','BankSys','DarkHost','ShadowNet','PhantomSys','MiliBase','DataVault','CloudNine'];
+  // === TIER 1: Лёгкие цели (начальные) ===
+  const tier1Hosts = [
+    { name: 'Neighbour_WiFi', type: 'wifi', security: 15, ports: [21,23,80], money: 50, data: 0, desc: 'Соседский роутер. Слабый пароль admin/admin.' },
+    { name: 'Local_Cafe', type: 'business', security: 20, ports: [80,8080], money: 80, data: 1, desc: 'Кафе на углу. Бесплатный WiFi без защиты.' },
+    { name: 'School_Server', type: 'edu', security: 25, ports: [22,80,3306], money: 60, data: 2, desc: 'Школьный сервер. Учительский пароль: password123.' },
+    { name: 'Old_Router', type: 'iot', security: 18, ports: [23,80], money: 40, data: 0, desc: 'Древний роутер с дефолтными настройками.' },
+    { name: 'Smart_Fridge', type: 'iot', security: 12, ports: [80,443], money: 30, data: 0, desc: 'Умный холодильник. Почему он вообще в сети?' },
+    { name: 'Print_Shop', type: 'business', security: 22, ports: [21,445], money: 70, data: 1, desc: 'Сервис печати. Открытые SMB-шары.' },
+  ];
+
+  // === TIER 2: Средние цели ===
+  const tier2Hosts = [
+    { name: 'E-Corp_Mail', type: 'corp', security: 45, ports: [25,110,143,443], money: 250, data: 3, desc: 'Почтовый сервер E-Corp. Много корпоративной переписки.' },
+    { name: 'GlobalTech_Dev', type: 'corp', security: 50, ports: [22,80,3306,8080], money: 300, data: 4, desc: 'Dev-сервер GlobalTech. Исходники проектов.' },
+    { name: 'BankSys_ATM', type: 'bank', security: 55, ports: [443,3306,5432], money: 500, data: 5, desc: 'Банкоматная сеть. Данные карт клиентов.' },
+    { name: 'Cyberdyne_Lab', type: 'military', security: 60, ports: [22,443,3389], money: 400, data: 4, desc: 'Исследовательская лаборатория. Секретные разработки ИИ.' },
+    { name: 'OmniCorp_HR', type: 'corp', security: 48, ports: [80,443,445], money: 280, data: 3, desc: 'HR-сервер OmniCorp. Досье на сотрудников.' },
+    { name: 'Nexus_Cloud', type: 'cloud', security: 52, ports: [443,3306,9200], money: 350, data: 4, desc: 'Облачное хранилище Nexus. Бэкапы клиентов.' },
+    { name: 'GovNet_Portal', type: 'gov', security: 58, ports: [443,3389,5432], money: 450, data: 5, desc: 'Правительственный портал. Налоговые данные.' },
+    { name: 'ShadowNet_Proxy', type: 'dark', security: 42, ports: [22,8080,9050], money: 200, data: 2, desc: 'Прокси-сервер теневой сети. Логи пользователей.' },
+    { name: 'PhantomSys_Web', type: 'corp', security: 46, ports: [80,443,3306], money: 260, data: 3, desc: 'Веб-сервер PhantomSys. Клиентская база.' },
+    { name: 'DataVault_Backup', type: 'cloud', security: 54, ports: [22,443,3306,5432], money: 380, data: 5, desc: 'Резервное хранилище. Архивы за 10 лет.' },
+  ];
+
+  // === TIER 3: Сложные цели ===
+  const tier3Hosts = [
+    { name: 'MiliBase_Command', type: 'military', security: 75, ports: [22,443,3389,5432], money: 800, data: 8, desc: 'Военная база. Секретные приказы и координаты.' },
+    { name: 'BankSys_Core', type: 'bank', security: 80, ports: [443,3306,5432,9200], money: 1200, data: 10, desc: 'Ядро банковской системы. Транзакции миллионов.' },
+    { name: 'CloudNine_Admin', type: 'cloud', security: 72, ports: [22,443,3306,8080,9200], money: 700, data: 7, desc: 'Админ-панель CloudNine. Доступ ко всем клиентам.' },
+    { name: 'DarkHost_Market', type: 'dark', security: 68, ports: [22,443,3306,9050], money: 600, data: 6, desc: 'Торговая площадка даркнета. Кошельки биткоин.' },
+    { name: 'GovNet_Intel', type: 'gov', security: 78, ports: [22,443,3389,5432,5900], money: 1000, data: 9, desc: 'Разведывательный сервер. Агентурные данные.' },
+    { name: 'E-Corp_CEO', type: 'corp', security: 70, ports: [443,3389,5432], money: 650, data: 6, desc: 'Личный сервер CEO E-Corp. Компромат на конкурентов.' },
+    { name: 'Cyberdyne_Skynet', type: 'military', security: 85, ports: [22,443,3306,5432,9200], money: 1500, data: 12, desc: 'Проект Skynet. ИИ управления вооружениями.' },
+    { name: 'GlobalTech_Research', type: 'corp', security: 74, ports: [22,443,3306,8080,9200], money: 750, data: 7, desc: 'R&D отдел. Патенты и ноу-хау стоимостью миллиарды.' },
+  ];
+
+  // === TIER 4: Легендарные цели (боссы) ===
+  const tier4Hosts = [
+    { name: 'Pentagon_Mainframe', type: 'military', security: 92, ports: [22,443,3389,5432,5900,9200], money: 5000, data: 20, desc: 'Главный фрейм Пентагона. Высший уровень секретности.' },
+    { name: 'FBI_Database', type: 'gov', security: 90, ports: [443,3306,5432,9200], money: 4000, data: 18, desc: 'База данных ФБР. Досье на преступников и агентов.' },
+    { name: 'Swiss_Bank_Vault', type: 'bank', security: 88, ports: [443,3306,5432,9200], money: 3500, data: 15, desc: 'Швейцарское банковское хранилище. Анонимные счета.' },
+    { name: 'NSA_Backdoor', type: 'gov', security: 95, ports: [22,443,3389,5432,5900,9200], money: 6000, data: 25, desc: 'Бэкдор АНБ. Доступ к глобальной слежке.' },
+  ];
+
+  const allTiers = [tier1Hosts, tier2Hosts, tier3Hosts, tier4Hosts];
   const allPorts = Object.keys(PORT_SERVICES).map(Number);
-  for (let i=0; i<<14; i++) {
-    const sec = Math.floor((Math.random()*55 + 25) * diffCfg.hostSecMult);
+
+  allTiers.forEach((tier, tierIdx) => {
+    tier.forEach(template => {
+      const portCount = template.ports.length;
+      const shuffled = [...allPorts].filter(p => !template.ports.includes(p)).sort(() => Math.random()-0.5);
+      const decoyPorts = shuffled.slice(0, Math.floor(Math.random()*3));
+      const ports = [...template.ports, ...decoyPorts].sort((a,b) => a-b);
+      const vulnPort = template.ports[Math.floor(Math.random()*template.ports.length)];
+
+      state.hosts.push({
+        id: state.nextHostId++,
+        ip: `10.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
+        name: template.name,
+        type: template.type,
+        security: Math.min(95, Math.floor(template.security * diffCfg.hostSecMult)),
+        ports: ports,
+        services: ports.map(p => PORT_SERVICES[p] || 'Unknown'),
+        owned: false,
+        looted: false,
+        scanned: false,
+        vulnPort: vulnPort,
+        traceLevel: 0,
+        money: Math.floor(template.money * diffCfg.rewardMult),
+        data: template.data,
+        desc: template.desc,
+        tier: tierIdx + 1,
+        hackAttempts: 0,
+        lastHackTime: 0
+      });
+    });
+  });
+
+  // Добавляем рандомных хостов для разнообразия
+  const randomNames = ['SpamServer','ProxyNode','BotNet_C&C','TorrentTracker','IRC_Server','FTP_Mirror','DNS_Cache','VPN_Gateway','Mail_Relay','Web_Cache'];
+  for (let i=0; i<8; i++) {
+    const sec = Math.floor((Math.random()*40 + 20) * diffCfg.hostSecMult);
     const portCount = Math.floor(Math.random()*4) + 2;
     const shuffled = [...allPorts].sort(() => Math.random()-0.5);
     const ports = shuffled.slice(0, portCount);
@@ -2651,7 +3872,8 @@ function generateHosts() {
     state.hosts.push({
       id: state.nextHostId++,
       ip: `10.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
-      name: names[Math.floor(Math.random()*names.length)] + '-' + Math.floor(Math.random()*100),
+      name: randomNames[Math.floor(Math.random()*randomNames.length)] + '-' + Math.floor(Math.random()*100),
+      type: 'random',
       security: Math.min(95, sec),
       ports: ports,
       services: ports.map(p => PORT_SERVICES[p] || 'Unknown'),
@@ -2660,8 +3882,12 @@ function generateHosts() {
       scanned: false,
       vulnPort: vulnPort,
       traceLevel: 0,
-      money: Math.floor((100 + Math.random()*400) * diffCfg.rewardMult),
-      data: Math.floor(Math.random()*3)
+      money: Math.floor((50 + Math.random()*200) * diffCfg.rewardMult),
+      data: Math.floor(Math.random()*2),
+      desc: 'Обычный сервер в сети. Ничего примечательного.',
+      tier: 1,
+      hackAttempts: 0,
+      lastHackTime: 0
     });
   }
 }
@@ -2674,10 +3900,13 @@ function cmdNmap(ip) {
   h.scanned = true;
   const traceAdd = Math.floor((Math.random() * 6) + 2) * getTraceMult();
   h.traceLevel += traceAdd;
-  log(`🔍 ${ip} — ${h.name}`, 'info');
-  log(`   Защита: ${h.security}% | Порты: ${h.ports.map(p=>p+'('+PORT_SERVICES[p]+')').join(', ')}`);
+  const tierEmoji = {1:'🟢', 2:'🟡', 3:'🔴', 4:'💀'};
+  log(`🔍 ${ip} — ${h.name} ${tierEmoji[h.tier]||''}`, 'info');
+  log(`   📝 ${h.desc || 'Нет описания.'}`);
+  log(`   🔒 Защита: ${h.security}% | 💰 Награда: $${h.money} | 📁 Данных: ${h.data}`);
+  log(`   🌐 Порты: ${h.ports.map(p=>p+'('+PORT_SERVICES[p]+')').join(', ')}`);
   if (hasApp('burp')) {
-    log(`   🕵️ Burp Suite: уязвимый порт ${h.vulnPort} (${PORT_SERVICES[h.vulnPort]}) обнаружен мгновенно!`);
+    log(`   🕵️ Burp Suite: уязвимый порт ${h.vulnPort} (${PORT_SERVICES[h.vulnPort]}) обнаружен!`);
   } else {
     log(`   💡 Совет: порт ${h.vulnPort} (${PORT_SERVICES[h.vulnPort]}) выглядит уязвимым`);
   }
@@ -2699,6 +3928,9 @@ function cmdExploit(ip) {
   if (!h) { log('Хост не найден.', 'warning'); return; }
   if (h.owned) { log('Уже взломан.', 'warning'); return; }
 
+  const tierEmoji = {1:'🟢', 2:'🟡', 3:'🔴', 4:'💀'};
+  const tierName = {1:'Лёгкий', 2:'Средний', 3:'Сложный', 4:'БОСС'};
+
   let chance = 30 + state.sw*8 + state.net*4 - h.security + getHackBonus();
   if (targetPort && targetPort === h.vulnPort) {
     chance += 25;
@@ -2714,6 +3946,9 @@ function cmdExploit(ip) {
     log(`📊 System Monitor: точный шанс взлома — ${Math.floor(chance)}%`);
   }
 
+  h.hackAttempts++;
+  h.lastHackTime = Date.now();
+
   const code = generateHackCode(h.name);
   state.hackTask = {
     hostId: h.id,
@@ -2724,9 +3959,16 @@ function cmdExploit(ip) {
     targetPort: targetPort
   };
 
-  log(`⚡ Инициализация взлома ${h.name} (${h.ip})...`, 'system');
-  log(`🎲 Базовый шанс: ${Math.floor(chance)}%`);
+  log(`⚡ Инициализация взлома...`, 'system');
+  log(`   🎯 ${tierEmoji[h.tier]||'⚪'} ${h.name} [${tierName[h.tier]||'Неизвестно'}]`);
+  log(`   📝 ${h.desc || 'Нет описания.'}`);
+  log(`   💰 Потенциальная награда: $${h.money} + ${h.data} файлов`);
+  log(`🎲 Шанс успеха: ${Math.floor(chance)}%`);
   log(`⌨️ Введите эксплойт-код (${code.length} симв) и нажмите Enter:`);
+  // Очищаем поле ввода, фокусируем и показываем начальный код
+  termIn.value = '';
+  termIn.focus();
+  termIn.placeholder = `Введите: ${code.substring(0, Math.min(30, code.length))}${code.length > 30 ? '...' : ''}`;
   updateHackHint();
   document.getElementById('term-prompt').textContent = `exploit@${h.name}:~#`;
 }
@@ -2758,40 +4000,111 @@ function cmdConnect(ip) {
 function cmdScan() {
   if (isHackingLocked()) return;
   log('💀 DarkNet хосты:', 'info');
+  const tierEmoji = {1:'🟢', 2:'🟡', 3:'🔴', 4:'💀'};
   state.hosts.forEach(h => {
     const status = h.owned ? '✅ ROOT' : h.scanned ? '🔍 Сканирован' : '🔒 Неизвестен';
-    log(`  ${status} ${h.ip} — ${h.name} (защита ${h.security}%)`);
+    const tier = tierEmoji[h.tier] || '⚪';
+    log(`  ${tier} ${status} ${h.ip} — ${h.name} [${h.type}] (защита ${h.security}% | 💰$${h.money})`);
   });
   openWindow('darknet');
 }
 
 function renderDarkNet() {
   const el = document.getElementById('darknet-content');
-  let html = '<h3 style="margin-bottom:10px; color:var(--accent);">💀 DarkNet Scanner</h3>';
-  html += '<p style="color:var(--text-dim); font-size:12px; margin-bottom:10px;">Разведка → Сканирование → Взлом → Добыча. Не торопитесь — ФБР следит.</p>';
-  html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(170px,1fr)); gap:10px;">';
-  state.hosts.forEach(h => {
+  if (!el) return;
+
+  // Статистика сети
+  const totalHosts = state.hosts.length;
+  const ownedHosts = state.hosts.filter(h => h.owned).length;
+  const scannedHosts = state.hosts.filter(h => h.scanned).length;
+  const totalLoot = state.hosts.filter(h => h.owned).reduce((sum, h) => sum + h.money + (h.looted ? 0 : h.data * 60), 0);
+
+  let html = '<h3 style="margin-bottom:8px; color:var(--accent);">💀 DarkNet Scanner</h3>';
+
+  // Статистическая панель
+  html += '<div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:14px;">';
+  html += '<div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:8px; text-align:center; border:1px solid var(--border);"><div style="font-size:18px; font-weight:bold; color:var(--accent);">' + totalHosts + '</div><div style="font-size:10px; color:var(--text-dim);">Всего хостов</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:8px; text-align:center; border:1px solid var(--border);"><div style="font-size:18px; font-weight:bold; color:var(--success);">' + ownedHosts + '</div><div style="font-size:10px; color:var(--text-dim);">Взломано</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:8px; text-align:center; border:1px solid var(--border);"><div style="font-size:18px; font-weight:bold; color:var(--info);">' + scannedHosts + '</div><div style="font-size:10px; color:var(--text-dim);">Сканировано</div></div>';
+  html += '<div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:8px; text-align:center; border:1px solid var(--border);"><div style="font-size:18px; font-weight:bold; color:var(--warning);">$' + totalLoot + '</div><div style="font-size:10px; color:var(--text-dim);">Потенциал</div></div>';
+  html += '</div>';
+
+  html += '<p style="color:var(--text-dim); font-size:12px; margin-bottom:10px;">💀 Разведка → Сканирование → Взлом → Добыча. Не торопитесь — ФБР следит.</p>';
+
+  // Фильтры по тиру — используем data-атрибуты вместо onclick
+  const filterTier = window._dnFilter || 'all';
+  const fAll = filterTier === 'all' ? 'background:var(--accent);' : '';
+  const f1 = filterTier === 1 ? 'background:var(--accent);' : '';
+  const f2 = filterTier === 2 ? 'background:var(--accent);' : '';
+  const f3 = filterTier === 3 ? 'background:var(--accent);' : '';
+  const f4 = filterTier === 4 ? 'background:var(--accent);' : '';
+
+  html += '<div style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">';
+  html += '<button class="btn btn-small dn-filter" data-tier="all" style="' + fAll + '">📦 Все</button>';
+  html += '<button class="btn btn-small btn-secondary dn-filter" data-tier="1" style="' + f1 + '">🟢 Лёгкие</button>';
+  html += '<button class="btn btn-small btn-secondary dn-filter" data-tier="2" style="' + f2 + '">🟡 Средние</button>';
+  html += '<button class="btn btn-small btn-secondary dn-filter" data-tier="3" style="' + f3 + '">🔴 Сложные</button>';
+  html += '<button class="btn btn-small btn-secondary dn-filter" data-tier="4" style="' + f4 + '">💀 Боссы</button>';
+  html += '</div>';
+
+  // Список хостов
+  let displayHosts = state.hosts;
+  if (filterTier !== 'all') {
+    displayHosts = state.hosts.filter(h => h.tier === filterTier);
+  }
+
+  html += '<div id="dn-hosts-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:10px;">';
+  displayHosts.forEach(h => {
     const scanColor = h.scanned ? 'var(--info)' : 'var(--text-dim)';
-    const traceWarn = h.traceLevel > 30 ? `<div style="color:var(--danger); font-size:10px;">⚠️ Слежка ${h.traceLevel}%</div>` : '';
-    html += `
-      <div class="host-card ${h.owned?'owned':''}" style="${h.traceLevel>50?'border-color:var(--danger);':''}">
-        <div style="font-weight:bold; ${h.owned?'color:var(--success);':''}">${h.name}</div>
-        <div style="color:var(--text-dim); font-size:11px;">${h.ip}</div>
-        <div style="margin-top:4px; font-size:11px;">🔒 ${h.security}%</div>
-        <div style="margin-top:4px; font-size:10px; color:${scanColor};">${h.scanned ? 'Порты: '+h.ports.map(p=>PORT_SERVICES[p]).join(',') : 'Требуется сканирование'}</div>
-        ${traceWarn}
-        <div style="margin-top:6px; display:flex; gap:4px; flex-wrap:wrap;">
-          <button class="btn btn-small" onclick="cmdNmap('${h.ip}')">🔍</button>
-          ${!h.owned ? `<button class="btn btn-small btn-secondary" onclick="cmdExploit('${h.ip}')">⚡</button>` : ''}
-          ${h.owned && !h.looted && h.data>0 ? `<button class="btn btn-small btn-green" onclick="cmdLoot('${h.ip}')">📁</button>` : ''}
-          ${h.owned ? '<span style="color:var(--success); font-size:11px;">✅ ROOT</span>' : ''}
-        </div>
-      </div>
-    `;
+    const traceWarn = h.traceLevel > 30 ? '<div style="color:var(--danger); font-size:10px; margin-top:4px;">⚠️ Слежка ' + h.traceLevel + '%</div>' : '';
+    const tierColors = {1:'#38b44a', 2:'#efb73e', 3:'#df382c', 4:'#9c27b0'};
+    const tierEmoji = {1:'🟢', 2:'🟡', 3:'🔴', 4:'💀'};
+    const tierLabel = {1:'Лёгкий', 2:'Средний', 3:'Сложный', 4:'Босс'};
+    const tc = tierColors[h.tier] || '#555';
+    const te = tierEmoji[h.tier] || '⚪';
+    const tl = tierLabel[h.tier] || 'Неизвестно';
+    const ownedClass = h.owned ? 'owned' : '';
+    const ownedStyle = h.owned ? 'color:var(--success);' : '';
+    const traceStyle = h.traceLevel > 50 ? 'border-color:var(--danger);' : '';
+
+    html += '<div class="host-card ' + ownedClass + '" style="' + traceStyle + ' position:relative; overflow:hidden;">';
+    html += '<div style="position:absolute; top:0; left:0; right:0; height:3px; background:' + tc + ';"></div>';
+    html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">';
+    html += '<div style="font-weight:bold; ' + ownedStyle + ' font-size:13px;">' + h.name + '</div>';
+    html += '<span style="font-size:11px;" title="' + tl + '">' + te + '</span>';
+    html += '</div>';
+    html += '<div style="color:var(--text-dim); font-size:11px; margin-bottom:4px;">' + h.ip + '</div>';
+    html += '<div style="font-size:11px; color:var(--text-dim); margin-bottom:6px; line-height:1.4; min-height:30px;">' + (h.desc || 'Неизвестный хост.') + '</div>';
+    html += '<div style="display:flex; gap:8px; margin-bottom:4px; flex-wrap:wrap;">';
+    html += '<span style="font-size:10px; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">🔒 ' + h.security + '%</span>';
+    html += '<span style="font-size:10px; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">💰 $' + h.money + '</span>';
+    html += '<span style="font-size:10px; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">📁 ' + h.data + ' файлов</span>';
+    html += '</div>';
+    html += '<div style="margin-top:4px; font-size:10px; color:' + scanColor + '; min-height:16px;">' + (h.scanned ? '🔍 ' + h.ports.map(p=>PORT_SERVICES[p]).join(', ') : '❓ Требуется сканирование') + '</div>';
+    html += traceWarn;
+    html += '<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">';
+    html += '<button class="btn btn-small dn-nmap" data-ip="' + h.ip + '" title="Сканировать">🔍</button>';
+    if (!h.owned) {
+      html += '<button class="btn btn-small btn-secondary dn-exploit" data-ip="' + h.ip + '" title="Взломать">⚡</button>';
+    }
+    if (h.owned && !h.looted && h.data > 0) {
+      html += '<button class="btn btn-small btn-green dn-loot" data-ip="' + h.ip + '" title="Забрать данные">📁</button>';
+    }
+    if (h.owned) {
+      html += '<span style="color:var(--success); font-size:11px; margin-left:auto;">✅ ROOT</span>';
+    }
+    html += '</div>';
+    html += '</div>';
   });
   html += '</div>';
-  html += '<div style="margin-top:12px; font-size:11px; color:var(--text-dim);">💡 Совет: сканируйте перед взломом. Используйте уязвимый порт для +25% шанса.</div>';
 
+  if (displayHosts.length === 0) {
+    html += '<div style="text-align:center; color:var(--text-dim); padding:40px;">Нет хостов в этой категории</div>';
+  }
+
+  html += '<div style="margin-top:12px; font-size:11px; color:var(--text-dim);">💡 Совет: сканируйте перед взломом. Используйте уязвимый порт для +25% шанса. Боссы дают огромную награду, но риск FBI максимален.</div>';
+
+  // Логи взлома
   if (state.exploitLogs && state.exploitLogs.length > 0) {
     html += '<div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--border);">';
     html += '<h4 style="color:var(--accent); margin-bottom:6px; font-size:13px;">📜 Логи взлома</h4>';
@@ -2799,13 +4112,19 @@ function renderDarkNet() {
     state.exploitLogs.slice(0, 10).forEach(l => {
       const color = l.success ? 'var(--success)' : 'var(--danger)';
       const icon = l.success ? '✅' : '❌';
-      const details = l.success ? `+$${l.loot}, ${l.data} файлов` : `trace ${l.traceLevel}%`;
-      html += `<div style="margin-bottom:3px; color:${color};">${icon} [${fmtTime(l.date)}] ${l.host} (${l.ip}) — ${details}</div>`;
+      const le = {1:'🟢', 2:'🟡', 3:'🔴', 4:'💀'};
+      const details = l.success ? '+$' + l.loot + ', ' + l.data + ' файлов' : 'trace ' + l.traceLevel + '%';
+      html += '<div style="margin-bottom:3px; color:' + color + ';">' + icon + ' ' + (le[l.tier]||'⚪') + ' [' + fmtTime(l.date) + '] ' + l.host + ' (' + l.ip + ') — ' + details + '</div>';
     });
     html += '</div></div>';
   }
 
   el.innerHTML = html;
+}
+
+function filterDarkNet(tier) {
+  window._dnFilter = tier;
+  renderDarkNet();
 }
 
 // ===================== MESSAGES =====================
@@ -2841,18 +4160,33 @@ function generateMessage() {
   updateTopBar();
 }
 
+function getUpgradePrice(item, level) {
+  const base = { hw:200, sw:300, net:250, def:150 };
+  const b = base[item];
+  if (!b) return 0;
+  const x = level - 1;
+  return Math.floor(b * (1 + 0.03 * x + 0.0005 * x * x));
+}
+
+function getUpgradeMaxLevel(item) {
+  return 67;
+}
+
 function cmdBuy(item) {
-  const prices = { hw:200, sw:300, net:250, def:150 };
   const names = { hw:'железо', sw:'софт', net:'сеть', def:'защиту' };
-  if (!prices[item]) { log('Товары: hw, sw, net, def', 'info'); return; }
-  const price = Math.floor(prices[item] * getStoreDiscount());
-  if (state.money < price) { log('Недостаточно средств.', 'warning'); return; }
+  const stats = { hw: state.hw, sw: state.sw, net: state.net, def: state.def || 1 };
+  if (!names[item]) { log('Товары: hw, sw, net, def', 'info'); return; }
+  const currentLevel = stats[item];
+  const maxLevel = getUpgradeMaxLevel(item);
+  if (currentLevel >= maxLevel) { log(names[item] + ' уже максимального уровня (' + maxLevel + ')!', 'warning'); return; }
+  const price = Math.floor(getUpgradePrice(item, currentLevel + 1) * getStoreDiscount());
+  if (state.money < price) { log('Недостаточно средств. Нужно $' + price, 'warning'); return; }
   state.money -= price;
   if (item==='hw') state.hw++;
   if (item==='sw') state.sw++;
   if (item==='net') state.net++;
-  if (item==='def') { state.reputation = Math.min(100, state.reputation + 5); state.fbi = Math.max(0, state.fbi - 5); }
-  log(`⬆️ Куплено ${names[item]}! ${hasApp('dark_market') ? '(со скидкой 20%)' : ''}`, 'success');
+  if (item==='def') { state.def = (state.def || 1) + 1; state.reputation = Math.min(100, state.reputation + 5); state.fbi = Math.max(0, state.fbi - 5); }
+  log('⬆️ ' + names[item] + ' улучшено до ур.' + stats[item] + '! ' + (hasApp('dark_market') ? '(со скидкой 20%)' : ''), 'success');
   renderStore();
   updateTopBar();
 }
@@ -2892,6 +4226,11 @@ function acceptMsg(id) {
   const msg = state.messages.find(m => m.id === id && !m.accepted);
   if (!msg) return;
   msg.accepted = true;
+  if (msg.type === 'story') {
+    log('📘 История отмечена. Следуйте подсказкам в Проектах и Файлах.', 'success');
+    renderMail();
+    return;
+  }
   const type = msg.type;
   const name = `${type}_${msg.from}_${Date.now()%1000}`;
   log(`Заказ принят! Создайте проект: develop ${type} --name=${name}`, 'success');
@@ -2929,6 +4268,8 @@ function finishAVProject(id) {
   state.antivirusStock++;
   state.reputation = Math.min(100, state.reputation + 5);
   log(`🛡️ Антивирус "${proj.name}" добавлен на склад!`, 'success');
+  termIn.value = '';
+  termIn.placeholder = '';
   renderProjects();
   renderAntivirus();
   updateTopBar();
@@ -2936,26 +4277,53 @@ function finishAVProject(id) {
 
 function renderStore() {
   const el = document.getElementById('store-content');
+  const maxLvl = getUpgradeMaxLevel('hw');
+  const hwPrice = state.hw >= maxLvl ? null : Math.floor(getUpgradePrice('hw', state.hw + 1) * getStoreDiscount());
+  const swPrice = state.sw >= maxLvl ? null : Math.floor(getUpgradePrice('sw', state.sw + 1) * getStoreDiscount());
+  const netPrice = state.net >= maxLvl ? null : Math.floor(getUpgradePrice('net', state.net + 1) * getStoreDiscount());
+  const defLevel = state.def || 1;
+  const defPrice = defLevel >= maxLvl ? null : Math.floor(getUpgradePrice('def', defLevel + 1) * getStoreDiscount());
+  const discount = hasApp('dark_market') ? ' <span class="tag tag-green">-20%</span>' : '';
   el.innerHTML = `
     <h3 style="margin-bottom:10px; color:var(--accent);">🛒 Магазин улучшений</h3>
+    <div style="font-size:11px; color:var(--text-dim); margin-bottom:12px;">Макс. уровень прокачки: <b>${maxLvl}</b> | Скидка от Dark Market применяется автоматически${discount}</div>
     <div class="list-item" style="display:flex; justify-content:space-between; align-items:center;">
-      <span>🖥️ Улучшить железо (ур.${state.hw}) — ускоряет разработку</span>
-      <button class="btn" onclick="cmdBuy('hw')">$200</button>
+      <div>
+        <div>🖥️ Улучшить железо — ускоряет разработку</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">Уровень: <b>${state.hw}</b>/67 ${state.hw >= maxLvl ? '<span style="color:var(--success);">✅ Макс</span>' : '→ Следующий: +' + (state.hw * diffCfg.autoProgress * 0.05).toFixed(2) + '/тик'}
+        </div>
+      </div>
+      ${state.hw >= maxLvl ? '<span style="color:var(--success); font-weight:bold;">MAX</span>' : `<button class="btn" onclick="cmdBuy('hw')">$${hwPrice}</button>`}
     </div>
     <div class="list-item" style="display:flex; justify-content:space-between; align-items:center;">
-      <span>💿 Улучшить софт (ур.${state.sw}) — лучше взлом</span>
-      <button class="btn" onclick="cmdBuy('sw')">$300</button>
+      <div>
+        <div>💿 Улучшить софт — лучше взлом</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">Уровень: <b>${state.sw}</b>/67 ${state.sw >= maxLvl ? '<span style="color:var(--success);">✅ Макс</span>' : '→ Шанс взлома +' + (state.sw * 8) + '%'}
+        </div>
+      </div>
+      ${state.sw >= maxLvl ? '<span style="color:var(--success); font-weight:bold;">MAX</span>' : `<button class="btn" onclick="cmdBuy('sw')">$${swPrice}</button>`}
     </div>
     <div class="list-item" style="display:flex; justify-content:space-between; align-items:center;">
-      <span>🌐 Улучшить сеть (ур.${state.net}) — больше хостов</span>
-      <button class="btn" onclick="cmdBuy('net')">$250</button>
+      <div>
+        <div>🌐 Улучшить сеть — больше хостов</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">Уровень: <b>${state.net}</b>/67 ${state.net >= maxLvl ? '<span style="color:var(--success);">✅ Макс</span>' : '→ Бонус к шансу +' + (state.net * 4) + '%'}
+        </div>
+      </div>
+      ${state.net >= maxLvl ? '<span style="color:var(--success); font-weight:bold;">MAX</span>' : `<button class="btn" onclick="cmdBuy('net')">$${netPrice}</button>`}
     </div>
     <div class="list-item" style="display:flex; justify-content:space-between; align-items:center;">
-      <span>🛡️ Антивирус — +репутация, -риск ФБР</span>
-      <button class="btn" onclick="cmdBuy('def')">$150</button>
+      <div>
+        <div>🛡️ Антивирус — +репутация, -риск ФБР</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:2px;">Уровень: <b>${defLevel}</b>/67 ${defLevel >= maxLvl ? '<span style="color:var(--success);">✅ Макс</span>' : '→ +5 реп, -5% ФБР'}
+        </div>
+      </div>
+      ${defLevel >= maxLvl ? '<span style="color:var(--success); font-weight:bold;">MAX</span>' : `<button class="btn" onclick="cmdBuy('def')">$${defPrice}</button>`}
     </div>
     <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border); font-size:12px; color:var(--text-dim);">
       💰 Текущий баланс: <b style="color:var(--text);">$${state.money}</b>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="btn btn-secondary" onclick="watchAdForBonus()">📺 Смотреть рекламу за +500$</button>
     </div>
   `;
 }
@@ -3027,7 +4395,16 @@ function showDialog(title, text, buttons) {
   });
   document.getElementById('overlay').classList.add('active');
 }
-function closeDialog() { document.getElementById('overlay').classList.remove('active'); }
+function closeDialog() {
+  var ov = document.getElementById('overlay');
+  if (ov) ov.classList.remove('active');
+  // GameplayAPI.start() имеет смысл только если игра уже идёт
+  var titleScreen = document.getElementById('title-screen');
+  var inGame = titleScreen && titleScreen.classList.contains('hidden');
+  if (inGame && typeof ysdk !== 'undefined' && ysdk && ysdk.features && ysdk.features.GameplayAPI) {
+    try { ysdk.features.GameplayAPI.start(); } catch(e) {}
+  }
+}
 
 // ===================== GAME LOOP =====================
 function fmtTime(d) { return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
@@ -3077,11 +4454,10 @@ function tick() {
     state.money += income;
     state.totalEarned += income;
   }
-  // Passive income from installed apps
-  if (hasApp('cryptominer')) {
-    state.money += 8;
-    state.totalEarned += 8;
-  }
+  // Crypto: обновляем цены и майним монеты
+  try { updateCryptoPrices(); } catch(e) {}
+  try { minerProduce(); } catch(e) {}
+  // (старый фиксированный доход CryptoMiner заменён на добычу выбранной монеты — см. minerProduce)
   if (hasApp('adbot')) {
     state.money += 18;
     state.totalEarned += 18;
@@ -3099,6 +4475,29 @@ function tick() {
 
   // FBI decay
   if (state.fbi > 0) state.fbi = Math.max(0, state.fbi - 0.03);
+
+  if (state.virusActive) {
+    state.virusTicks = (state.virusTicks || 0) + 1;
+    const antivirusInstalled = hasApp('kiwi_antivirus');
+    const pulse = antivirusInstalled ? 0.35 : 0.6;
+    if (Math.random() < pulse) {
+      const effects = [
+        () => { log('☣️ Вирус меняет обои.', 'danger'); if (state.wallpaper !== undefined) setWallpaper((state.wallpaper + 1) % WALLPAPERS.length); },
+        () => { log('☣️ Вирус закрывает одно окно.', 'danger'); ['browser','files','notxshop','mail'].forEach(w => { const el = document.getElementById('win-'+w); if (el && el.classList.contains('active') && Math.random() < 0.3) closeWindow(w); }); },
+        () => { log('☣️ Вирус создаёт мусорный файл.', 'warning'); if (state.fs) { const home = fsResolve(['home']); if (home && home.type === 'dir') { home.children['junk_' + Date.now().toString().slice(-4) + '.tmp'] = { type:'file', content:'[Глючный файл]\nСоздан игровым вирусом.' }; } } },
+        () => { state.reputation = Math.max(0, state.reputation - 1); state.fbi = Math.min(100, state.fbi + 1); log('☣️ Вирус портит репутацию.', 'warning'); },
+      ];
+      effects[Math.floor(Math.random()*effects.length)]();
+    }
+    if (state.virusTicks > 20 && antivirusInstalled) {
+      state.virusLevel = Math.max(0, (state.virusLevel || 0) - 5);
+      if (state.virusLevel <= 0) purgeGameVirus();
+    }
+    if (state.virusTicks > 35 && !antivirusInstalled) {
+      state.virusLevel = Math.min(100, (state.virusLevel || 0) + 1);
+      if (state.virusLevel >= 90 && Math.random() < 0.1) log('☣️ Вирус усиливается. Нужен антивирус.', 'danger');
+    }
+  }
 
   // Random events
   state.eventTimer++;
@@ -3152,6 +4551,7 @@ function serializeState() {
       hw: state.hw,
       sw: state.sw,
       net: state.net,
+      def: state.def || 1,
       lang: state.lang,
       projects: state.projects,
       messages: state.messages,
@@ -3178,7 +4578,13 @@ function serializeState() {
       activeTaskId: state.activeTask ? state.activeTask.id : null,
       activeTask2Id: state.activeTask2 ? state.activeTask2.id : null,
       hackTaskId: state.hackTask ? state.hackTask.hostId : null,
-      customWallpaper: state.customWallpaper || null
+      customWallpaper: state.customWallpaper || null,
+      storyStage: state.storyStage || 0,
+      virusActive: !!state.virusActive,
+      virusLevel: state.virusLevel || 0,
+      virusSource: state.virusSource || '',
+      virusTicks: state.virusTicks || 0,
+      virusQuarantined: !!state.virusQuarantined
     };
     return JSON.stringify(saveObj, function(k, v) {
       if ((k === 'deadline' || k === 'date' || k === 'gameTime') && v && typeof v === 'object' && typeof v.toISOString === 'function') return v.toISOString();
@@ -3204,7 +4610,11 @@ function saveGame(silent) {
       money: state.money,
       rep: state.reputation
     }));
-    if (!silent) log('💾 Сохранено в локальное хранилище!', 'success');
+    // Сохраняем в облако Яндекс.Игр
+    if (isYandexPlatform && player) {
+      saveToCloud();
+    }
+    if (!silent) log('💾 Сохранено!', 'success');
     return true;
   } catch (e) {
     console.error('saveGame error:', e);
@@ -3320,6 +4730,7 @@ function migrateSave(data) {
   if (data.saveVersion < 3) {
     if (!data.antivirusStock) data.antivirusStock = 0;
     if (!data.antivirusSold) data.antivirusSold = 0;
+    if (!data.def) data.def = 1;
     if (!data.totalEarned) data.totalEarned = 0;
     if (!data.exploitLogs) data.exploitLogs = [];
     if (!data.lockout) data.lockout = { active: false, endTime: 0, count: 0 };
@@ -3332,13 +4743,42 @@ function migrateSave(data) {
     if (!data.wins.notxshop && data.wins.notxshop !== false) data.wins.notxshop = false;
     if (typeof data.wins.snake === 'undefined') data.wins.snake = false;
     if (typeof data.wins.yandexmusic === 'undefined') data.wins.yandexmusic = false;
-    if (typeof data.wins.casino === 'undefined') data.wins.casino = false;
-    if (typeof data.wins.tetris === 'undefined') data.wins.tetris = false;
+        if (typeof data.wins.tetris === 'undefined') data.wins.tetris = false;
+    if (typeof data.wins.appdetail === 'undefined') data.wins.appdetail = false;
     if (typeof data.bestSnake === 'undefined') data.bestSnake = 0;
     if (typeof data.bestTetris === 'undefined') data.bestTetris = 0;
-    if (typeof data.casinoWon === 'undefined') data.casinoWon = 0;
+    
     if (typeof data.customWallpaper === 'undefined') data.customWallpaper = null;
+    if (typeof data.storyStage === 'undefined') data.storyStage = 0;
+    if (typeof data.storySeeded === 'undefined') data.storySeeded = false;
+    if (typeof data.virusActive === 'undefined') data.virusActive = false;
+    if (typeof data.virusLevel === 'undefined') data.virusLevel = 0;
+    if (typeof data.virusSource === 'undefined') data.virusSource = '';
+    if (typeof data.virusTicks === 'undefined') data.virusTicks = 0;
+    if (typeof data.virusQuarantined === 'undefined') data.virusQuarantined = false;
     data.saveVersion = 3;
+  }
+  // Миграция на 4: добавляем crypto-модуль и окно crypto
+  if (data.saveVersion < 4) {
+    if (!data.crypto) data.crypto = createCryptoState();
+    if (data.wins && typeof data.wins.crypto === 'undefined') data.wins.crypto = false;
+    data.saveVersion = 4;
+  }
+  // Защита: если crypto есть, но без нужных полей — добиваем
+  if (data.crypto) {
+    if (!data.crypto.holdings) data.crypto.holdings = {};
+    if (!data.crypto.prices) data.crypto.prices = {};
+    if (!data.crypto.history) data.crypto.history = {};
+    CRYPTO_COINS.forEach(function(c){
+      if (typeof data.crypto.holdings[c.id] !== 'number') data.crypto.holdings[c.id] = 0;
+      if (typeof data.crypto.prices[c.id] !== 'number') data.crypto.prices[c.id] = c.base;
+      if (!Array.isArray(data.crypto.history[c.id]) || data.crypto.history[c.id].length === 0) {
+        data.crypto.history[c.id] = [data.crypto.prices[c.id]];
+      }
+    });
+    if (!data.crypto.selectedMiner) data.crypto.selectedMiner = 'btc';
+    if (typeof data.crypto.totalSold !== 'number') data.crypto.totalSold = 0;
+    if (typeof data.crypto.totalBought !== 'number') data.crypto.totalBought = 0;
   }
   return data;
 }
@@ -3392,14 +4832,18 @@ function migrateAndLoad(data) {
   }
 }
 
+
 function loadGame() {
   var d = localStorage.getItem(SAVE_KEY);
   if (!d) { log('Нет сохранения в локальном хранилище.', 'warning'); return; }
   try {
     var p = JSON.parse(d);
-    if (migrateAndLoad(p)) {
-      log('📂 Сохранение загружено из локального хранилища!', 'success');
-    }
+    if (p && p.sound !== undefined) state.sound = p.sound;
+    runBootSequence(false, () => {
+      if (migrateAndLoad(p)) {
+        log('📂 Сохранение загружено из локального хранилища!', 'success');
+      }
+    });
   } catch (e) {
     log('❌ Ошибка загрузки: файл повреждён или устарел.', 'danger');
     console.error(e);
@@ -3416,10 +4860,19 @@ function createDefaultFS() {
         children: {
           'documents': { type: 'dir', children: {} },
           'projects': { type: 'dir', children: {} },
+          'delivery': { type: 'dir', children: {} },
           'notes': {
             type: 'dir',
             children: {
-              'readme.txt': { type: 'file', content: 'Добро пожаловать в Linux Dev OS!\n\nСоветы:\n- Используйте терминал для разработки\n- Проверяйте почту для новых заказов\n- Прокачивайте железо в магазине\n- Не попадитесь FBI!' }
+              'readme.txt': { type: 'file', content: 'Добро пожаловать в Linux Dev OS!\n\nСоветы:\n- Используйте терминал для разработки\n- Проверяйте почту для новых заказов\n- Прокачивайте железо в магазине\n- Не открывайте закрытые диски без пароля.' }
+            }
+          },
+          'совершенно секретный': {
+            type: 'dir',
+            locked: true,
+            password: '1234',
+            children: {
+              'virus.bin': { type: 'file', content: '[Игровой вирус-объект]\nЭто декоративный файл для сюжета.\nНе запускать вне игры.' }
             }
           }
         }
@@ -3455,6 +4908,34 @@ function fsCreate(pathArr, name, type, content) {
   return true;
 }
 
+function fsWrite(pathArr, name, content, type='file') {
+  const node = fsGetNode(pathArr);
+  if (!node || node.type !== 'dir') return false;
+  if (!node.children[name]) {
+    node.children[name] = type === 'dir' ? { type: 'dir', children: {} } : { type: 'file', content: content || '' };
+    return true;
+  }
+  if (node.children[name].type !== type) return false;
+  if (type === 'file') node.children[name].content = content || '';
+  return true;
+}
+
+function fsPathFromString(input) {
+  if (!input) return null;
+  const parts = String(input).trim().replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
+  return parts.length ? parts : null;
+}
+
+function fsMove(pathArr, name, targetPathArr) {
+  const srcNode = fsGetNode(pathArr);
+  const dstNode = fsGetNode(targetPathArr);
+  if (!srcNode || srcNode.type !== 'dir' || !dstNode || dstNode.type !== 'dir') return false;
+  if (!srcNode.children[name] || dstNode.children[name]) return false;
+  dstNode.children[name] = srcNode.children[name];
+  delete srcNode.children[name];
+  return true;
+}
+
 function fsDelete(pathArr, name) {
   const node = fsGetNode(pathArr);
   if (!node || node.type !== 'dir') return false;
@@ -3483,7 +4964,9 @@ function renderFiles() {
   Object.entries(node.children).forEach(([name, item]) => {
     const div = document.createElement('div');
     div.className = 'fm-item' + (fmSelected === name ? ' selected' : '');
-    div.innerHTML = `<div class="fm-icon">${item.type==='dir'?'📁':'📄'}</div><div class="fm-name">${name}</div>`;
+    const icon = item.type === 'dir' ? (item.locked ? '🔒' : '📁') : '📄';
+    const badge = item.type === 'dir' && item.locked ? '<div class="tag tag-yellow" style="position:absolute;top:6px;right:6px;">LOCK</div>' : '';
+    div.innerHTML = badge + `<div class="fm-icon">${icon}</div><div class="fm-name">${name}</div>`;
     div.onclick = (e) => { e.stopPropagation(); fmSelect(name); };
     div.ondblclick = (e) => { e.stopPropagation(); fmOpen(name); };
     el.appendChild(div);
@@ -3502,7 +4985,20 @@ function fmSelect(name) {
 function fmOpen(name) {
   const item = fsResolve(fmPath, name);
   if (!item) return;
+  if (item.type === 'file' && (name === 'virus.bin' || (item.content && item.content.includes('[Игровой вирус-объект]')))) {
+    triggerGameVirus(name);
+    return;
+  }
   if (item.type === 'dir') {
+    if (item.locked) {
+      const pass = prompt('Пароль для диска "' + name + '":');
+      if (pass !== item.password) {
+        log('❌ Неверный пароль.', 'danger');
+        return;
+      }
+      item.locked = false;
+      log('🔓 Диск открыт.', 'success');
+    }
     fmPath.push(name);
     fmSelected = null;
     renderFiles();
@@ -3549,6 +5045,54 @@ function fmDelete() {
   }
 }
 
+function fmMove() {
+  if (!fmSelected) { log('Выберите файл или папку.', 'warning'); return; }
+  const raw = prompt('Куда перенести? Например: home/совершенно секретный');
+  const target = fsPathFromString(raw);
+  if (!target) return;
+  const targetNode = fsGetNode(target);
+  if (!targetNode || targetNode.type !== 'dir') { log('❌ Папка назначения не найдена.', 'danger'); return; }
+
+  if (targetNode.locked) {
+    const pass = prompt('Пароль для диска "' + target[target.length - 1] + '":');
+    if (pass !== targetNode.password) { log('❌ Неверный пароль.', 'danger'); return; }
+    targetNode.locked = false;
+    log('🔓 Диск назначения открыт.', 'success');
+  }
+
+  if (fsMove(fmPath, fmSelected, target)) {
+    log('📦 Объект перенесён.', 'success');
+    fmSelected = null;
+    renderFiles();
+    checkStoryProgress();
+  } else {
+    log('Не удалось переместить объект.', 'warning');
+  }
+}
+
+function triggerGameVirus(sourceName) {
+  if (!state) return;
+  state.virusActive = true;
+  state.virusLevel = Math.min(100, (state.virusLevel || 0) + 35);
+  state.virusSource = sourceName || 'unknown';
+  state.virusTicks = 0;
+  state.virusQuarantined = false;
+  log('☣️ Обнаружен игровой вирус: ' + state.virusSource, 'danger');
+  pushNotification('Kiwi OS', 'Вирус активирован в игре');
+  renderSystemSettings();
+}
+
+function purgeGameVirus() {
+  if (!state) return;
+  state.virusActive = false;
+  state.virusLevel = 0;
+  state.virusSource = '';
+  state.virusTicks = 0;
+  state.virusQuarantined = true;
+  log('🧪 Вирус изолирован в карантине.', 'success');
+  renderSystemSettings();
+}
+
 // ===================== TEXT EDITOR =====================
 function editorOpen(pathArr, name) {
   const item = fsResolve(pathArr, name);
@@ -3569,6 +5113,171 @@ function editorSave() {
   }
 }
 
+
+function seedStoryline() {
+  if (!state || state.storySeeded) return;
+  state.storySeeded = true;
+  if (!state.messages) state.messages = [];
+  state.messages.unshift({
+    id: state.nextMsgId++,
+    from: 'Куратор Kiwi Lab',
+    subject: 'Первая доставка',
+    reward: 0,
+    deadlineHours: 24,
+    body: 'Открой Kiwi Draw, сделай простой эскиз, экспортируй его в Файлы и перенеси файл на диск “совершенно секретный”. Пароль к диску: 1234.',
+    read: false,
+    accepted: false,
+    type: 'story'
+  });
+  log('📘 Сюжетная задача добавлена в Почту.', 'info');
+}
+
+function checkStoryProgress() {
+  if (!state || !state.fs) return;
+  const secret = fsResolve(['home'], 'совершенно секретный');
+  if (secret && secret.type === 'dir' && secret.children && secret.children['kiwi_poster.kwd']) {
+    if ((state.storyStage || 0) < 2) {
+      state.storyStage = 2;
+      state.money += 120;
+      state.reputation = Math.min(100, state.reputation + 4);
+      log('🎉 Файл доставлен на закрытый диск. Сюжет завершён.', 'success');
+      updateTopBar();
+    }
+  }
+}
+
+let kiwiDrawState = {
+  initialized: false,
+  canvas: null,
+  ctx: null,
+  drawing: false,
+  color: '#6bcb77',
+  erase: false,
+  brush: 8,
+  lastX: 0,
+  lastY: 0,
+  strokes: []
+};
+
+function kiwiSetColor(color) {
+  kiwiDrawState.color = color;
+  kiwiDrawState.erase = false;
+}
+
+function kiwiSetErase() {
+  kiwiDrawState.erase = true;
+}
+
+function kiwiUndo() {
+  kiwiDrawState.strokes.pop();
+  kiwiRedrawAll();
+}
+
+function kiwiClear() {
+  if (!kiwiDrawState.ctx || !kiwiDrawState.canvas) return;
+  kiwiDrawState.ctx.fillStyle = '#f7f7f7';
+  kiwiDrawState.ctx.fillRect(0, 0, kiwiDrawState.canvas.width, kiwiDrawState.canvas.height);
+  kiwiDrawState.strokes = [];
+}
+
+function kiwiDrawLine(x1, y1, x2, y2, color, brush) {
+  const ctx = kiwiDrawState.ctx;
+  if (!ctx) return;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = brush;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
+function kiwiRedrawAll() {
+  const c = kiwiDrawState.canvas, ctx = kiwiDrawState.ctx;
+  if (!c || !ctx) return;
+  ctx.fillStyle = '#f7f7f7';
+  ctx.fillRect(0, 0, c.width, c.height);
+  kiwiDrawState.strokes.forEach(s => {
+    for (let i = 1; i < s.points.length; i++) {
+      kiwiDrawLine(s.points[i-1].x, s.points[i-1].y, s.points[i].x, s.points[i].y, s.color, s.brush);
+    }
+  });
+}
+
+function kiwiExport() {
+  const fileName = 'kiwi_poster.kwd';
+  const payload = {
+    app: 'Kiwi Draw',
+    exportedAt: new Date().toISOString(),
+    brush: kiwiDrawState.brush,
+    color: kiwiDrawState.color,
+    strokes: kiwiDrawState.strokes
+  };
+  const content = JSON.stringify(payload);
+  if (!fsWrite(['home','documents'], fileName, content, 'file')) {
+    log('❌ Не удалось сохранить эскиз.', 'danger');
+    return;
+  }
+  state.storyStage = Math.max(state.storyStage || 0, 1);
+  log('💾 Эскиз экспортирован в /home/documents/' + fileName, 'success');
+  log('📦 Теперь перенесите файл на диск “совершенно секретный”.', 'info');
+  renderFiles();
+  checkStoryProgress();
+}
+
+function renderKiwiDraw() {
+  const canvas = document.getElementById('kiwi-canvas');
+  if (!canvas) return;
+  if (!kiwiDrawState.initialized) {
+    kiwiDrawState.canvas = canvas;
+    kiwiDrawState.ctx = canvas.getContext('2d');
+    kiwiClear();
+
+    const getPos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const p = e.touches ? e.touches[0] : e;
+      return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+    };
+
+    const start = (e) => {
+      e.preventDefault();
+      const p = getPos(e);
+      kiwiDrawState.drawing = true;
+      kiwiDrawState.lastX = p.x;
+      kiwiDrawState.lastY = p.y;
+      kiwiDrawState.strokes.push({ color: kiwiDrawState.erase ? '#f7f7f7' : kiwiDrawState.color, brush: kiwiDrawState.erase ? 16 : kiwiDrawState.brush, points: [p] });
+    };
+
+    const move = (e) => {
+      if (!kiwiDrawState.drawing) return;
+      e.preventDefault();
+      const p = getPos(e);
+      const stroke = kiwiDrawState.strokes[kiwiDrawState.strokes.length - 1];
+      kiwiDrawLine(kiwiDrawState.lastX, kiwiDrawState.lastY, p.x, p.y, stroke.color, stroke.brush);
+      stroke.points.push(p);
+      kiwiDrawState.lastX = p.x;
+      kiwiDrawState.lastY = p.y;
+    };
+
+    const end = (e) => {
+      if (!kiwiDrawState.drawing) return;
+      e.preventDefault();
+      kiwiDrawState.drawing = false;
+    };
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    window.addEventListener('touchend', end, { passive: false });
+
+    kiwiDrawState.initialized = true;
+  }
+  kiwiRedrawAll();
+}
+
 // ===================== ACHIEVEMENTS =====================
 function createAchievements() {
   return {
@@ -3584,7 +5293,6 @@ function createAchievements() {
     notx_collector: { id:'notx_collector', title:'Коллекционер ПО', desc:'Установить 5 приложений из App Store', icon:'🛍️', unlocked:false },
     power_user:    { id:'power_user',    title:'Power User', desc:'Купить IntelliJ Ultimate', icon:'☕', unlocked:false },
     gamer:         { id:'gamer',         title:'Геймер', desc:'Купить 3 игры в NotX SHOP', icon:'🎮', unlocked:false },
-    high_roller:   { id:'high_roller',   title:'High Roller', desc:'Выиграть $500+ в казино за один спин', icon:'🎰', unlocked:false },
     snake_master:  { id:'snake_master',  title:'Змей Уроборос', desc:'Набрать 100+ очков в Змейке', icon:'🐍', unlocked:false },
     tetris_pro:    { id:'tetris_pro',    title:'Тетрис-про', desc:'Достичь 5 уровня в Тетрисе', icon:'🧱', unlocked:false }
   };
@@ -3642,7 +5350,7 @@ function checkAchievements() {
   if (state.reputation >= 100 && !a.reputation.unlocked) unlockAchievement('reputation');
   if (state.installedApps && state.installedApps.length >= 5 && !a.notx_collector.unlocked) unlockAchievement('notx_collector');
   if (hasApp('intellij') && !a.power_user.unlocked) unlockAchievement('power_user');
-  const funAppsCount = ['snake','yandex_music','casino','tetris'].filter(id => hasApp(id)).length;
+  const funAppsCount = ['snake','yandex_music','tetris'].filter(id => hasApp(id)).length;
   if (funAppsCount >= 3 && !a.gamer.unlocked) unlockAchievement('gamer');
 }
 
@@ -3656,7 +5364,19 @@ const NOTX_SHOP = [
     category: 'dev',
     price: 80,
     desc: 'Авто-прогресс ×1.2. Терминал с цветной подсветкой.',
-    installed: false
+    rating: 4.2,
+    downloads: 1240,
+    version: '9.0.1',
+    author: 'Vim Foundation',
+    size: '12 MB',
+    screenshots: ['🖥️', '⌨️', '🎨'],
+    specs: 'Требуется: HW ≥ 1, SW ≥ 1',
+    fullDesc: 'Vim Pro — профессиональный текстовый редактор для хакеров и разработчиков. Ускоряет автоматическую разработку на 20%. Включает цветную подсветку синтаксиса в терминале.',
+    reviews: [
+      { user: 'neo_hacker', rating: 5, text: 'Лучший редактор! Не могу без него кодить.', date: '2026-05-15' },
+      { user: 'script_kiddie', rating: 3, text: 'Слишком сложно выйти из Vim...', date: '2026-05-10' },
+      { user: 'dev_guru', rating: 5, text: ':wq и вперёд!', date: '2026-05-08' }
+    ]
   },
   {
     id: 'vscode',
@@ -3665,7 +5385,18 @@ const NOTX_SHOP = [
     category: 'dev',
     price: 150,
     desc: 'Авто-прогресс ×1.5. Подсказки показывают 2 символа вперёд.',
-    installed: false
+    rating: 4.7,
+    downloads: 8930,
+    version: '1.89.0',
+    author: 'Microsoft',
+    size: '180 MB',
+    screenshots: ['💻', '📁', '🔧'],
+    specs: 'Требуется: HW ≥ 2, SW ≥ 2',
+    fullDesc: 'Visual Studio Code — самый популярный редактор кода в мире. В NotX SHOP версии включены эксклюзивные плагины для хакерской разработки. Подсказки показывают 2 символа вперёд!',
+    reviews: [
+      { user: 'frontend_ninja', rating: 5, text: 'Идеально для веб-разработки. Плагины топ!', date: '2026-05-18' },
+      { user: 'cpp_dev', rating: 4, text: 'Хорошо, но IntelliJ лучше для C++.', date: '2026-05-12' }
+    ]
   },
   {
     id: 'intellij',
@@ -3674,7 +5405,19 @@ const NOTX_SHOP = [
     category: 'dev',
     price: 300,
     desc: 'Авто-прогресс ×2.0. Можно иметь 2 активных проекта одновременно.',
-    installed: false
+    rating: 4.9,
+    downloads: 3420,
+    version: '2024.1',
+    author: 'JetBrains',
+    size: '850 MB',
+    screenshots: ['☕', '🚀', '📊'],
+    specs: 'Требуется: HW ≥ 3, SW ≥ 3, NET ≥ 2',
+    fullDesc: 'IntelliJ IDEA Ultimate — мощнейшая IDE для профессионалов. Уникальная функция: параллельная разработка двух проектов одновременно. Авто-прогресс удваивается.',
+    reviews: [
+      { user: 'java_king', rating: 5, text: 'Это лучшая IDE на планете. Два проекта одновременно — имба!', date: '2026-05-20' },
+      { user: 'kotlin_fan', rating: 5, text: 'JetBrains никогда не подводят.', date: '2026-05-17' },
+      { user: 'poor_dev', rating: 4, text: 'Дорого, но оно того стоит.', date: '2026-05-14' }
+    ]
   },
   {
     id: 'copilot',
@@ -3683,7 +5426,18 @@ const NOTX_SHOP = [
     category: 'dev',
     price: 100,
     desc: 'Подсказка показывает 3 следующих символа вместо 1.',
-    installed: false
+    rating: 4.5,
+    downloads: 5670,
+    version: '1.200.0',
+    author: 'GitHub / OpenAI',
+    size: '45 MB',
+    screenshots: ['🤖', '✨', '💡'],
+    specs: 'Требуется: NET ≥ 2',
+    fullDesc: 'ИИ-ассистент программиста. Предсказывает до 3 следующих символов кода. Работает в терминале и при взломе. Требует интернет-соединение.',
+    reviews: [
+      { user: 'ai_skeptic', rating: 5, text: 'Он буквально читает мои мысли!', date: '2026-05-19' },
+      { user: 'old_school', rating: 3, text: 'ИИ заменит нас всех...', date: '2026-05-11' }
+    ]
   },
   {
     id: 'nmap_pro',
@@ -3692,7 +5446,18 @@ const NOTX_SHOP = [
     category: 'hack',
     price: 80,
     desc: 'Сканирование не даёт слежку. Показывает все порты сразу.',
-    installed: false
+    rating: 4.3,
+    downloads: 2100,
+    version: '7.95',
+    author: 'Gordon Lyon',
+    size: '28 MB',
+    screenshots: ['🔍', '🌐', '📋'],
+    specs: 'Требуется: NET ≥ 1',
+    fullDesc: 'Профессиональный сканер сети. Pro-версия не оставляет следов при сканировании и мгновенно отображает все открытые порты цели.',
+    reviews: [
+      { user: 'network_admin', rating: 5, text: 'Must have для пентестера.', date: '2026-05-16' },
+      { user: 'stealth_ops', rating: 4, text: 'Хорошо, но Wireshark тоже нужен.', date: '2026-05-09' }
+    ]
   },
   {
     id: 'burp',
@@ -3701,7 +5466,18 @@ const NOTX_SHOP = [
     category: 'hack',
     price: 200,
     desc: 'Видно уязвимый порт без скана. +15% к шансу взлома.',
-    installed: false
+    rating: 4.6,
+    downloads: 1890,
+    version: '2024.2',
+    author: 'PortSwigger',
+    size: '420 MB',
+    screenshots: ['🕵️', '🎯', '🔓'],
+    specs: 'Требуется: SW ≥ 2, NET ≥ 2',
+    fullDesc: 'Burp Suite — стандарт индустрии для тестирования веб-безопасности. В NotX SHOP версии: автоматическое обнаружение уязвимых портов без сканирования и бонус +15% к успеху взлома.',
+    reviews: [
+      { user: 'web_hacker', rating: 5, text: 'Находит уязвимости, которые я бы пропустил.', date: '2026-05-20' },
+      { user: 'bug_bounty', rating: 5, text: 'Заработал $50k на баг баунти с Burp!', date: '2026-05-13' }
+    ]
   },
   {
     id: 'metasploit',
@@ -3710,7 +5486,19 @@ const NOTX_SHOP = [
     category: 'hack',
     price: 350,
     desc: '+25% шанс взлома. Длина эксплойт-кода −30%.',
-    installed: false
+    rating: 4.8,
+    downloads: 1560,
+    version: '6.4.0',
+    author: 'Rapid7',
+    size: '1.2 GB',
+    screenshots: ['⚡', '💣', '🎭'],
+    specs: 'Требуется: HW ≥ 3, SW ≥ 4, NET ≥ 3',
+    fullDesc: 'Metasploit Framework — самый мощный инструмент для разработки и выполнения эксплойтов. Сокращает длину вводимого кода на 30% и добавляет +25% к шансу успешного взлома.',
+    reviews: [
+      { user: 'red_team', rating: 5, text: 'Это оружие массового взлома. Люблю его.', date: '2026-05-19' },
+      { user: 'script_kiddie', rating: 5, text: 'Теперь я реальный хакер!', date: '2026-05-15' },
+      { user: 'fbi_watcher', rating: 1, text: 'ЭТО НЕЛЕГАЛЬНО', date: '2026-05-01' }
+    ]
   },
   {
     id: 'wireshark',
@@ -3719,7 +5507,18 @@ const NOTX_SHOP = [
     category: 'hack',
     price: 120,
     desc: 'Видишь уровень слежки хоста до начала взлома.',
-    installed: false
+    rating: 4.4,
+    downloads: 2780,
+    version: '4.2.0',
+    author: 'Wireshark Foundation',
+    size: '75 MB',
+    screenshots: ['📡', '📊', '🔎'],
+    specs: 'Требуется: NET ≥ 2',
+    fullDesc: 'Анализатор сетевого трафика. Показывает уровень слежки (traceLevel) хоста ДО начала взлома. Помогает выбирать безопасные цели.',
+    reviews: [
+      { user: 'packet_sniffer', rating: 5, text: 'Видит всё. Буквально всё.', date: '2026-05-17' },
+      { user: 'careful_hacker', rating: 4, text: 'Помогает избегать горячих хостов.', date: '2026-05-10' }
+    ]
   },
   {
     id: 'tor',
@@ -3728,7 +5527,18 @@ const NOTX_SHOP = [
     category: 'sec',
     price: 120,
     desc: 'Рост FBI при взломе и скане в 2 раза медленнее.',
-    installed: false
+    rating: 4.6,
+    downloads: 4560,
+    version: '13.5',
+    author: 'Tor Project',
+    size: '95 MB',
+    screenshots: ['🧅', '🌐', '👤'],
+    specs: 'Требуется: NET ≥ 2',
+    fullDesc: 'Tor Browser обеспечивает анонимный доступ к сети. В игре: замедляет рост уровня FBI при сканировании и взломе в 2 раза. Необходим для долгосрочных операций.',
+    reviews: [
+      { user: 'anonymouse', rating: 5, text: 'FBI больше не дышит мне в затылок.', date: '2026-05-18' },
+      { user: 'paranoid', rating: 5, text: 'Моя первая покупка в каждом забеге.', date: '2026-05-14' }
+    ]
   },
   {
     id: 'firewall',
@@ -3737,7 +5547,18 @@ const NOTX_SHOP = [
     category: 'sec',
     price: 180,
     desc: 'Хосты жалуются в FBI реже (−40% шанс жалобы).',
-    installed: false
+    rating: 4.5,
+    downloads: 3120,
+    version: '2024.1',
+    author: 'SecureNet',
+    size: '35 MB',
+    screenshots: ['🧱', '🛡️', '🔥'],
+    specs: 'Требуется: SW ≥ 2',
+    fullDesc: 'Профессиональный фаервол. Блокирует 40% попыток хостов пожаловаться в FBI. Критически важен при массовом взломе корпоративных сетей.',
+    reviews: [
+      { user: 'mass_hacker', rating: 5, text: 'Взломал 20 хостов подряд — ни одной жалобы!', date: '2026-05-20' },
+      { user: 'careful', rating: 4, text: 'Хорошо работает в паре с Tor.', date: '2026-05-12' }
+    ]
   },
   {
     id: 'vpn',
@@ -3746,7 +5567,18 @@ const NOTX_SHOP = [
     category: 'sec',
     price: 100,
     desc: 'Сканирование и взлом не повышают traceLevel.',
-    installed: false
+    rating: 4.1,
+    downloads: 5340,
+    version: '8.7',
+    author: 'KeepSolid',
+    size: '22 MB',
+    screenshots: ['🔐', '🌍', '👻'],
+    specs: 'Требуется: NET ≥ 1',
+    fullDesc: 'VPN Unlimited полностью скрывает traceLevel при сканировании и взломе. Хосты не видят, что ты их сканируешь. Идеально для стелс-операций.',
+    reviews: [
+      { user: 'ghost_mode', rating: 5, text: 'Я призрак. Меня не существует.', date: '2026-05-19' },
+      { user: 'speed_demon', rating: 3, text: 'Медленно, но безопасно.', date: '2026-05-11' }
+    ]
   },
   {
     id: 'cryptominer',
@@ -3754,8 +5586,19 @@ const NOTX_SHOP = [
     emoji: '⛏️',
     category: 'passive',
     price: 250,
-    desc: 'Пассивный доход +$8/час.',
-    installed: false
+    desc: 'Майнит BTC/ETH/LTC/DOGE/USDT. Доход зависит от железа и курса.',
+    rating: 3.8,
+    downloads: 6780,
+    version: '3.0',
+    author: 'CryptoDev',
+    size: '15 MB',
+    screenshots: ['⛏️', '₿', 'Ξ'],
+    specs: 'Требуется: HW ≥ 2',
+    fullDesc: 'Майнинг криптовалюты в фоновом режиме. Добывает выбранную монету (BTC, ETH, LTC, DOGE или USDT) каждый тик. Скорость майнинга растёт от уровня железа (HW). Управляйте монетой и продавайте через приложение Crypto Wallet (💰).',
+    reviews: [
+      { user: 'btc_bro', rating: 4, text: 'Стабильный доход, но медленный.', date: '2026-05-16' },
+      { user: 'get_rich', rating: 2, text: 'AdBot приносит больше.', date: '2026-05-09' }
+    ]
   },
   {
     id: 'adbot',
@@ -3764,7 +5607,18 @@ const NOTX_SHOP = [
     category: 'passive',
     price: 400,
     desc: 'Пассивный доход +$18/час. +5% риск FBI.',
-    installed: false
+    rating: 4.0,
+    downloads: 4230,
+    version: '5.0',
+    author: 'BotNet Inc',
+    size: '8 MB',
+    screenshots: ['🤖', '💵', '⚠️'],
+    specs: 'Требуется: NET ≥ 3',
+    fullDesc: 'Ботнет для показа рекламы. Высокий доход $18/час, но повышает риск привлечь внимание FBI на 5%. Для смелых предпринимателей.',
+    reviews: [
+      { user: 'risk_taker', rating: 5, text: '$18/час! Риск того стоит.', date: '2026-05-20' },
+      { user: 'fbi_bait', rating: 2, text: 'FBI пришло через 2 часа. Не советую.', date: '2026-05-07' }
+    ]
   },
   {
     id: 'freelance_bot',
@@ -3773,7 +5627,18 @@ const NOTX_SHOP = [
     category: 'passive',
     price: 200,
     desc: 'Авто-принимает заказы из почты раз в 15 мин.',
-    installed: false
+    rating: 4.3,
+    downloads: 2890,
+    version: '1.5',
+    author: 'AutoWork',
+    size: '18 MB',
+    screenshots: ['📬', '📋', '✅'],
+    specs: 'Требуется: SW ≥ 2',
+    fullDesc: 'Автоматический ассистент фрилансера. Проверяет почту каждые 15 минут и автоматически принимает выгодные заказы. Экономит время на рутину.',
+    reviews: [
+      { user: 'lazy_dev', rating: 5, text: 'Теперь я вообще ничего не делаю!', date: '2026-05-18' },
+      { user: 'control_freak', rating: 3, text: 'Иногда принимает сомнительные заказы.', date: '2026-05-13' }
+    ]
   },
   {
     id: 'sysmon',
@@ -3782,7 +5647,18 @@ const NOTX_SHOP = [
     category: 'sys',
     price: 50,
     desc: 'Показывает точный шанс взлома до начала в терминале.',
-    installed: false
+    rating: 4.7,
+    downloads: 7120,
+    version: '3.2',
+    author: 'SysTools',
+    size: '5 MB',
+    screenshots: ['📊', '💻', '📈'],
+    specs: 'Требуется: HW ≥ 1',
+    fullDesc: 'Мониторинг системы в реальном времени. Отображает точный процент успеха взлома прямо в терминале перед началом операции. Must have для планирования.',
+    reviews: [
+      { user: 'planner', rating: 5, text: 'Знаю шанс до того, как рискую. Идеально.', date: '2026-05-19' },
+      { user: 'everyone', rating: 5, text: 'За $50 это лучшая покупка в игре.', date: '2026-05-15' }
+    ]
   },
   {
     id: 'dark_market',
@@ -3791,7 +5667,18 @@ const NOTX_SHOP = [
     category: 'sys',
     price: 50,
     desc: 'Скидка 20% на всё в обычном магазине улучшений.',
-    installed: false
+    rating: 4.4,
+    downloads: 5340,
+    version: '1.0',
+    author: 'DarkNet',
+    size: '3 MB',
+    screenshots: ['🌑', '💸', '🏷️'],
+    specs: 'Требуется: NET ≥ 1',
+    fullDesc: 'Доступ к теневым торговым площадкам. Даёт перманентную скидку 20% на всё железо, софт, сеть и защиту в обычном магазине. Окупается после 3 покупок.',
+    reviews: [
+      { user: 'economist', rating: 5, text: 'Окупилось за 2 покупки. Берите!', date: '2026-05-17' },
+      { user: 'newbie', rating: 4, text: 'Хорошо, но сначала копите на железо.', date: '2026-05-11' }
+    ]
   },
   {
     id: 'snake',
@@ -3800,7 +5687,18 @@ const NOTX_SHOP = [
     category: 'fun',
     price: 50,
     desc: 'Классическая игра Змейка. Собирай яблоки, расти, не врезайся!',
-    installed: false
+    rating: 4.6,
+    downloads: 12340,
+    version: '1.0',
+    author: 'RetroGames',
+    size: '2 MB',
+    screenshots: ['🐍', '🍎', '🎮'],
+    specs: 'Требуется: HW ≥ 1',
+    fullDesc: 'Классическая змейка в ретро-стиле. Управление стрелками или WASD. Собирай яблоки, увеличивай змейку, избегай столкновений со стенами и собой.',
+    reviews: [
+      { user: 'retro_fan', rating: 5, text: 'Ностальгия! Играю между взломами.', date: '2026-05-20' },
+      { user: 'pro_gamer', rating: 4, text: 'Простая, но затягивает. 120 очков!', date: '2026-05-16' }
+    ]
   },
   {
     id: 'yandex_music',
@@ -3809,17 +5707,20 @@ const NOTX_SHOP = [
     category: 'fun',
     price: 80,
     desc: 'Музыкальный плеер с 8-бит треками и визуализатором.',
-    installed: false
+    rating: 4.5,
+    downloads: 8920,
+    version: '2024.5',
+    author: 'Yandex',
+    size: '40 MB',
+    screenshots: ['🎵', '🎹', '🌈'],
+    specs: 'Требуется: SW ≥ 1, звук включён',
+    fullDesc: 'Музыкальный плеер с коллекцией 8-бит треков в стиле ретро-игр. Включает визуализатор, плейлисты и поддержку Web Audio API. Отличный фон для хакерских сессий.',
+    reviews: [
+      { user: 'music_lover', rating: 5, text: 'Cyberpunk Dreams — мой anthem!', date: '2026-05-19' },
+      { user: 'coder', rating: 4, text: 'Кодится лучше с музыкой. Спасибо, Яндекс!', date: '2026-05-14' }
+    ]
   },
-  {
-    id: 'casino',
-    name: 'NotX Casino',
-    emoji: '🎰',
-    category: 'fun',
-    price: 100,
-    desc: 'Рулетка на деньги. Ставь $50-$500 и крути! Шанс ×2 или ×0.',
-    installed: false
-  },
+  
   {
     id: 'tetris',
     name: 'Тетрис',
@@ -3827,7 +5728,39 @@ const NOTX_SHOP = [
     category: 'fun',
     price: 60,
     desc: 'Классический Тетрис. Управление стрелками.',
-    installed: false
+    rating: 4.8,
+    downloads: 15670,
+    version: '1.0',
+    author: 'Tetris Holdings',
+    size: '3 MB',
+    screenshots: ['🧱', '📐', '🏆'],
+    specs: 'Требуется: HW ≥ 1',
+    fullDesc: 'Легендарная головоломка. Укладывай падающие фигуры в полные ряды. Управление стрелками: ← → движение, ↑ поворот, ↓ ускорение. 7 классических тетрамино.',
+    reviews: [
+      { user: 'tetris_god', rating: 5, text: 'Достиг 12 уровня. Руки дрожат!', date: '2026-05-20' },
+      { user: 'casual', rating: 5, text: 'Вечная классика. За $60 — даром.', date: '2026-05-17' },
+      { user: 'old_gamer', rating: 5, text: 'Играю с 1984 года. Всё ещё лучшая.', date: '2026-05-12' }
+    ]
+  },
+  {
+    id: 'kiwi_antivirus',
+    name: 'Kiwi Antivirus',
+    emoji: '🛡️',
+    category: 'sec',
+    price: 180,
+    desc: 'Снимает вирус в игре и открывает карантин.',
+    rating: 4.8,
+    downloads: 4210,
+    version: '1.0.0',
+    author: 'Kiwi Lab',
+    size: '52 MB',
+    screenshots: ['🛡️', '🧪', '📦'],
+    specs: 'Требуется: SW ≥ 2, DEF ≥ 1',
+    fullDesc: 'Игровой антивирус для Linux Dev OS. Обнаруживает файл-вирус в секретной папке, переводит его в карантин и частично очищает заражённые элементы интерфейса.',
+    reviews: [
+      { user: 'sys_guard', rating: 5, text: 'Спас мой сейв от вируса за минуту.', date: '2026-05-21' },
+      { user: 'lab_tester', rating: 4, text: 'Хорошо чистит, но не магия.', date: '2026-05-18' }
+    ]
   }
 ];
 
@@ -3889,13 +5822,14 @@ function buyNotxApp(id) {
   updateTopBar();
   updateStartMenuApps();
   // Special install effects
-  if (id === 'cryptominer') log('⛏️ CryptoMiner запущен. Доход +$8/час.', 'info');
+  if (id === 'cryptominer') { log('⛏️ CryptoMiner запущен. Майнит ' + (state.crypto ? cryptoCoin(state.crypto.selectedMiner).symbol : 'BTC') + '. Открой 💰 Crypto Wallet, чтобы продать.', 'info'); openWindow('crypto'); }
   if (id === 'adbot') log('🤖 AdBot Network активирован. Доход +$18/час.', 'info');
   if (id === 'freelance_bot') log('📬 Freelance Bot ожидает заказы...', 'info');
   if (id === 'snake') { log('🐍 Змейка установлена! Иконка добавлена на рабочий стол.', 'success'); createDesktopIcon('snake', '🐍', 'Змейка', 'linear-gradient(135deg,#4caf50,#2e7d32)', 'snake'); }
   if (id === 'yandex_music') { log('🎵 Яндекс Музыка установлена! Иконка добавлена на рабочий стол.', 'success'); createDesktopIcon('yandexmusic', '🎵', 'Яндекс Музыка', 'linear-gradient(135deg,#ff0000,#cc0000)', 'yandexmusic'); }
-  if (id === 'casino') { log('🎰 NotX Casino установлено! Удачи!', 'success'); createDesktopIcon('casino', '🎰', 'NotX Casino', 'linear-gradient(135deg,#ffd700,#ff8c00)', 'casino'); }
+  
   if (id === 'tetris') { log('🧱 Тетрис установлен! Иконка добавлена на рабочий стол.', 'success'); createDesktopIcon('tetris', '🧱', 'Тетрис', 'linear-gradient(135deg,#9c27b0,#673ab7)', 'tetris'); }
+  if (id === 'kiwi_antivirus') { state.def = Math.max(state.def || 1, 2); log('🛡️ Kiwi Antivirus установлен. Защита в игре усилена.', 'success'); renderSystemSettings(); }
 }
 
 function updateStartMenuApps() {
@@ -3905,7 +5839,7 @@ function updateStartMenuApps() {
   const funApps = [
     {id:'snake', icon:'🐍', label:'Змейка', req:'snake'},
     {id:'yandexmusic', icon:'🎵', label:'Яндекс Музыка', req:'yandex_music'},
-    {id:'casino', icon:'🎰', label:'NotX Casino', req:'casino'},
+    
     {id:'tetris', icon:'🧱', label:'Тетрис', req:'tetris'}
   ];
   const installed = funApps.filter(a => hasApp(a.req));
@@ -4005,14 +5939,37 @@ function syncDesktopIcons() {
   // Create icons for installed fun apps
   if (hasApp('snake')) createDesktopIcon('snake', '🐍', 'Змейка', 'linear-gradient(135deg,#4caf50,#2e7d32)', 'snake');
   if (hasApp('yandex_music')) createDesktopIcon('yandexmusic', '🎵', 'Яндекс Музыка', 'linear-gradient(135deg,#ff0000,#cc0000)', 'yandexmusic');
-  if (hasApp('casino')) createDesktopIcon('casino', '🎰', 'NotX Casino', 'linear-gradient(135deg,#ffd700,#ff8c00)', 'casino');
+  
   if (hasApp('tetris')) createDesktopIcon('tetris', '🧱', 'Тетрис', 'linear-gradient(135deg,#9c27b0,#673ab7)', 'tetris');
+  // Crypto Wallet — встроен в систему, всегда доступен
+  createDesktopIcon('crypto', '💰', 'Crypto Wallet', 'linear-gradient(135deg,#f7931a,#627eea)', 'crypto');
 }
 
 function renderNotxShop() {
   const el = document.getElementById('notxshop-content');
   if (!el) return;
+
+  let html = '<div style="padding:14px;">';
+  html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">';
+  html += '<h3 style="color:var(--accent); margin:0;">🛍️ NotX SHOP</h3>';
+  html += '<span style="font-size:12px; color:var(--text-dim);">💰 $' + state.money + ' | 📦 ' + (state.installedApps ? state.installedApps.length : 0) + ' apps' + (hasApp('dark_market') ? ' <span class="tag tag-green">-20%</span>' : '') + '</span>';
+  html += '</div>';
+
+  // Search + filter bar
+  html += '<div style="display:flex; gap:8px; margin-bottom:14px;">';
+  html += '<input type="text" id="shop-search" placeholder="🔍 Поиск приложений..." style="flex:1; background:#2a2a2a; border:1px solid var(--border); color:var(--text); padding:6px 10px; border-radius:6px; font-size:13px;" oninput="filterShop(this.value)">';
+  html += '<select id="shop-sort" style="background:#2a2a2a; border:1px solid var(--border); color:var(--text); padding:6px 10px; border-radius:6px; font-size:13px;" onchange="sortShop(this.value)">';
+  html += '<option value="popular">🔥 Популярные</option>';
+  html += '<option value="price_asc">💰 Дешевые</option>';
+  html += '<option value="price_desc">💸 Дорогие</option>';
+  html += '<option value="rating">⭐ Рейтинг</option>';
+  html += '<option value="name">🔤 По имени</option>';
+  html += '</select>';
+  html += '</div>';
+
+  // Category tabs
   const cats = {
+    all: '📦 Все',
     dev: '💻 Разработка',
     hack: '🕵️ Хакинг',
     sec: '🛡️ Защита',
@@ -4020,35 +5977,868 @@ function renderNotxShop() {
     sys: '⚙️ Системные',
     fun: '🎮 Развлечения'
   };
-  let html = '<h3 style="margin-bottom:10px; color:var(--accent);">🛍️ NotX SHOP</h3>';
-  html += '<p style="color:var(--text-dim); font-size:12px; margin-bottom:12px;">Установлено: ' + (state.installedApps ? state.installedApps.length : 0) + ' | Баланс: <b style="color:var(--success);">$' + state.money + '</b>' + (hasApp('dark_market') ? ' <span class="tag tag-green">Скидка 20%</span>' : '') + '</p>';
-
+  html += '<div style="display:flex; gap:4px; margin-bottom:14px; flex-wrap:wrap;">';
   Object.entries(cats).forEach(([cat, label]) => {
-    html += '<h4 style="margin:14px 0 8px; color:var(--info); font-size:13px; border-bottom:1px solid var(--border); padding-bottom:4px;">' + label + '</h4>';
-    html += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap:10px;">';
-    NOTX_SHOP.filter(a => a.category === cat).forEach(app => {
-      const owned = hasApp(app.id);
-      const price = Math.floor(app.price * getStoreDiscount());
-      html += `
-        <div style="background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:10px; ${owned ? 'opacity:0.6; border-color:var(--success);' : ''}">
-          <div style="font-size:24px; margin-bottom:4px;">${app.emoji}</div>
-          <div style="font-weight:bold; font-size:13px; margin-bottom:4px;">${app.name}</div>
-          <div style="font-size:11px; color:var(--text-dim); margin-bottom:8px; min-height:44px;">${app.desc}</div>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:bold; color:${owned ? 'var(--success)' : 'var(--accent)'};">${owned ? '✅ Установлено' : '$' + price}</span>
-            ${!owned ? `<button class="btn btn-small" onclick="buyNotxApp('${app.id}')">Купить</button>` : '<span style="font-size:11px; color:var(--success);">🚀 Активно</span>'}
-          </div>
-        </div>
-      `;
-    });
-    html += '</div>';
+    const active = (window._shopCat || 'all') === cat;
+    html += `<button class="btn btn-small ${active ? '' : 'btn-secondary'}" style="${active ? 'background:var(--accent);' : ''}" onclick="setShopCat('${cat}')">${label}</button>`;
   });
+  html += '</div>';
 
-  html += '<div style="margin-top:16px; padding-top:10px; border-top:1px solid var(--border); font-size:12px; color:var(--text-dim);">';
-  html += '💡 Совет: приложения из категории <b>Разработка</b> стакаются по принципу "лучший бонус", остальные — суммируются.';
+  html += '<div id="shop-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap:12px;">';
+  html += buildShopGrid();
+  html += '</div>';
+
   html += '</div>';
   el.innerHTML = html;
 }
+
+function buildShopGrid() {
+  const cat = window._shopCat || 'all';
+  const search = (window._shopSearch || '').toLowerCase();
+  const sort = window._shopSort || 'popular';
+
+  let apps = cat === 'all' ? [...NOTX_SHOP] : NOTX_SHOP.filter(a => a.category === cat);
+
+  if (search) {
+    apps = apps.filter(a => a.name.toLowerCase().includes(search) || a.desc.toLowerCase().includes(search));
+  }
+
+  switch(sort) {
+    case 'price_asc': apps.sort((a,b) => a.price - b.price); break;
+    case 'price_desc': apps.sort((a,b) => b.price - a.price); break;
+    case 'rating': apps.sort((a,b) => b.rating - a.rating); break;
+    case 'name': apps.sort((a,b) => a.name.localeCompare(b.name)); break;
+    default: apps.sort((a,b) => b.downloads - a.downloads); break;
+  }
+
+  let html = '';
+  apps.forEach(app => {
+    const owned = hasApp(app.id);
+    const price = Math.floor(app.price * getStoreDiscount());
+    const stars = '★'.repeat(Math.floor(app.rating)) + '☆'.repeat(5 - Math.floor(app.rating));
+    html += '<div class="shop-card" data-app-id="' + app.id + '" style="background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px; cursor:pointer; transition:all 0.15s; ' + (owned ? 'border-color:var(--success);' : '') + '">';
+    html += '<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">';
+    html += '<div style="font-size:32px; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:10px;">' + app.emoji + '</div>';
+    html += '<div style="flex:1;">';
+    html += '<div style="font-weight:bold; font-size:13px;">' + app.name + '</div>';
+    html += '<div style="font-size:11px; color:var(--text-dim);">' + app.author + '</div>';
+    html += '</div>';
+    if (owned) html += '<span style="font-size:18px;">✅</span>';
+    html += '</div>';
+    html += '<div style="font-size:11px; color:var(--text-dim); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">' + app.desc + '</div>';
+    html += '<div style="display:flex; justify-content:space-between; align-items:center;">';
+    html += '<div><span style="color:var(--warning); font-size:12px;">' + stars + '</span><span style="font-size:10px; color:var(--text-dim); margin-left:4px;">' + app.rating + '</span></div>';
+    html += '<span style="font-weight:bold; color:' + (owned ? 'var(--success)' : 'var(--accent)') + '; font-size:14px;">' + (owned ? 'Установлено' : '$' + price) + '</span>';
+    html += '</div>';
+    html += '<div style="margin-top:6px; font-size:10px; color:var(--text-dim);">⬇️ ' + app.downloads.toLocaleString() + ' загрузок</div>';
+    html += '</div>';
+  });
+
+  if (apps.length === 0) {
+    html = '<div style="grid-column:1/-1; text-align:center; color:var(--text-dim); padding:40px;">Ничего не найдено 🔍</div>';
+  }
+  return html;
+}
+
+// Event delegation for shop cards
+document.addEventListener('click', function(e) {
+  const card = e.target.closest('.shop-card');
+  if (card && card.dataset.appId) {
+    e.stopPropagation();
+    openAppDetail(card.dataset.appId);
+  }
+});
+
+document.addEventListener('mouseover', function(e) {
+  const card = e.target.closest('.shop-card');
+  if (card) card.style.borderColor = 'var(--accent)';
+});
+
+document.addEventListener('mouseout', function(e) {
+  const card = e.target.closest('.shop-card');
+  if (card) {
+    const app = NOTX_SHOP.find(a => a.id === card.dataset.appId);
+    const owned = app && hasApp(app.id);
+    card.style.borderColor = owned ? 'var(--success)' : 'var(--border)';
+  }
+});
+
+function setShopCat(cat) {
+  window._shopCat = cat;
+  renderNotxShop();
+}
+
+function filterShop(query) {
+  window._shopSearch = query;
+  const grid = document.getElementById('shop-grid');
+  if (grid) grid.innerHTML = buildShopGrid();
+}
+
+function sortShop(sort) {
+  window._shopSort = sort;
+  const grid = document.getElementById('shop-grid');
+  if (grid) grid.innerHTML = buildShopGrid();
+}
+
+// ===================== APP DETAIL VIEW =====================
+function openAppDetail(id) {
+  const app = NOTX_SHOP.find(a => a.id === id);
+  if (!app) return;
+  const owned = hasApp(id);
+  const price = Math.floor(app.price * getStoreDiscount());
+
+  const win = document.getElementById('win-appdetail');
+  const title = document.getElementById('appdetail-title');
+  const content = document.getElementById('appdetail-content');
+  if (!win || !content) return;
+
+  title.textContent = app.emoji + ' ' + app.name;
+
+  let html = '<div style="display:flex; flex-direction:column; height:100%;">';
+
+  // Header
+  html += '<div style="padding:14px; border-bottom:1px solid var(--border);">';
+  html += '<div style="display:flex; gap:14px; align-items:flex-start;">';
+  html += '<div style="font-size:56px; width:80px; height:80px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:16px; flex-shrink:0;">' + app.emoji + '</div>';
+  html += '<div style="flex:1;">';
+  html += '<div style="font-size:18px; font-weight:bold; margin-bottom:4px;">' + app.name + '</div>';
+  html += '<div style="font-size:12px; color:var(--text-dim); margin-bottom:6px;">' + app.author + ' • v' + app.version + ' • ' + app.size + '</div>';
+  html += '<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">';
+  const stars = '★'.repeat(Math.floor(app.rating)) + '☆'.repeat(5 - Math.floor(app.rating));
+  html += '<span style="color:var(--warning);">' + stars + '</span>';
+  html += '<span style="font-size:13px; font-weight:bold;">' + app.rating + '</span>';
+  html += '<span style="font-size:11px; color:var(--text-dim);">• ' + app.downloads.toLocaleString() + ' загрузок</span>';
+  html += '</div>';
+  html += '<div style="display:flex; gap:8px; flex-wrap:wrap;">';
+  html += '<span class="tag tag-blue">' + ({dev:'💻 Разработка', hack:'🕵️ Хакинг', sec:'🛡️ Защита', passive:'⛏️ Пассивный доход', sys:'⚙️ Системные', fun:'🎮 Развлечения'}[app.category]) + '</span>';
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+
+  // Action bar
+  html += '<div style="margin-top:12px; display:flex; gap:8px;">';
+  if (!owned) {
+    html += '<button class="btn app-buy-btn" data-app-id="' + id + '" style="flex:1; font-size:14px; padding:8px 16px;">💰 Купить за $' + price + '</button>';
+  } else {
+    html += '<button class="btn btn-green" style="flex:1; font-size:14px; padding:8px 16px;" disabled>✅ Установлено</button>';
+  }
+  html += '<button class="btn btn-secondary app-back-btn" style="">↩ Назад</button>';
+  html += '</div>';
+  html += '</div>';
+
+  // Tabs
+  html += '<div style="display:flex; border-bottom:1px solid var(--border);">';
+  html += '<div class="app-tab active" data-tab="desc" id="app-tab-desc">📄 Описание</div>';
+  html += '<div class="app-tab" data-tab="reviews" id="app-tab-reviews">💬 Отзывы (' + app.reviews.length + ')</div>';
+  html += '<div class="app-tab" data-tab="specs" id="app-tab-specs">🔧 Системные требования</div>';
+  html += '</div>';
+
+  // Tab content
+  html += '<div style="flex:1; overflow-y:auto; padding:14px;">';
+
+  // Description tab
+  html += '<div class="app-tab-content active" id="app-content-desc">';
+  html += '<p style="font-size:13px; line-height:1.6; margin-bottom:14px;">' + app.fullDesc + '</p>';
+  html += '<h4 style="color:var(--accent); font-size:13px; margin-bottom:8px;">📸 Скриншоты</h4>';
+  html += '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">';
+  app.screenshots.forEach((s, i) => {
+    html += '<div style="width:80px; height:80px; background:rgba(255,255,255,0.05); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:36px; border:1px solid var(--border);">' + s + '</div>';
+  });
+  html += '</div>';
+  html += '<h4 style="color:var(--accent); font-size:13px; margin-bottom:8px;">⚡ Эффекты в игре</h4>';
+  html += '<div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px; font-size:12px; line-height:1.5;">' + app.desc + '</div>';
+  html += '</div>';
+
+  // Reviews tab
+  html += '<div class="app-tab-content" id="app-content-reviews">';
+  app.reviews.forEach(r => {
+    const rStars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+    html += '<div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px; margin-bottom:8px;">';
+    html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">';
+    html += '<span style="font-weight:bold; font-size:12px;">👤 ' + r.user + '</span>';
+    html += '<span style="font-size:11px; color:var(--text-dim);">' + r.date + '</span>';
+    html += '</div>';
+    html += '<div style="color:var(--warning); font-size:11px; margin-bottom:4px;">' + rStars + '</div>';
+    html += '<div style="font-size:12px;">' + r.text + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Specs tab
+  html += '<div class="app-tab-content" id="app-content-specs">';
+  html += '<div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:12px;">';
+  html += '<div class="stat-row"><span>Версия:</span><b>' + app.version + '</b></div>';
+  html += '<div class="stat-row"><span>Размер:</span><b>' + app.size + '</b></div>';
+  html += '<div class="stat-row"><span>Разработчик:</span><b>' + app.author + '</b></div>';
+  html += '<div class="stat-row"><span>Загрузок:</span><b>' + app.downloads.toLocaleString() + '</b></div>';
+  html += '<div class="stat-row"><span>Рейтинг:</span><b>' + app.rating + '/5.0</b></div>';
+  html += '<div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">';
+  html += '<div style="font-size:12px; color:var(--info); margin-bottom:4px;">🖥️ Требования:</div>';
+  html += '<div style="font-size:12px;">' + app.specs + '</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '</div>'; // tab content wrapper
+  html += '</div>'; // main wrapper
+
+  content.innerHTML = html;
+  win.classList.add('active', 'opening');
+  setTimeout(() => win.classList.remove('opening'), 200);
+  win.style.zIndex = ++zIndex;
+}
+
+function buyNotxAppFromDetail(id) {
+  buyNotxApp(id);
+  // Refresh detail view
+  setTimeout(() => openAppDetail(id), 100);
+}
+
+function closeAppDetail() {
+  closeWindow('appdetail');
+}
+
+// Event delegation for app detail view
+document.addEventListener('click', function(e) {
+  // Tab switching
+  const tab = e.target.closest('.app-tab');
+  if (tab && tab.dataset.tab) {
+    switchAppTab(tab.dataset.tab);
+    return;
+  }
+
+  // Buy button
+  const buyBtn = e.target.closest('.app-buy-btn');
+  if (buyBtn && buyBtn.dataset.appId) {
+    buyNotxAppFromDetail(buyBtn.dataset.appId);
+    return;
+  }
+
+  // Back button
+  if (e.target.closest('.app-back-btn')) {
+    closeAppDetail();
+    return;
+  }
+});
+
+
+// App detail event delegation
+document.addEventListener('click', function(e) {
+  // Tab switching
+  const tab = e.target.closest('.app-tab');
+  if (tab && tab.dataset.tab) {
+    switchAppTab(tab.dataset.tab);
+    return;
+  }
+
+  // Buy button
+  const buyBtn = e.target.closest('.app-buy-btn');
+  if (buyBtn && buyBtn.dataset.appId) {
+    buyNotxAppFromDetail(buyBtn.dataset.appId);
+    return;
+  }
+
+  // Back button
+  if (e.target.closest('.app-back-btn')) {
+    closeAppDetail();
+    return;
+  }
+});
+
+
+
+function switchAppTab(tab) {
+  document.querySelectorAll('.app-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.app-tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('app-tab-' + tab).classList.add('active');
+  document.getElementById('app-content-' + tab).classList.add('active');
+}
+
+// ===================== YANDEX GAMES SDK v2 =====================
+let ysdk = null;
+let isYandexPlatform = false;
+let player = null;
+let gameLang = 'ru';
+
+// Инициализация SDK согласно документации Яндекс.Игр
+async function initYandexSDK() {
+    if (typeof YaGames === 'undefined') {
+        console.log('Игра запущена не на Яндекс.Играх, SDK не инициализирован');
+        isYandexPlatform = false;
+        return;
+    }
+
+    try {
+        ysdk = await YaGames.init();
+        isYandexPlatform = true;
+        console.log('✅ Yandex Games SDK v2 инициализирован');
+
+        // Автоопределение языка (пункт 2.14)
+        try {
+            gameLang = ysdk.environment.i18n.lang || 'ru';
+            console.log('🌐 Язык платформы:', gameLang);
+        } catch(e) {
+            gameLang = 'ru';
+        }
+
+        // Получаем данные игрока
+        try {
+            player = await ysdk.getPlayer();
+            console.log('✅ Игрок получен:', player.getName() || 'Anonymous');
+        } catch(e) {
+            console.log('⚠️ Игрок не авторизован, используем анонимный режим');
+        }
+
+        // Получаем safeStorage для iOS и приватного режима
+        try {
+          const safeStorage = await ysdk.getStorage();
+          if (safeStorage) {
+            window._safeStorage = safeStorage;
+            console.log('✅ SafeStorage инициализирован');
+          }
+        } catch(e) {
+          console.log('⚠️ SafeStorage не доступен, используем localStorage');
+        }
+
+        // Загружаем облачное сохранение
+        await loadCloudSave();
+
+        // Настраиваем автосохранение
+        setupAutoCloudSave();
+
+        // Настраиваем обработку паузы/возобновления
+        setupPauseResume();
+
+        // Показываем sticky banner если доступен
+        try {
+            const { stickyAdvIsShowing, reason } = await ysdk.adv.getBannerAdvStatus();
+            if (!stickyAdvIsShowing && !reason) {
+                await ysdk.adv.showBannerAdv();
+            }
+        } catch(e) {
+            console.log('Баннеры не доступны:', e.message);
+        }
+
+        console.log('✅ Готово к работе на Яндекс.Играх');
+    } catch (error) {
+        console.error('❌ Ошибка инициализации SDK:', error);
+        isYandexPlatform = false;
+    }
+}
+
+// Обработка visibilitychange (пункт 1.3) - остановка звука при сворачивании
+function setupVisibilityHandler() {
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            // Страница скрыта - останавливаем звук и игру
+            if (audioCtx && audioCtx.state === 'running') {
+                audioCtx.suspend();
+            }
+            // Останавливаем игровые процессы
+            if (snakeInterval) { clearInterval(snakeInterval); snakeInterval = null; }
+            if (tetrisInterval) { clearInterval(tetrisInterval); tetrisInterval = null; }
+            if (ymInterval) { clearInterval(ymInterval); ymInterval = null; }
+            if (ymOsc) { ymOsc.stop(); ymOsc = null; }
+            // Останавливаем анимации
+            if (bgAnimId) { cancelAnimationFrame(bgAnimId); bgAnimId = null; }
+        } else {
+            // Страница видна - возобновляем
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            // Возобновляем анимации если нужно
+            if (bgAnimType && !bgAnimId) {
+                bgLoop();
+            }
+        }
+    });
+}
+
+// Обработка game_api_pause / game_api_resume (пункт 1.19.4)
+function setupPauseResume() {
+    if (!ysdk) return;
+
+    ysdk.on('game_api_pause', function() {
+        console.log('⏸ Игра на паузе (game_api_pause)');
+        // Останавливаем звук
+        if (audioCtx && audioCtx.state === 'running') {
+            audioCtx.suspend();
+        }
+        // Останавливаем игровые процессы
+        if (snakeInterval) { clearInterval(snakeInterval); }
+        if (tetrisInterval) { clearInterval(tetrisInterval); }
+        if (ymInterval) { clearInterval(ymInterval); }
+        if (ymOsc) { ymOsc.stop(); }
+        // Скрываем баннер
+        if (ysdk && ysdk.adv) {
+            ysdk.adv.hideBannerAdv().catch(() => {});
+        }
+    });
+
+    ysdk.on('game_api_resume', function() {
+        console.log('▶ Игра возобновлена (game_api_resume)');
+        // Возобновляем звук
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        // Показываем баннер
+        if (ysdk && ysdk.adv) {
+            ysdk.adv.showBannerAdv().catch(() => {});
+        }
+    });
+}
+
+// Показать полноэкранную рекламу (interstitial)
+async function showInterstitialAd() {
+    if (!isYandexPlatform || !ysdk) {
+        console.log('Реклама недоступна: не на платформе Яндекс.Игр');
+        return false;
+    }
+    try {
+        // Останавливаем геймплей перед рекламой
+        if (ysdk.features && ysdk.features.GameplayAPI) {
+            ysdk.features.GameplayAPI.stop();
+        }
+
+        await ysdk.adv.showFullscreenAdv({
+            callbacks: {
+                onOpen: () => {
+                    console.log('📺 Interstitial открыт');
+                    // Останавливаем звук
+                    if (audioCtx) audioCtx.suspend();
+                },
+                onClose: (wasShown) => {
+                    console.log('📺 Interstitial закрыт, показан:', wasShown);
+                    // Возобновляем звук
+                    if (audioCtx) audioCtx.resume();
+                    // Возобновляем геймплей
+                    if (ysdk.features && ysdk.features.GameplayAPI) {
+                        ysdk.features.GameplayAPI.start();
+                    }
+                },
+                onError: (error) => {
+                    console.error('❌ Ошибка interstitial:', error);
+                    if (audioCtx) audioCtx.resume();
+                    if (ysdk.features && ysdk.features.GameplayAPI) {
+                        ysdk.features.GameplayAPI.start();
+                    }
+                }
+            }
+        });
+        return true;
+    } catch(e) { 
+        console.error('Не удалось показать interstitial:', e);
+        if (ysdk.features && ysdk.features.GameplayAPI) {
+            ysdk.features.GameplayAPI.start();
+        }
+        return false; 
+    }
+}
+
+// Показать вознаграждаемую рекламу (rewarded video)
+async function showRewardedAd() {
+    if (!isYandexPlatform || !ysdk) {
+        log('Реклама доступна только на Яндекс.Играх', 'warning');
+        return false;
+    }
+    try {
+        // Останавливаем геймплей перед рекламой
+        if (ysdk.features && ysdk.features.GameplayAPI) {
+            ysdk.features.GameplayAPI.stop();
+        }
+
+        let rewarded = false;
+        await ysdk.adv.showRewardedVideo({
+            callbacks: {
+                onOpen: () => {
+                    console.log('📺 Rewarded открыт');
+                    if (audioCtx) audioCtx.suspend();
+                },
+                onRewarded: () => {
+                    console.log('🎁 Награда получена!');
+                    rewarded = true;
+                    // Даём награду
+                    state.money += 500;
+                    state.totalEarned += 500;
+                    updateTopBar();
+                    pushNotification('Бонус!', '+500$ за просмотр рекламы');
+                    log('🎁 +500$ за просмотр рекламы!', 'success');
+                },
+                onClose: (wasShown) => {
+                    console.log('📺 Rewarded закрыт');
+                    if (audioCtx) audioCtx.resume();
+                    if (ysdk.features && ysdk.features.GameplayAPI) {
+                        ysdk.features.GameplayAPI.start();
+                    }
+                },
+                onError: (error) => {
+                    console.error('❌ Ошибка rewarded:', error);
+                    if (audioCtx) audioCtx.resume();
+                    if (ysdk.features && ysdk.features.GameplayAPI) {
+                        ysdk.features.GameplayAPI.start();
+                    }
+                }
+            }
+        });
+        return rewarded;
+    } catch(e) { 
+        console.error('Не удалось показать rewarded:', e);
+        if (ysdk.features && ysdk.features.GameplayAPI) {
+            ysdk.features.GameplayAPI.start();
+        }
+        return false; 
+    }
+}
+
+// Сохранить игру в облако Яндекс.Игр (player.setData)
+async function saveToCloud() {
+    if (!isYandexPlatform || !player) return false;
+    try {
+        // Также сохраняем в safeStorage для надёжности на iOS
+        if (window._safeStorage) {
+          try {
+            const raw = serializeState();
+            if (raw) await window._safeStorage.setItem('linuxdev_save_backup', raw);
+          } catch(e) {}
+        }
+        const saveData = {
+            saveVersion: state.saveVersion || 3,
+            money: state.money,
+            reputation: state.reputation,
+            fbi: state.fbi,
+            gameTime: state.gameTime ? state.gameTime.toISOString() : new Date().toISOString(),
+            hw: state.hw,
+            sw: state.sw,
+            net: state.net,
+            def: state.def || 1,
+            lang: state.lang,
+            projects: state.projects,
+            messages: state.messages,
+            hosts: state.hosts,
+            nextMsgId: state.nextMsgId,
+            nextProjId: state.nextProjId,
+            nextHostId: state.nextHostId,
+            showHints: state.showHints,
+            sound: state.sound,
+            soundVolume: state.soundVolume,
+            wallpaper: state.wallpaper,
+            animBg: state.animBg,
+            gameOver: state.gameOver,
+            eventTimer: state.eventTimer,
+            wins: state.wins,
+            diff: state.diff,
+            antivirusStock: state.antivirusStock,
+            antivirusSold: state.antivirusSold,
+            totalEarned: state.totalEarned,
+            fs: state.fs,
+            achievements: state.achievements,
+            exploitLogs: state.exploitLogs,
+            lockout: state.lockout,
+            installedApps: state.installedApps,
+            bestSnake: state.bestSnake,
+            bestTetris: state.bestTetris,
+            customWallpaper: state.customWallpaper,
+            lastSave: Date.now()
+        };
+
+        await player.setData(saveData);
+        console.log('✅ Сохранение синхронизировано с облаком Яндекс.Игр');
+        return true;
+    } catch(e) {
+        console.error('❌ Ошибка сохранения в облако:', e);
+        return false;
+    }
+}
+
+// Загрузить игру из облака Яндекс.Игр (player.getData)
+async function loadCloudSave() {
+    if (!isYandexPlatform || !player) return false;
+    try {
+        // Пробуем загрузить из safeStorage как фолбэк
+        let cloudSave = null;
+        try {
+          if (window._safeStorage) {
+            const backup = await window._safeStorage.getItem('linuxdev_save_backup');
+            if (backup) {
+              cloudSave = JSON.parse(backup);
+              console.log('✅ Сохранение загружено из safeStorage');
+            }
+          }
+        } catch(e) {}
+        // Если нет в safeStorage — пробуем облако
+        if (!cloudSave) {
+          cloudSave = await player.getData();
+        }
+        if (cloudSave && cloudSave.money !== undefined) {
+            // Мигрируем данные
+            cloudSave.gameTime = new Date(cloudSave.gameTime || new Date());
+            if (cloudSave.projects) {
+                cloudSave.projects.forEach(function(x) { 
+                    if (x.deadline) x.deadline = new Date(x.deadline); 
+                });
+            }
+            if (cloudSave.messages) {
+                cloudSave.messages.forEach(function(x) { 
+                    x.date = new Date(x.date); 
+                });
+            }
+            if (cloudSave.exploitLogs) {
+                cloudSave.exploitLogs.forEach(function(x) { 
+                    if (x.date && typeof x.date === 'string') x.date = new Date(x.date); 
+                });
+            }
+
+            // Восстанавливаем активные проекты
+            var active = null;
+            if (cloudSave.activeTaskId) {
+                active = cloudSave.projects.find(function(pr) { return pr.id === cloudSave.activeTaskId; }) || null;
+            }
+            var active2 = null;
+            if (cloudSave.activeTask2Id) {
+                active2 = cloudSave.projects.find(function(pr) { return pr.id === cloudSave.activeTask2Id; }) || null;
+            }
+            delete cloudSave.activeTaskId;
+            delete cloudSave.activeTask2Id;
+
+            // Объединяем с текущим состоянием
+            Object.assign(state, cloudSave);
+            state.activeTask = active;
+            state.activeTask2 = active2;
+
+            console.log('✅ Сохранение загружено из облака Яндекс.Игр');
+            pushNotification('Облачное сохранение', 'Прогресс восстановлен из облака!');
+            return true;
+        }
+    } catch(e) {
+        console.error('❌ Ошибка загрузки из облака:', e);
+    }
+    return false;
+}
+
+// Автосохранение в облако
+function setupAutoCloudSave() {
+    if (!isYandexPlatform) return;
+    // Сохраняем в облако каждые 30 секунд
+    setInterval(function() {
+        if (state && !state.gameOver) {
+            saveToCloud();
+        }
+    }, 30000);
+}
+
+// Кнопка "Смотреть рекламу за бонус"
+function watchAdForBonus() {
+    showRewardedAd();
+}
+
+
+// ===================== FEEDBACK / REVIEW =====================
+async function requestGameReview() {
+    if (!isYandexPlatform || !ysdk || !ysdk.feedback) {
+        log('Оценка доступна только на Яндекс.Играх', 'warning');
+        return;
+    }
+    try {
+        const { value, reason } = await ysdk.feedback.canReview();
+        if (value) {
+            const { feedbackSent } = await ysdk.feedback.requestReview();
+            if (feedbackSent) {
+                log('⭐ Спасибо за оценку!', 'success');
+                pushNotification('Спасибо!', 'Ваша оценка помогает развитию игры');
+            } else {
+                log('Окно оценки закрыто', 'info');
+            }
+        } else {
+            log('Оценка недоступна: ' + reason, 'warning');
+        }
+    } catch (e) {
+        console.error('Ошибка запроса оценки:', e);
+        log('Не удалось запросить оценку', 'warning');
+    }
+}
+
+// ===================== FULLSCREEN & ORIENTATION =====================
+function requestFullscreen() {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+}
+
+function exitFullscreen() {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+}
+
+function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || 
+              document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+function toggleFullscreen() {
+    if (isFullscreen()) {
+        exitFullscreen();
+        log('🖥️ Полноэкранный режим выключен', 'info');
+    } else {
+        requestFullscreen();
+        log('🖥️ Полноэкранный режим включен', 'success');
+    }
+}
+
+// Обработка ориентации экрана
+function handleOrientation() {
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile && !isPortrait) {
+        let warn = document.getElementById('orientation-warning');
+        if (!warn) {
+            warn = document.createElement('div');
+            warn.id = 'orientation-warning';
+            warn.style.cssText = `
+                position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:999999;
+                display:flex; align-items:center; justify-content:center;
+                flex-direction:column; color:white; font-family:sans-serif;
+                text-align:center; padding:20px;
+            `;
+            warn.innerHTML = `
+                <div style="font-size:48px; margin-bottom:20px;">📱</div>
+                <div style="font-size:20px; font-weight:bold; margin-bottom:10px;">Поверните устройство</div>
+                <div style="font-size:14px; color:#aaa;">Для комфортной игры поверните телефон в портретный режим</div>
+            `;
+            document.body.appendChild(warn);
+        }
+        warn.style.display = 'flex';
+    } else {
+        const warn = document.getElementById('orientation-warning');
+        if (warn) warn.style.display = 'none';
+    }
+}
+
+window.addEventListener('resize', handleOrientation);
+window.addEventListener('orientationchange', handleOrientation);
+
+// ===================== MOBILE KEYBOARD =====================
+// Виртуальная клавиатура для терминала на мобильных
+function showMobileKeyboard() {
+    const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+    if (!isMobile) return;
+
+    let kb = document.getElementById('mobile-keyboard');
+    if (!kb) {
+        kb = document.createElement('div');
+        kb.id = 'mobile-keyboard';
+        kb.style.cssText = `
+            position:fixed; bottom:44px; left:0; right:0; z-index:99999;
+            background:rgba(30,30,30,0.98); border-top:1px solid #555;
+            padding:6px; display:none; flex-wrap:wrap; gap:3px;
+            justify-content:center; backdrop-filter:blur(10px);
+        `;
+        const rows = [
+            'qwertyuiop',
+            'asdfghjkl',
+            'zxcvbnm',
+            '0123456789',
+            ' _-=[];,.\/\`'
+        ];
+        rows.forEach(row => {
+            const rowDiv = document.createElement('div');
+            rowDiv.style.cssText = 'display:flex; gap:3px; justify-content:center; width:100%; margin-bottom:3px;';
+            row.split('').forEach(key => {
+                const btn = document.createElement('button');
+                btn.textContent = key;
+                btn.style.cssText = `
+                    min-width:28px; height:36px; background:#444; color:white;
+                    border:1px solid #666; border-radius:4px; font-size:14px;
+                    font-family:monospace; cursor:pointer; padding:0 6px;
+                `;
+                btn.onmousedown = (e) => {
+                    e.preventDefault();
+                    const termIn = document.getElementById('term-in');
+                    if (termIn) {
+                        termIn.focus();
+                        // Вставляем символ напрямую в поле
+                        const start = termIn.selectionStart || termIn.value.length;
+                        const end = termIn.selectionEnd || start;
+                        termIn.value = termIn.value.substring(0, start) + key + termIn.value.substring(end);
+                        termIn.selectionStart = termIn.selectionEnd = start + 1;
+                        // Также диспатчим событие для обработчиков
+                        const ev = new KeyboardEvent('keydown', { key: key, bubbles: true });
+                        termIn.dispatchEvent(ev);
+                    }
+                };
+                rowDiv.appendChild(btn);
+            });
+            kb.appendChild(rowDiv);
+        });
+        // Special keys row
+        const specialRow = document.createElement('div');
+        specialRow.style.cssText = 'display:flex; gap:3px; justify-content:center; width:100%;';
+        ['Enter', 'Backspace', 'Space', 'Tab'].forEach(special => {
+            const btn = document.createElement('button');
+            btn.textContent = special === 'Space' ? '␣' : special;
+            btn.style.cssText = `
+                min-width:${special === 'Space' ? '80px' : '60px'}; height:36px; background:#555;
+                color:white; border:1px solid #666; border-radius:4px; font-size:12px;
+                cursor:pointer; padding:0 8px;
+            `;
+            btn.onmousedown = (e) => {
+                e.preventDefault();
+                const termIn = document.getElementById('term-in');
+                if (termIn) {
+                    termIn.focus();
+                    const key = special === 'Space' ? ' ' : special;
+                    if (key === 'Backspace') {
+                        const start = termIn.selectionStart || 0;
+                        const end = termIn.selectionEnd || 0;
+                        if (start > 0) {
+                            termIn.value = termIn.value.substring(0, start - 1) + termIn.value.substring(end);
+                            termIn.selectionStart = termIn.selectionEnd = start - 1;
+                        }
+                    } else if (key === ' ') {
+                        const start = termIn.selectionStart || termIn.value.length;
+                        const end = termIn.selectionEnd || start;
+                        termIn.value = termIn.value.substring(0, start) + ' ' + termIn.value.substring(end);
+                        termIn.selectionStart = termIn.selectionEnd = start + 1;
+                    }
+                    const ev = new KeyboardEvent('keydown', { key: key, bubbles: true });
+                    termIn.dispatchEvent(ev);
+                }
+            };
+            specialRow.appendChild(btn);
+        });
+        kb.appendChild(specialRow);
+        document.body.appendChild(kb);
+    }
+
+    const termWin = document.getElementById('win-terminal');
+    if (termWin && termWin.classList.contains('active')) {
+        kb.style.display = 'flex';
+    }
+}
+
+function hideMobileKeyboard() {
+    const kb = document.getElementById('mobile-keyboard');
+    if (kb) kb.style.display = 'none';
+}
+
+// Переопределяем openWindow/closeWindow для мобильной клавиатуры
+const _origOpenWindow = openWindow;
+openWindow = function(name) {
+    _origOpenWindow(name);
+    if (name === 'terminal') showMobileKeyboard();
+    else hideMobileKeyboard();
+};
+
+const _origCloseWindow = closeWindow;
+closeWindow = function(name) {
+    _origCloseWindow(name);
+    if (name === 'terminal') hideMobileKeyboard();
+};
+
 
 // ===================== INIT =====================
 let gameInterval = null;
@@ -4058,6 +6848,13 @@ function initGame() {
   if (!state.achievements) state.achievements = createAchievements();
   if (!state.exploitLogs) state.exploitLogs = [];
   if (!state.lockout) state.lockout = { active: false, endTime: 0, count: 0 };
+  if (typeof state.storyStage === 'undefined') state.storyStage = 0;
+  if (typeof state.storySeeded === 'undefined') state.storySeeded = false;
+  // Настраиваем обработчик visibilitychange (пункт 1.3)
+  setupVisibilityHandler();
+  seedStoryline();
+  // Проверяем ориентацию экрана
+  handleOrientation();
   // Apply wallpaper
   if (state.customWallpaper) {
     applyCustomWallpaper();
@@ -4083,6 +6880,7 @@ function initGame() {
   renderAntivirus();
   renderFiles();
   renderAchievements();
+  renderKiwiDraw();
   renderNotxShop();
   updateStartMenuApps();
   syncDesktopIcons();
@@ -4467,11 +7265,12 @@ var snakeInterval = null;
 function startSnake() {
   stopSnake();
   const canvas = document.getElementById('snake-canvas');
-  if (!canvas) return;
+  if (!canvas) { console.error('Snake canvas not found'); return; }
   const ctx = canvas.getContext('2d');
+  if (!ctx) { console.error('Cannot get 2D context'); return; }
   const size = 20;
-  const cols = canvas.width / size;
-  const rows = canvas.height / size;
+  const cols = Math.floor(canvas.width / size);
+  const rows = Math.floor(canvas.height / size);
   snakeGame = {
     snake: [{x: Math.floor(cols/2), y: Math.floor(rows/2)}],
     dir: {x: 0, y: 0},
@@ -4481,8 +7280,11 @@ function startSnake() {
     over: false,
     cols, rows, size, ctx
   };
-  document.getElementById('snake-score').textContent = 'Очки: 0';
+  const scoreEl = document.getElementById('snake-score');
+  if (scoreEl) scoreEl.textContent = 'Очки: 0';
+  snakeDraw();
   snakeInterval = setInterval(snakeTick, 120);
+  log('🐍 Змейка запущена! Управление: стрелки или WASD', 'success');
 }
 
 function stopSnake() {
@@ -4522,19 +7324,23 @@ function snakeTick() {
 
 function snakeDraw() {
   const g = snakeGame;
-  if (!g) return;
-  g.ctx.fillStyle = '#1a1a1a';
-  g.ctx.fillRect(0, 0, g.cols*g.size, g.rows*g.size);
-  // Apple
-  g.ctx.fillStyle = '#ff4444';
-  g.ctx.beginPath();
-  g.ctx.arc(g.apple.x*g.size + g.size/2, g.apple.y*g.size + g.size/2, g.size/2-2, 0, Math.PI*2);
-  g.ctx.fill();
-  // Snake
-  g.snake.forEach((s, i) => {
-    g.ctx.fillStyle = i === 0 ? '#44ff44' : '#22aa22';
-    g.ctx.fillRect(s.x*g.size+1, s.y*g.size+1, g.size-2, g.size-2);
-  });
+  if (!g || !g.ctx) return;
+  try {
+    g.ctx.fillStyle = '#1a1a1a';
+    g.ctx.fillRect(0, 0, g.cols*g.size, g.rows*g.size);
+    // Apple
+    g.ctx.fillStyle = '#ff4444';
+    g.ctx.beginPath();
+    g.ctx.arc(g.apple.x*g.size + g.size/2, g.apple.y*g.size + g.size/2, g.size/2-2, 0, Math.PI*2);
+    g.ctx.fill();
+    // Snake
+    g.snake.forEach((s, i) => {
+      g.ctx.fillStyle = i === 0 ? '#44ff44' : '#22aa22';
+      g.ctx.fillRect(s.x*g.size+1, s.y*g.size+1, g.size-2, g.size-2);
+    });
+  } catch(e) {
+    console.error('Snake draw error:', e);
+  }
 }
 
 function snakeGameOver() {
@@ -4549,11 +7355,31 @@ function snakeGameOver() {
 // Snake keyboard
 window.addEventListener('keydown', function(e) {
   if (!snakeGame || snakeGame.over) return;
+  // Only handle if snake window is visible
+  const win = document.getElementById('win-snake');
+  if (!win || !win.classList.contains('active')) return;
+
   switch(e.key) {
-    case 'ArrowUp': case 'w': case 'W': if (snakeGame.dir.y !== 1) snakeGame.nextDir = {x:0,y:-1}; e.preventDefault(); break;
-    case 'ArrowDown': case 's': case 'S': if (snakeGame.dir.y !== -1) snakeGame.nextDir = {x:0,y:1}; e.preventDefault(); break;
-    case 'ArrowLeft': case 'a': case 'A': if (snakeGame.dir.x !== 1) snakeGame.nextDir = {x:-1,y:0}; e.preventDefault(); break;
-    case 'ArrowRight': case 'd': case 'D': if (snakeGame.dir.x !== -1) snakeGame.nextDir = {x:1,y:0}; e.preventDefault(); break;
+    case 'ArrowUp': case 'w': case 'W': 
+      if (snakeGame.dir.y !== 1) snakeGame.nextDir = {x:0,y:-1}; 
+      e.preventDefault(); 
+      e.stopPropagation();
+      break;
+    case 'ArrowDown': case 's': case 'S': 
+      if (snakeGame.dir.y !== -1) snakeGame.nextDir = {x:0,y:1}; 
+      e.preventDefault(); 
+      e.stopPropagation();
+      break;
+    case 'ArrowLeft': case 'a': case 'A': 
+      if (snakeGame.dir.x !== 1) snakeGame.nextDir = {x:-1,y:0}; 
+      e.preventDefault(); 
+      e.stopPropagation();
+      break;
+    case 'ArrowRight': case 'd': case 'D': 
+      if (snakeGame.dir.x !== -1) snakeGame.nextDir = {x:1,y:0}; 
+      e.preventDefault(); 
+      e.stopPropagation();
+      break;
   }
 });
 
@@ -4662,81 +7488,7 @@ function ymVisualizer() {
   draw();
 }
 
-// ===================== CASINO =====================
-var casinoBet = 50;
-var casinoSpinning = false;
-
-function setCasinoBet(amount) {
-  casinoBet = amount;
-  document.getElementById('casino-bet').textContent = '$' + amount;
-}
-
-function spinCasino() {
-  if (casinoSpinning) return;
-  if (state.money < casinoBet) { log('Недостаточно денег для ставки!', 'danger'); return; }
-  state.money -= casinoBet;
-  updateTopBar();
-  document.getElementById('casino-balance').textContent = '$' + state.money;
-  casinoSpinning = true;
-  const wheel = document.getElementById('casino-wheel');
-  const result = document.getElementById('casino-result');
-  result.textContent = 'Крутим...';
-  result.style.color = 'var(--text)';
-
-  const outcomes = [
-    { label: '×2', mult: 2, color: '#38b44a', angle: 30 },
-    { label: '×0', mult: 0, color: '#df382c', angle: 90 },
-    { label: '×1.5', mult: 1.5, color: '#efb73e', angle: 150 },
-    { label: '×1.2', mult: 1.2, color: '#19b6ee', angle: 210 },
-    { label: '×0.5', mult: 0.5, color: '#e95420', angle: 270 },
-    { label: '×0', mult: 0, color: '#df382c', angle: 330 }
-  ];
-  const roll = Math.random();
-  let pick;
-  if (roll < 0.15) pick = outcomes[0];      // ×2  (15%)
-  else if (roll < 0.40) pick = outcomes[1];  // ×0  (25%)
-  else if (roll < 0.60) pick = outcomes[2];  // ×1.5 (20%)
-  else if (roll < 0.80) pick = outcomes[3];  // ×1.2 (20%)
-  else if (roll < 0.95) pick = outcomes[4]; // ×0.5 (15%)
-  else pick = outcomes[5];                   // ×0  (5%)
-
-  const spins = 3 + Math.floor(Math.random() * 3);
-  const targetAngle = spins * 360 + pick.angle;
-  wheel.style.transform = 'rotate(0deg)';
-  requestAnimationFrame(() => {
-    wheel.style.transform = `rotate(${targetAngle}deg)`;
-  });
-
-  setTimeout(() => {
-    casinoSpinning = false;
-    const win = Math.floor(casinoBet * pick.mult);
-    state.money += win;
-    if (win > casinoBet) {
-      result.innerHTML = `<span style="color:var(--success);">🎉 Выигрыш $${win}!</span>`;
-      log(`🎰 Casino: +$${win} (${pick.label})`, 'success');
-    } else if (win === casinoBet) {
-      result.innerHTML = `<span style="color:var(--warning);">↩️ Возврат $${win}</span>`;
-    } else {
-      result.innerHTML = `<span style="color:var(--danger);">💸 Проигрыш $${casinoBet}</span>`;
-      log(`🎰 Casino: -$${casinoBet} (${pick.label})`, 'warning');
-    }
-    updateTopBar();
-    document.getElementById('casino-balance').textContent = '$' + state.money;
-  }, 2200);
-}
-
-// ===================== TETRIS =====================
-var tetrisGame = null;
-var tetrisInterval = null;
-const TETROMINOES = {
-  I: { shape: [[1,1,1,1]], color: '#00f0f0' },
-  O: { shape: [[1,1],[1,1]], color: '#f0f000' },
-  T: { shape: [[0,1,0],[1,1,1]], color: '#a000f0' },
-  S: { shape: [[0,1,1],[1,1,0]], color: '#00f000' },
-  Z: { shape: [[1,1,0],[0,1,1]], color: '#f00000' },
-  J: { shape: [[1,0,0],[1,1,1]], color: '#0000f0' },
-  L: { shape: [[0,0,1],[1,1,1]], color: '#f0a000' }
-};
+;
 
 function startTetris() {
   stopTetris();
@@ -4986,15 +7738,57 @@ setInterval(() => {
 }, 25000);
 
 // Startup
-window.addEventListener('load', () => {
-  const ts = document.getElementById('title-screen');
-  if (ts) ts.style.display = 'flex';
 
-  setTimeout(() => {
-    pushNotification('Linux Dev OS', 'Система успешно загружена');
-  }, 2000);
+// ===================== DARKNET EVENT DELEGATION =====================
+// Кнопки в DarkNet создаются динамически через innerHTML,
+// поэтому onclick не работает. Используем event delegation.
+document.addEventListener('click', function(e) {
+  // Filter buttons
+  const filterBtn = e.target.closest('.dn-filter');
+  if (filterBtn) {
+    const tier = filterBtn.dataset.tier;
+    window._dnFilter = tier === 'all' ? 'all' : parseInt(tier);
+    renderDarkNet();
+    return;
+  }
+
+  // Nmap buttons
+  const nmapBtn = e.target.closest('.dn-nmap');
+  if (nmapBtn) {
+    const ip = nmapBtn.dataset.ip;
+    if (ip) cmdNmap(ip);
+    return;
+  }
+
+  // Exploit buttons
+  const exploitBtn = e.target.closest('.dn-exploit');
+  if (exploitBtn) {
+    const ip = exploitBtn.dataset.ip;
+    if (ip) cmdExploit(ip);
+    return;
+  }
+
+  // Loot buttons
+  const lootBtn = e.target.closest('.dn-loot');
+  if (lootBtn) {
+    const ip = lootBtn.dataset.ip;
+    if (ip) cmdLoot(ip);
+    return;
+  }
 });
 
+window.addEventListener('load', () => {
+    const ts = document.getElementById('title-screen');
+    if (ts) ts.style.display = 'flex';
+    refreshBootMenu();
+    
+    // Инициализируем SDK после загрузки страницы
+    initYandexSDK();
+    
+    setTimeout(() => {
+        pushNotification('Linux Dev OS', 'Система успешно загружена');
+    }, 2000);
+});
 </script>
 
 <div id="notifications" style="position:fixed;top:40px;right:10px;z-index:99999;display:flex;flex-direction:column;gap:8px;"></div>
