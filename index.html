@@ -332,6 +332,11 @@ body {
     border-radius: 4px;
     padding: 12px;
     min-height: 250px;
+    overflow-y: auto;
+  }
+  .browser-page.yt-page {
+    padding: 0;
+    background: #f9f9f9;
   }
 
   /* ===== UI COMPONENTS ===== */
@@ -910,6 +915,114 @@ body {
     font-size: 13px;
     text-shadow: 1px 1px 2px black;
   }
+
+  /* ===== BIOS SCREEN ===== */
+  #bios-screen {
+    position: fixed;
+    inset: 0;
+    background: #0000aa;
+    color: #ffffff;
+    font-family: var(--font-mono);
+    z-index: 101000; /* Even higher than boot-screen */
+    padding: 12px;
+    display: none;
+    flex-direction: column;
+    box-sizing: border-box;
+    font-size: 13px;
+    line-height: 1.4;
+    text-shadow: none;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  .bios-header {
+    background: #aaaaaa;
+    color: #0000aa;
+    text-align: center;
+    font-weight: bold;
+    padding: 3px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .bios-nav {
+    display: flex;
+    justify-content: space-around;
+    background: #aaaaaa;
+    color: #0000aa;
+    font-weight: bold;
+    padding: 4px 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ffffff;
+  }
+  .bios-nav-item {
+    padding: 2px 14px;
+    cursor: pointer;
+  }
+  .bios-nav-item.active {
+    background: #0000aa;
+    color: #ffffff;
+  }
+  .bios-body {
+    display: flex;
+    flex: 1;
+    border: 2px double #ffffff;
+    padding: 12px;
+    gap: 15px;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: #0000aa;
+  }
+  .bios-left {
+    flex: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+  }
+  .bios-right {
+    flex: 1;
+    border-left: 2px double #ffffff;
+    padding-left: 15px;
+    color: #ffff55; /* yellow help text */
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-y: auto;
+    text-align: left;
+  }
+  .bios-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    text-align: left;
+  }
+  .bios-row:hover, .bios-row.selected {
+    background: #ffffff;
+    color: #0000aa;
+  }
+  .bios-title {
+    font-weight: bold;
+  }
+  .bios-val {
+    color: #ffff55;
+    font-weight: bold;
+  }
+  .bios-row:hover .bios-val, .bios-row.selected .bios-val {
+    color: #0000aa;
+  }
+  .bios-footer {
+    background: #aaaaaa;
+    color: #0000aa;
+    padding: 5px 10px;
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    border: 1px solid #ffffff;
+  }
 </style>
 <base target="_blank">
 </head>
@@ -920,9 +1033,33 @@ body {
 <!-- ==================== BOOT SCREEN ==================== -->
 <div id="boot-screen" style="display: none;">
   <div class="boot-terminal" id="boot-log"></div>
+  <button id="boot-bios-btn" onclick="triggerBiosSetup()" style="position: absolute; right: 20px; bottom: 60px; padding: 10px 18px; background: #222; border: 1px solid #555; color: #ffff55; font-family: var(--font-mono); cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 13px; z-index: 100010;">[B] BIOS Setup</button>
+  <div style="position: absolute; left: 20px; bottom: 60px; color: #888; font-size: 12px; font-family: var(--font-mono);" id="boot-press-key-msg">Press [B] to enter BIOS Setup / Нажмите [B] для входа в BIOS</div>
   <div class="boot-progress-container">
     <div class="boot-progress-bar" id="boot-progress"></div>
     <div class="boot-percentage" id="boot-percentage">0%</div>
+  </div>
+</div>
+
+<!-- ==================== BIOS SCREEN ==================== -->
+<div id="bios-screen">
+  <div class="bios-header">DevOS Setup Utility - BIOS v1.42</div>
+  <div class="bios-nav">
+    <span class="bios-nav-item active" id="bios-tab-main" onclick="switchBiosTab('main')">Main</span>
+    <span class="bios-nav-item" id="bios-tab-advanced" onclick="switchBiosTab('advanced')">Advanced</span>
+    <span class="bios-nav-item" id="bios-tab-exit" onclick="switchBiosTab('exit')">Exit</span>
+  </div>
+  <div class="bios-body">
+    <div class="bios-left" id="bios-options-panel">
+      <!-- Options will be rendered dynamically here -->
+    </div>
+    <div class="bios-right" id="bios-help-panel">
+      Select an option on the left side to see description. Click to toggle values.
+    </div>
+  </div>
+  <div class="bios-footer">
+    <span>↑↓ Navigate  •  Click to Toggle  •  Enter Select</span>
+    <span style="color: #ffff55;">F10: Save & Exit</span>
   </div>
 </div>
 
@@ -1122,15 +1259,17 @@ body {
     <button class="window-btn btn-max" onclick="toggleWindowFullscreen('browser')">□</button>
     <button class="window-btn btn-close" onclick="closeWindow('browser')">×</button>
   </div>
-  <div class="window-content">
+  <div class="window-content" style="display:flex; flex-direction:column;">
     <div class="browser-toolbar">
+      <button class="btn btn-small btn-secondary" onclick="browserBack()" title="Назад">◀</button>
+      <button class="btn btn-small btn-secondary" onclick="browserForward()" title="Вперёд">▶</button>
+      <button class="btn btn-small btn-secondary" onclick="renderBrowser()" title="Обновить">🔄</button>
+      <button class="btn btn-small btn-secondary" onclick="browserHome()" title="Домой">🏠</button>
       <span>🔒</span>
-      <input type="text" value="googie.com/freelance" readonly>
-      <button class="btn btn-small" onclick="renderBrowser()">🔄</button>
+      <input type="text" id="browser-url" value="googie.com" onkeydown="if(event.key==='Enter')browserNavigate(this.value)">
+      <button class="btn btn-small" onclick="browserNavigate(document.getElementById('browser-url').value)">➜</button>
     </div>
-    <div class="browser-page" id="browser-page">
-      <h2 style="color:#ea4335; margin-bottom:6px;">Googie Freelance</h2>
-      <p style="color:#666; margin-bottom:12px; font-size:13px;">Биржа заказов. Выбирайте и начинайте прямо здесь!</p>
+    <div class="browser-page" id="browser-page" style="flex:1; overflow-y:auto;">
       <div id="browser-content"></div>
     </div>
   </div>
@@ -2307,6 +2446,9 @@ function createState() {
     virusSource: '',
     virusTicks: 0,
     virusQuarantined: false,
+    biosSecureBoot: true,
+    biosOverclock: false,
+    biosSataMode: 'AHCI',
     crypto: createCryptoState()
   };
 }
@@ -2599,8 +2741,39 @@ const langs = {
   js: { name:'JavaScript', speed:1.1, reward:1.1 }
 };
 
-// ===================== SYSTEM BOOT SEQUENCE =====================
+// ===================== SYSTEM BOOT SEQUENCE & BIOS =====================
+let tempBiosSettings = {
+  secureBoot: true,
+  overclock: false,
+  sataMode: 'AHCI'
+};
+
+let activeBiosTab = 'main';
+let selectedBiosRow = 0;
+let biosIsNewGame = true;
+let biosOnComplete = null;
+let currentBiosRows = [];
+
+function syncBiosWithState() {
+  if (state) {
+    state.biosSecureBoot = tempBiosSettings.secureBoot;
+    state.biosOverclock = tempBiosSettings.overclock;
+    state.biosSataMode = tempBiosSettings.sataMode;
+  }
+}
+
+function syncStateWithBios() {
+  if (state) {
+    tempBiosSettings.secureBoot = state.biosSecureBoot !== undefined ? state.biosSecureBoot : true;
+    tempBiosSettings.overclock = !!state.biosOverclock;
+    tempBiosSettings.sataMode = state.biosSataMode || 'AHCI';
+  }
+}
+
 function runBootSequence(isNewGame, onComplete) {
+  window.bootIsNewGame = isNewGame;
+  window.bootOnComplete = onComplete;
+
   const bootScreen = document.getElementById('boot-screen');
   const bootLog = document.getElementById('boot-log');
   const bootProgress = document.getElementById('boot-progress');
@@ -2614,6 +2787,11 @@ function runBootSequence(isNewGame, onComplete) {
   // Show boot screen and ensure it's fully opaque
   bootScreen.style.opacity = '1';
   bootScreen.style.display = 'flex';
+  
+  // Show key press message and button
+  document.getElementById('boot-press-key-msg').style.display = 'block';
+  document.getElementById('boot-bios-btn').style.display = 'block';
+
   bootLog.innerHTML = `<div style="color: var(--accent); font-weight: bold; margin-bottom: 15px; font-size: 11px; line-height: 1.2; white-space: pre;">  _      _                    _____                 ____   _____ \n | |    (_)                  |  __ \\               / __ \\ / ____|\n | |     _ _ __  _   ___  __ | |  | | ___ _   _   | |  | | (___  \n | |    | | '\''_ \\| | | \\ \\/ / | |  | |/ _ \\ \\ / /  | |  | |\\___ \\ \n | |____| | | | | |_| |>  <  | |__| |  __\\\\ V /   | |__| |____) |\n |______|_|_| |_|\\__,_/_/\\_\\ |_____/ \\___| \\_/     \\____/|_____/ </div>`;
   bootProgress.style.width = '0%';
   bootPercentage.textContent = '0%';
@@ -2623,13 +2801,17 @@ function runBootSequence(isNewGame, onComplete) {
     "[  0.082512] Booting Linux Dev OS on quantum processor...",
     "[  0.154124] Detecting available core modules...",
     "[  0.221015] Memory: 32GB RAM detected, allocation table verified.",
+    "[  0.278142] ACPI: Dynamic OEM Table Load... Done.",
     "[  0.312411] Mounting system partition (Ext4 on sda1)...",
     "[  0.412014] Initializing sound servers and graphics pipeline...",
+    "[  0.490151] USB: Registered new interface driver usbcore...",
     "[  0.584214] Starting network interfaces (Wi-Fi 802.11ax)...",
+    "[  0.640121] Graphics: Intel UHD Graphics initialized (FrameBuffer 1920x1080)",
     "[  0.724512] Creating directory /home/neo ... Done.",
     "[  0.865123] Setting up workspace for hacker trainee...",
     "[  1.024151] Generating educational hints...",
     "[  1.184512] Loading NotX SHOP catalogue...",
+    "[  1.210452] Security: Applying AppArmor firewall rules...",
     "[  1.324512] Generating initial freelance jobs...",
     "[  1.484214] Syncing local environment config...",
     "[  1.612014] Starting DE (Custom Wayland Compositor)...",
@@ -2639,29 +2821,42 @@ function runBootSequence(isNewGame, onComplete) {
     "[  0.000000] Linux version 5.15.0-dev-os (gcc version 11.2.0)",
     "[  0.072512] Initializing boot sequence from save state...",
     "[  0.144124] Loading system settings and preferences...",
+    "[  0.180251] SaveMeta: Decrypting local checkpoint metadata... OK",
     "[  0.221015] Restoring file system: /home/documents, /home/notes...",
     "[  0.312411] Decrypting home directory partitions... Done.",
+    "[  0.380124] Storage: Verifying directory integrity check... Passed",
     "[  0.424151] Rebuilding network topology...",
     "[  0.552014] Restoring active freelance projects and emails...",
     "[  0.684214] Syncing achievements database with local storage...",
     "[  0.812411] Loading installed packages: VS Code, Vim, Copilot...",
     "[  0.942512] Verifying connection integrity with Googie Freelance...",
+    "[  1.021045] Packages: Reloading Node.js modules... Done.",
     "[  1.104214] Restoring FBI risk factors and surveillance levels...",
     "[  1.284512] Loading crypto wallet data and historical chart...",
     "[  1.424512] Initializing system visual themes and custom wallpapers...",
     "[  1.594214] Relaunching background daemon services...",
+    "[  1.641021] Audio: Restoring master volume and sound themes...",
     "[  1.724512] Verification success. Restoring your session...",
     "[  1.904512] Welcome back, developer! Boot complete."
   ];
 
   let currentLine = 0;
   const totalLines = logs.length;
-  const intervalTime = 100; // fast but readable, total 1.6s
+  const intervalTime = 250; // Slower boot (250ms * 20 lines = 5.0 seconds total!)
 
   // Try to unlock Web Audio context on load
   try {
     ensureAudio();
   } catch(e) {}
+
+  // Key listener for entering BIOS
+  function handleBootKeys(e) {
+    if (e.key === 'b' || e.key === 'B' || e.key === 'и' || e.key === 'И') {
+      window.removeEventListener('keydown', handleBootKeys);
+      triggerBiosSetup();
+    }
+  }
+  window.addEventListener('keydown', handleBootKeys);
 
   const interval = setInterval(() => {
     if (currentLine < totalLines) {
@@ -2675,6 +2870,12 @@ function runBootSequence(isNewGame, onComplete) {
       bootProgress.style.width = percent + '%';
       bootPercentage.textContent = percent + '%';
 
+      // Hide BIOS options at the last phase
+      if (percent > 65) {
+        document.getElementById('boot-press-key-msg').style.display = 'none';
+        document.getElementById('boot-bios-btn').style.display = 'none';
+      }
+
       // Small high-pitch keyboard terminal click
       try {
         ensureAudio();
@@ -2682,6 +2883,9 @@ function runBootSequence(isNewGame, onComplete) {
       } catch(e) {}
     } else {
       clearInterval(interval);
+      window.bootIntervalId = null;
+      window.removeEventListener('keydown', handleBootKeys);
+      
       // Play system start noise
       try {
         ensureAudio();
@@ -2699,6 +2903,179 @@ function runBootSequence(isNewGame, onComplete) {
       }, 500);
     }
   }, intervalTime);
+  
+  window.bootIntervalId = interval;
+}
+
+function openBiosSetup(isNewGame, onComplete) {
+  biosIsNewGame = isNewGame;
+  biosOnComplete = onComplete;
+  
+  // Sync state if already exists
+  if (state) {
+    syncStateWithBios();
+  }
+
+  document.getElementById('boot-screen').style.display = 'none';
+  document.getElementById('bios-screen').style.display = 'flex';
+  
+  // Play retro PC beep!
+  try {
+    ensureAudio();
+    playTone(1000, 'square', 0.15, 0.1);
+  } catch(e) {}
+
+  switchBiosTab('main');
+  window.addEventListener('keydown', handleBiosKeys);
+}
+
+function handleBiosKeys(e) {
+  const tabNames = ['main', 'advanced', 'exit'];
+  let tabIdx = tabNames.indexOf(activeBiosTab);
+
+  if (e.key === 'ArrowLeft') {
+    tabIdx = (tabIdx - 1 + tabNames.length) % tabNames.length;
+    switchBiosTab(tabNames[tabIdx]);
+    e.preventDefault();
+  } else if (e.key === 'ArrowRight') {
+    tabIdx = (tabIdx + 1) % tabNames.length;
+    switchBiosTab(tabNames[tabIdx]);
+    e.preventDefault();
+  } else if (e.key === 'ArrowUp') {
+    if (currentBiosRows.length > 0) {
+      selectedBiosRow = (selectedBiosRow - 1 + currentBiosRows.length) % currentBiosRows.length;
+      renderBiosOptions();
+    }
+    e.preventDefault();
+  } else if (e.key === 'ArrowDown') {
+    if (currentBiosRows.length > 0) {
+      selectedBiosRow = (selectedBiosRow + 1) % currentBiosRows.length;
+      renderBiosOptions();
+    }
+    e.preventDefault();
+  } else if (e.key === 'Enter') {
+    if (currentBiosRows.length > 0) {
+      const activeRow = currentBiosRows[selectedBiosRow];
+      if (activeRow && activeRow.action) {
+        activeRow.action();
+      }
+    }
+    e.preventDefault();
+  } else if (e.key === 'F10') {
+    exitBios(true);
+    e.preventDefault();
+  }
+}
+
+function switchBiosTab(tabName) {
+  activeBiosTab = tabName;
+  selectedBiosRow = 0;
+  
+  document.querySelectorAll('.bios-nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  const activeTabEl = document.getElementById('bios-tab-' + tabName);
+  if (activeTabEl) activeTabEl.classList.add('active');
+
+  renderBiosOptions();
+}
+
+function renderBiosOptions() {
+  const panel = document.getElementById('bios-options-panel');
+  if (!panel) return;
+
+  panel.innerHTML = '';
+  currentBiosRows = [];
+
+  if (activeBiosTab === 'main') {
+    currentBiosRows = [
+      { id: 'version', title: 'BIOS Version', value: 'DevOS Aptio v1.42', desc: 'System BIOS firmware version and release level.', type: 'info' },
+      { id: 'cpu', title: 'Processor Type', value: 'Quantum Core i9 @ 5.4 GHz', desc: 'Central Processing Unit manufacturer and frequency.', type: 'info' },
+      { id: 'memory', title: 'System Memory', value: '32768 MB (DDR5)', desc: 'Total physical RAM memory installed in the system.', type: 'info' },
+      { id: 'secure_boot', title: 'Secure Boot State', value: tempBiosSettings.secureBoot ? '[Enabled]' : '[Disabled]', desc: 'Secure Boot protects OS boot integrity. Disabling gives +5% Hacking success chance but increases Virus vulnerability and FBI trace speed.', type: 'toggle', action: () => { tempBiosSettings.secureBoot = !tempBiosSettings.secureBoot; renderBiosOptions(); } }
+    ];
+  } else if (activeBiosTab === 'advanced') {
+    currentBiosRows = [
+      { id: 'overclock', title: 'CPU Overclocking', value: tempBiosSettings.overclock ? '[Enabled (+10% Speed)]' : '[Disabled]', desc: 'Increases processor speed. Speeds up auto-progress of coding projects by +10%, but slightly increases the FBI trace speed and processor temperature.', type: 'toggle', action: () => { tempBiosSettings.overclock = !tempBiosSettings.overclock; renderBiosOptions(); } },
+      { id: 'sata', title: 'SATA Controller Mode', value: `[${tempBiosSettings.sataMode}]`, desc: 'Configure SATA controller interface mode. [AHCI] is recommended for speed. [Compatibility] is legacy IDE mode.', type: 'toggle', action: () => { tempBiosSettings.sataMode = tempBiosSettings.sataMode === 'AHCI' ? 'Compatibility' : 'AHCI'; renderBiosOptions(); } }
+    ];
+  } else if (activeBiosTab === 'exit') {
+    currentBiosRows = [
+      { id: 'save_exit', title: 'Save Changes and Reboot', desc: 'Save settings to non-volatile BIOS memory and restart the system.', type: 'action', action: () => { exitBios(true); } },
+      { id: 'discard_exit', title: 'Discard Changes and Exit', desc: 'Exit BIOS setup without saving any of the modified values.', type: 'action', action: () => { exitBios(false); } }
+    ];
+  }
+
+  currentBiosRows.forEach((row, idx) => {
+    const el = document.createElement('div');
+    el.className = 'bios-row' + (idx === selectedBiosRow ? ' selected' : '');
+    
+    let valHtml = '';
+    if (row.type === 'info') {
+      valHtml = `<span class="bios-val" style="color: #ffffff;">${row.value}</span>`;
+    } else if (row.type === 'toggle') {
+      valHtml = `<span class="bios-val">${row.value}</span>`;
+    }
+
+    el.innerHTML = `<span class="bios-title">${row.title}</span>${valHtml}`;
+    
+    el.onmouseover = () => {
+      selectedBiosRow = idx;
+      document.querySelectorAll('.bios-row').forEach((r, i) => {
+        r.classList.toggle('selected', i === idx);
+      });
+      document.getElementById('bios-help-panel').innerHTML = row.desc;
+    };
+
+    el.onclick = () => {
+      if (row.action) row.action();
+    };
+
+    panel.appendChild(el);
+  });
+
+  // Render initial help panel description
+  const activeRow = currentBiosRows[selectedBiosRow];
+  if (activeRow) {
+    document.getElementById('bios-help-panel').innerHTML = activeRow.desc;
+  }
+}
+
+function exitBios(save) {
+  window.removeEventListener('keydown', handleBiosKeys);
+  document.getElementById('bios-screen').style.display = 'none';
+
+  if (save) {
+    syncBiosWithState();
+    
+    // System Reboot: show boot screen again with restart notice
+    const bootScreen = document.getElementById('boot-screen');
+    const bootLog = document.getElementById('boot-log');
+    bootScreen.style.display = 'flex';
+    bootScreen.style.opacity = '1';
+    
+    bootLog.innerHTML = `<div style="color: #ff5555; font-weight: bold; margin-bottom: 10px;">[BIOS] Settings saved. System is rebooting...</div>`;
+    
+    // Retrigger boot sequence from scratch with a small delay
+    setTimeout(() => {
+      runBootSequence(biosIsNewGame, biosOnComplete);
+    }, 1000);
+  } else {
+    // Just resume boot sequence
+    const bootScreen = document.getElementById('boot-screen');
+    bootScreen.style.display = 'flex';
+    bootScreen.style.opacity = '1';
+    runBootSequence(biosIsNewGame, biosOnComplete);
+  }
+}
+
+function triggerBiosSetup() {
+  if (window.bootIntervalId) {
+    clearInterval(window.bootIntervalId);
+    window.bootIntervalId = null;
+  }
+  openBiosSetup(window.bootIsNewGame, window.bootOnComplete);
 }
 
 // ===================== TITLE SCREEN =====================
@@ -3932,6 +4309,9 @@ function cmdExploit(ip) {
   const tierName = {1:'Лёгкий', 2:'Средний', 3:'Сложный', 4:'БОСС'};
 
   let chance = 30 + state.sw*8 + state.net*4 - h.security + getHackBonus();
+  if (!state.biosSecureBoot) {
+    chance += 5; // +5% chance if Secure Boot is disabled in BIOS
+  }
   if (targetPort && targetPort === h.vulnPort) {
     chance += 25;
     log(`🎯 Целевой порт ${targetPort} — уязвимость подтверждена!`, 'info');
@@ -4328,9 +4708,523 @@ function renderStore() {
   `;
 }
 
+// ===================== GOOGIE BROWSER 2.0 =====================
+// Многосайтовый браузер: поисковик, новости, форум, видео и др.
+var browserHistory = ['googie.com'];
+var browserHistIdx = 0;
+
+// Каталог сайтов в игровом интернете
+const BROWSER_SITES = [
+  { url:'googie.com',        title:'Googie — поиск',          fav:'🔎', cat:'Поисковик' },
+  { url:'googie.com/freelance', title:'Googie Freelance',     fav:'💼', cat:'Работа' },
+  { url:'news.kiwi',         title:'Kiwi News',               fav:'📰', cat:'Новости' },
+  { url:'cryptodaily.io',    title:'Crypto Daily',            fav:'📈', cat:'Крипто-новости' },
+  { url:'hacktalk.forum',    title:'HackTalk',                fav:'💬', cat:'Форум' },
+  { url:'youtube.com',       title:'YouTube',                 fav:'▶️', cat:'Видео' },
+  { url:'kiwitube.com',      title:'KiwiTube',                fav:'📺', cat:'Видео' },
+  { url:'shopzilla.store',   title:'ShopZilla',               fav:'🛍️', cat:'Магазин' }
+];
+
+function browserNavigate(url) {
+  if (!url) return;
+  url = String(url).trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/+$/,'');
+  // обрезаем историю вперёд и добавляем новый адрес
+  browserHistory = browserHistory.slice(0, browserHistIdx + 1);
+  browserHistory.push(url);
+  browserHistIdx = browserHistory.length - 1;
+  renderBrowser();
+}
+
+function browserBack() {
+  if (browserHistIdx > 0) { browserHistIdx--; renderBrowser(); }
+}
+function browserForward() {
+  if (browserHistIdx < browserHistory.length - 1) { browserHistIdx++; renderBrowser(); }
+}
+function browserHome() {
+  browserNavigate('googie.com');
+}
+
+function browserGoSearch(q) {
+  if (!q || !q.trim()) return;
+  browserNavigate('googie.com/search?q=' + encodeURIComponent(q.trim()));
+}
+
 function renderBrowser() {
   const el = document.getElementById('browser-content');
-  const listings = [
+  const urlBar = document.getElementById('browser-url');
+  if (!el) return;
+  const url = browserHistory[browserHistIdx] || 'googie.com';
+  if (urlBar) urlBar.value = url;
+
+  let html = '';
+  const browserPageEl = document.getElementById('browser-page');
+  const isYT = url === 'youtube.com' || url.startsWith('youtube.com');
+  if (browserPageEl) {
+    if (isYT) browserPageEl.classList.add('yt-page');
+    else browserPageEl.classList.remove('yt-page');
+  }
+  if (url === 'googie.com') html = pageGoogieHome();
+  else if (url.startsWith('googie.com/search')) html = pageGoogieSearch(url);
+  else if (url === 'googie.com/freelance') html = pageFreelance();
+  else if (url === 'news.kiwi') html = pageNews();
+  else if (url === 'cryptodaily.io') html = pageCryptoNews();
+  else if (url === 'hacktalk.forum') html = pageForum();
+  else if (isYT) html = pageYouTube(url);
+  else if (url === 'kiwitube.com') html = pageKiwiTube();
+  else if (url === 'shopzilla.store') html = pageShopZilla();
+  else html = page404(url);
+
+  el.innerHTML = html;
+}
+
+// ---- Поисковая строка-помощник ----
+function browserSearchBar(big) {
+  const size = big ? 'padding:12px 16px; font-size:16px;' : 'padding:8px 12px; font-size:13px;';
+  return '<div style="display:flex; gap:6px; margin:0 auto; max-width:520px;">' +
+    '<input id="googie-q" type="text" placeholder="Найти в Googie..." style="flex:1; ' + size + ' border:1px solid #dadce0; border-radius:24px; outline:none; color:#333;" ' +
+    'onkeydown="if(event.key===\'Enter\')browserGoSearch(this.value)">' +
+    '<button class="btn" style="background:#4285f4; border-radius:24px;" onclick="browserGoSearch(document.getElementById(\'googie-q\').value)">🔎</button>' +
+    '</div>';
+}
+
+// ---- Закладки (плитки сайтов) ----
+function browserBookmarks() {
+  let h = '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:10px; margin-top:18px;">';
+  BROWSER_SITES.filter(s => s.url !== 'googie.com').forEach(s => {
+    h += '<div onclick="browserNavigate(\'' + s.url + '\')" style="cursor:pointer; text-align:center; padding:10px 6px; border-radius:10px; background:#f5f5f5; border:1px solid #eee; transition:all .15s;" onmouseover="this.style.background=\'#eef3ff\'" onmouseout="this.style.background=\'#f5f5f5\'">' +
+      '<div style="font-size:28px;">' + s.fav + '</div>' +
+      '<div style="font-size:11px; color:#444; margin-top:4px; font-weight:600;">' + s.title.split(' ')[0] + '</div>' +
+      '<div style="font-size:9px; color:#999;">' + s.cat + '</div>' +
+      '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+// ---- Googie домашняя ----
+function pageGoogieHome() {
+  return '<div style="padding:30px 10px; text-align:center;">' +
+    '<div style="font-size:46px; font-weight:bold; margin-bottom:18px; letter-spacing:-2px;">' +
+      '<span style="color:#4285f4;">G</span><span style="color:#ea4335;">o</span>' +
+      '<span style="color:#fbbc05;">o</span><span style="color:#4285f4;">g</span>' +
+      '<span style="color:#34a853;">i</span><span style="color:#ea4335;">e</span>' +
+    '</div>' +
+    browserSearchBar(true) +
+    '<div style="margin-top:10px; font-size:12px; color:#999;">Поиск по всему игровому интернету 🌐</div>' +
+    browserBookmarks() +
+    '</div>';
+}
+
+// ---- Googie результаты поиска ----
+function pageGoogieSearch(url) {
+  let q = '';
+  const m = url.match(/q=([^&]*)/);
+  if (m) { try { q = decodeURIComponent(m[1]); } catch(e) { q = m[1]; } }
+  const ql = q.toLowerCase();
+
+  // База результатов
+  const RESULTS = [
+    { t:'Kiwi News — свежие новости IT и мира', u:'news.kiwi', d:'Главные заголовки дня: технологии, киберпреступность, экономика и стартапы.', k:['новост','news','it','технолог','kiwi'] },
+    { t:'Crypto Daily — курсы и аналитика', u:'cryptodaily.io', d:'Bitcoin, Ethereum и альткоины: котировки, прогнозы и обзоры рынка.', k:['крипт','crypto','bitcoin','btc','eth','биткоин','курс','деньг'] },
+    { t:'HackTalk — форум этичных хакеров', u:'hacktalk.forum', d:'Обсуждения пентеста, эксплойтов, инструментов и историй из практики.', k:['хак','hack','взлом','эксплойт','exploit','форум','nmap','metasploit'] },
+    { t:'YouTube — смотри видео онлайн', u:'youtube.com', d:'Миллиарды видео: туториалы по программированию, хакингу, Linux и всему на свете. Открывает настоящий YouTube!', k:['видео','video','туториал','обзор','tube','стрим','игр','youtube','ютуб','смотреть','программ','python','linux','hack'] },
+    { t:'KiwiTube — внутриигровой видеохостинг', u:'kiwitube.com', d:'Игровые туториалы по программированию, обзоры игр и стримы внутри Linux Dev OS.', k:['kiwi','kiwitube','внутри','игра'] },
+    { t:'Googie Freelance — биржа заказов', u:'googie.com/freelance', d:'Найди заказы на разработку: сайты, игры, антивирусы. Работай из дома.', k:['работ','freelance','заказ','деньг','фриланс','job','разработ'] },
+    { t:'ShopZilla — интернет-магазин', u:'shopzilla.store', d:'Гаджеты, железо и софт со скидками. Доставка по всему миру.', k:['магазин','shop','купить','железо','hardware','гаджет'] }
+  ];
+
+  let matched = RESULTS;
+  if (ql) {
+    const scored = RESULTS.map(r => {
+      let score = 0;
+      r.k.forEach(kw => { if (ql.includes(kw) || kw.includes(ql)) score += 2; });
+      if (r.t.toLowerCase().includes(ql)) score += 3;
+      if (r.d.toLowerCase().includes(ql)) score += 1;
+      return { r, score };
+    }).filter(x => x.score > 0).sort((a,b) => b.score - a.score);
+    matched = scored.length ? scored.map(x => x.r) : RESULTS;
+  }
+
+  let html = '<div style="padding:6px;">';
+  // верхняя поисковая строка
+  html += '<div style="display:flex; gap:8px; align-items:center; border-bottom:1px solid #eee; padding-bottom:12px; margin-bottom:12px;">' +
+    '<span style="font-size:20px; font-weight:bold; letter-spacing:-1px;"><span style="color:#4285f4;">G</span><span style="color:#ea4335;">o</span><span style="color:#fbbc05;">o</span><span style="color:#4285f4;">g</span><span style="color:#34a853;">i</span><span style="color:#ea4335;">e</span></span>' +
+    '<input id="googie-q" type="text" value="' + q.replace(/"/g,'&quot;') + '" style="flex:1; padding:7px 14px; border:1px solid #dadce0; border-radius:20px; outline:none; color:#333;" onkeydown="if(event.key===\'Enter\')browserGoSearch(this.value)">' +
+    '<button class="btn btn-small" style="background:#4285f4;" onclick="browserGoSearch(document.getElementById(\'googie-q\').value)">🔎</button>' +
+    '</div>';
+  html += '<div style="font-size:12px; color:#777; margin-bottom:12px;">Результатов: примерно ' + (matched.length * 1843 + 27) + ' (0.' + (12 + matched.length) + ' сек)</div>';
+
+  matched.forEach(r => {
+    html += '<div style="margin-bottom:18px;">' +
+      '<div style="font-size:12px; color:#006621;">' + r.u + '</div>' +
+      '<div onclick="browserNavigate(\'' + r.u + '\')" style="font-size:17px; color:#1a0dab; cursor:pointer; margin:2px 0;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">' + r.t + '</div>' +
+      '<div style="font-size:13px; color:#545454; line-height:1.4;">' + r.d + '</div>' +
+      '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+// ---- Kiwi News ----
+function pageNews() {
+  const news = [
+    { tag:'ТЕХНО', color:'#4285f4', t:'Вышла новая модель ИИ-ассистента для программистов', d:'Разработчики сообщают о росте продуктивности на 40%. Эксперты спорят о будущем профессии.' },
+    { tag:'КИБЕР', color:'#ea4335', t:'Крупная утечка данных в корпорации E-Corp', d:'Хакеры получили доступ к базе клиентов. Компания обещает усилить защиту.' },
+    { tag:'ЭКОНОМ', color:'#34a853', t:'Рынок фриланса бьёт рекорды', d:'Спрос на разработчиков вырос вдвое за последний квартал. Зарплаты растут.' },
+    { tag:'НАУКА', color:'#fbbc05', t:'Учёные представили квантовый процессор нового поколения', d:'Производительность в задачах шифрования выросла в сотни раз.' },
+    { tag:'ИГРЫ', color:'#9c27b0', t:'Ретро-игры снова в моде', d:'Змейка и Тетрис возглавили чарты ностальгических приложений.' }
+  ];
+  let html = '<div style="padding:6px;">';
+  html += '<div style="display:flex; align-items:center; gap:8px; border-bottom:3px solid #ea4335; padding-bottom:10px; margin-bottom:14px;"><span style="font-size:26px;">📰</span><h2 style="color:#222; margin:0;">Kiwi News</h2><span style="margin-left:auto; font-size:11px; color:#999;">' + fmtTime(state.gameTime) + ' • сегодня</span></div>';
+  news.forEach((n,i) => {
+    html += '<div style="border-bottom:1px solid #eee; padding:12px 0;">' +
+      '<span style="background:' + n.color + '; color:#fff; font-size:10px; font-weight:bold; padding:2px 8px; border-radius:4px;">' + n.tag + '</span>' +
+      '<div style="font-size:16px; font-weight:bold; color:#1a1a1a; margin:6px 0;">' + n.t + '</div>' +
+      '<div style="font-size:13px; color:#555; line-height:1.45;">' + n.d + '</div>' +
+      '</div>';
+  });
+  html += '<div style="margin-top:14px; text-align:center;"><button class="btn btn-small btn-secondary" onclick="browserHome()">🏠 На главную Googie</button></div>';
+  html += '</div>';
+  return html;
+}
+
+// ---- Crypto Daily ----
+function pageCryptoNews() {
+  let rows = '';
+  if (state && state.crypto && typeof CRYPTO_COINS !== 'undefined') {
+    CRYPTO_COINS.forEach(c => {
+      const price = state.crypto.prices[c.id];
+      const hist = state.crypto.history[c.id] || [price];
+      const first = hist[0], last = hist[hist.length-1];
+      const ch = ((last - first) / first) * 100;
+      const up = ch >= 0;
+      rows += '<div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #eee;">' +
+        '<div style="font-size:22px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; background:' + c.color + '; color:#fff; border-radius:50%; font-weight:bold;">' + c.emoji + '</div>' +
+        '<div style="flex:1;"><b style="color:#222;">' + c.name + '</b> <span style="color:#999; font-size:11px;">' + c.symbol + '</span></div>' +
+        '<div style="text-align:right;"><div style="font-weight:bold; color:#222;">' + fmtPrice(price) + '</div>' +
+        '<div style="font-size:12px; color:' + (up ? '#34a853' : '#ea4335') + ';">' + (up ? '▲' : '▼') + ' ' + Math.abs(ch).toFixed(2) + '%</div></div>' +
+        '</div>';
+    });
+  } else {
+    rows = '<div style="color:#777; padding:10px;">Котировки недоступны.</div>';
+  }
+  let html = '<div style="padding:6px;">';
+  html += '<div style="display:flex; align-items:center; gap:8px; border-bottom:3px solid #f7931a; padding-bottom:10px; margin-bottom:8px;"><span style="font-size:26px;">📈</span><h2 style="color:#222; margin:0;">Crypto Daily</h2></div>';
+  html += '<div style="font-size:12px; color:#777; margin-bottom:6px;">Курсы в реальном времени из игрового рынка:</div>';
+  html += rows;
+  html += '<div style="background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:10px; margin-top:14px; font-size:13px; color:#5d4037;">💡 <b>Аналитика:</b> рынок волатилен. Майните через CryptoMiner и торгуйте в приложении 💰 Crypto Wallet.</div>';
+  html += '<div style="margin-top:12px; text-align:center;"><button class="btn btn-small" onclick="openWindow(\'crypto\')">💰 Открыть Crypto Wallet</button></div>';
+  html += '</div>';
+  return html;
+}
+
+// ---- HackTalk форум ----
+function pageForum() {
+  const threads = [
+    { a:'r00t_neo', r:128, t:'Гайд: как использовать nmap для разведки', d:'Делюсь опытом сканирования. Сначала всегда nmap, потом exploit по уязвимому порту.' },
+    { a:'gh0st', r:64, t:'Metasploit vs ручной эксплойт — что лучше?', d:'Metasploit экономит время и даёт +25% к шансу. Но базу знать надо.' },
+    { a:'cypher', r:97, t:'Как сбросить внимание FBI?', d:'Tor Browser + VPN. Со временем уровень FBI падает сам. Не жадничайте с боссами.' },
+    { a:'newbie21', r:5, t:'Только начал, с чего стартовать?', d:'Бери заказы на Googie Freelance, прокачивай SW и NET в магазине.' },
+    { a:'anon', r:42, t:'Лучшие пассивные доходы в 2026', d:'AdBot даёт больше всех, но и риск FBI выше. CryptoMiner безопаснее.' }
+  ];
+  let html = '<div style="padding:6px;">';
+  html += '<div style="display:flex; align-items:center; gap:8px; border-bottom:2px solid #00c853; padding-bottom:10px; margin-bottom:12px;"><span style="font-size:26px;">💬</span><h2 style="color:#222; margin:0;">HackTalk</h2><span style="margin-left:auto; font-size:11px; color:#999;">форум • ' + threads.length + ' тем</span></div>';
+  threads.forEach(t => {
+    html += '<div style="background:#fafafa; border:1px solid #eee; border-radius:8px; padding:10px; margin-bottom:8px;">' +
+      '<div style="font-size:15px; font-weight:bold; color:#1565c0;">' + t.t + '</div>' +
+      '<div style="font-size:13px; color:#555; margin:4px 0; line-height:1.4;">' + t.d + '</div>' +
+      '<div style="font-size:11px; color:#999;">👤 ' + t.a + ' • 👍 ' + t.r + ' ответов</div>' +
+      '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+// ---- KiwiTube ----
+function pageKiwiTube() {
+  const vids = [
+    { e:'🐍', t:'Змейка за 10 минут на JavaScript', a:'CodeKiwi', v:'1.2M' },
+    { e:'⚡', t:'Топ-5 трюков в терминале Linux', a:'TermMaster', v:'843K' },
+    { e:'🛡️', t:'Как защититься от вирусов', a:'SecLab', v:'512K' },
+    { e:'💰', t:'Крипта для новичков 2026', a:'CryptoBro', v:'2.1M' },
+    { e:'🎮', t:'Лучшие ретро-игры', a:'RetroZone', v:'690K' },
+    { e:'🤖', t:'ИИ пишет код за меня', a:'FutureDev', v:'3.4M' }
+  ];
+  let html = '<div style="padding:6px;">';
+  html += '<div style="display:flex; align-items:center; gap:8px; border-bottom:2px solid #ff0000; padding-bottom:10px; margin-bottom:12px;"><span style="font-size:26px;">📺</span><h2 style="color:#222; margin:0;">KiwiTube</h2></div>';
+  html += '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px;">';
+  vids.forEach(v => {
+    html += '<div onclick="log(\'📺 Просмотр: ' + v.t.replace(/'/g,"") + '\',\'info\')" style="cursor:pointer;">' +
+      '<div style="height:90px; background:linear-gradient(135deg,#222,#444); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:40px;">' + v.e + '</div>' +
+      '<div style="font-size:13px; font-weight:600; color:#222; margin-top:6px; line-height:1.3;">' + v.t + '</div>' +
+      '<div style="font-size:11px; color:#777;">' + v.a + ' • ' + v.v + ' просмотров</div>' +
+      '</div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+// ---- ShopZilla ----
+function pageShopZilla() {
+  let html = '<div style="padding:6px;">';
+  html += '<div style="display:flex; align-items:center; gap:8px; border-bottom:2px solid #ff6d00; padding-bottom:10px; margin-bottom:12px;"><span style="font-size:26px;">🛍️</span><h2 style="color:#222; margin:0;">ShopZilla</h2></div>';
+  html += '<div style="background:#fff3e0; border:1px solid #ffcc80; border-radius:8px; padding:12px; font-size:13px; color:#5d4037; line-height:1.5;">' +
+    '🛒 Хотите купить улучшения железа, софта и сети? Это делается в системном <b>Магазине</b> вашей ОС, а приложения — в <b>NotX SHOP</b>.' +
+    '</div>';
+  html += '<div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; justify-content:center;">' +
+    '<button class="btn" onclick="openWindow(\'store\')">🛒 Открыть Магазин</button>' +
+    '<button class="btn btn-secondary" onclick="openWindow(\'notxshop\')">🛍️ Открыть NotX SHOP</button>' +
+    '</div>';
+  html += '</div>';
+  return html;
+}
+
+// ---- YouTube ----
+function pageYouTube(url) {
+  // If URL is a direct video watch link — redirect to real YouTube immediately
+  const watchMatch = url.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/);
+  if (watchMatch) {
+    const realUrl = 'https://www.youtube.com/watch?v=' + watchMatch[1];
+    window.open(realUrl, '_blank');
+    browserNavigate('youtube.com');
+    return pageYouTube('youtube.com');
+  }
+
+  // Parse search query if present
+  let searchQ = '';
+  const ytSearchMatch = url.match(/[?&]search_query=([^&]*)/);
+  const ytQMatch = url.match(/[?&]q=([^&]*)/);
+  if (ytSearchMatch) { try { searchQ = decodeURIComponent(ytSearchMatch[1].replace(/\+/g,' ')); } catch(e) { searchQ = ytSearchMatch[1]; } }
+  else if (ytQMatch) { try { searchQ = decodeURIComponent(ytQMatch[1].replace(/\+/g,' ')); } catch(e) { searchQ = ytQMatch[1]; } }
+
+  // =====================================================================
+  // РЕАЛЬНЫЕ видео с настоящими ID и превью от YouTube
+  // =====================================================================
+  const categories = [
+    {
+      label: '🎮 Программирование и IT',
+      vids: [
+        { id: '_uQrJ0TkZlc', title: 'Python Tutorial – Python Full Course for Beginners', ch: 'Programming with Mosh', views: '35M', dur: '6:14:07' },
+        { id: 'PkZNo7MFNFg', title: 'Learn JavaScript - Full Course for Beginners', ch: 'freeCodeCamp.org', views: '16M', dur: '3:26:42' },
+        { id: 'rfscVS0vtbw', title: 'Learn to Code – For Beginners (Full Course)', ch: 'freeCodeCamp.org', views: '4.1M', dur: '1:41:32' },
+        { id: 'qz0aGYrrlhU', title: 'HTML Tutorial for Beginners: Full HTML & CSS Course', ch: 'Programming with Mosh', views: '5.2M', dur: '1:09:29' },
+        { id: 'Oe421EPjeBE', title: 'Node.js and Express.js – Full Course', ch: 'freeCodeCamp.org', views: '3.9M', dur: '8:16:48' },
+        { id: 'dQw4w9WgXcQ', title: '\u{1F3B5} Secret Track for Hackers \u{1F47E}', ch: 'Rick Astley', views: '1.5B', dur: '3:33' },
+      ]
+    },
+    {
+      label: '\u{1F512} Кибербезопасность и этичный хакинг',
+      vids: [
+        { id: '3Kq1MIfTWCE', title: 'Ethical Hacking Full Course – Learn to Hack in 15 Hours', ch: 'freeCodeCamp.org', views: '6.7M', dur: '15:28:46' },
+        { id: 'hDd3-KnVxCM', title: 'Kali Linux Tutorial for Beginners – Full Ethical Hacking Course', ch: 'NetworkChuck', views: '2.3M', dur: '2:12:05' },
+        { id: 'O4O-x8JjFUg', title: 'Nmap Tutorial to find Network Vulnerabilities', ch: 'NetworkChuck', views: '1.9M', dur: '17:22' },
+        { id: 'a83ASGn_V_s', title: 'How I Would Learn Cybersecurity (If I Could Start Over)', ch: 'NetworkChuck', views: '4.5M', dur: '13:42' },
+        { id: 'fHhNWX2BKLE', title: 'SQL Injection – Computerphile', ch: 'Computerphile', views: '2.4M', dur: '7:24' },
+        { id: 'HIbBDWdAqxs', title: 'Linux for Hackers – Getting Started with Kali', ch: 'NetworkChuck', views: '3.5M', dur: '22:08' },
+      ]
+    },
+    {
+      label: '\u{1F427} Linux и терминал',
+      vids: [
+        { id: 'ZtqBQ68cfJc', title: 'The Linux Command Line Full Course', ch: 'freeCodeCamp.org', views: '2.9M', dur: '4:18:44' },
+        { id: 'rowbOA3o8MI', title: 'Bash Scripting Tutorial for Beginners', ch: 'Joe Collins', views: '1.4M', dur: '2:10:20' },
+        { id: 'BNbi9fg3J78', title: 'Ubuntu Linux Tutorial for Beginners', ch: 'Learn Linux TV', views: '3.1M', dur: '56:03' },
+        { id: 'ysEN5RaKOlA', title: 'Vim As Your Editor – Beginner to Expert', ch: 'ThePrimeagen', views: '2.7M', dur: '8:52' },
+        { id: 'sWbUDq4S6Y8', title: 'Linux Terminal Tips: Speed, Fun & Productivity', ch: 'Chris Titus Tech', views: '890K', dur: '28:17' },
+        { id: 'GzrNQCBDOGM', title: 'Top 50 Linux Commands You NEED to Know', ch: 'LearnLinuxTV', views: '1.2M', dur: '34:09' },
+      ]
+    },
+    {
+      label: '\u{1F4B0} Крипта, блокчейн и технологии',
+      vids: [
+        { id: 'SSo_EIwHSd4', title: 'Bitcoin Explained Simply for Dummies', ch: '99Bitcoins', views: '5.8M', dur: '7:55' },
+        { id: 'Lx9zgZCMqXE', title: 'Blockchain Technology Explained (in 2 minutes)', ch: 'Simply Explained', views: '3.7M', dur: '6:12' },
+        { id: 'wVyu8gkMD5g', title: 'Web3 Explained – What is Web3?', ch: 'Fireship', views: '2.1M', dur: '12:38' },
+        { id: 'M576WGiDBdQ', title: 'What is ChatGPT and How Does It Work?', ch: 'AI Explained', views: '4.3M', dur: '18:21' },
+        { id: 'aircAruvnKk', title: 'But what is a neural network? | Deep learning', ch: '3Blue1Brown', views: '14M', dur: '19:13' },
+        { id: 'J8TgJxbgEFQ', title: 'How Computers Work – CPU, RAM, ROM Explained', ch: 'CrashCourse', views: '6.4M', dur: '11:29' },
+      ]
+    },
+    {
+      label: '\u{1F3AE} Игры и развлечения',
+      vids: [
+        { id: 'pCJXSrOg5oM', title: 'GTA VI – Official Trailer', ch: 'Rockstar Games', views: '180M', dur: '1:31' },
+        { id: 'QSPGH4dJ0rk', title: 'World Record Speedrun – The Untold Story', ch: 'Summoning Salt', views: '8.2M', dur: '29:43' },
+        { id: 'U0S9HkKFCNI', title: 'Game Development Explained in 2 Minutes', ch: 'Fireship', views: '1.8M', dur: '2:15' },
+        { id: '8X2kIfS6fb8', title: 'Top 10 Most SATISFYING Games Ever Made', ch: 'GoodTimesWithScar', views: '5.4M', dur: '14:55' },
+        { id: 'bVdOY3YBonY', title: 'История CS:GO – от начала до конца', ch: 'TheWarOwl', views: '6.1M', dur: '47:22' },
+        { id: '09R8_2nJtjg', title: 'Every Console Generation Explained', ch: 'Scott The Woz', views: '4.8M', dur: '42:11' },
+      ]
+    }
+  ];
+
+  // Build search results block if there is a query
+  let searchResultsHtml = '';
+  if (searchQ) {
+    const realYTSearchUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(searchQ);
+    searchResultsHtml =
+      '<div style="background:#fff8e1;border:1px solid #ffc107;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">' +
+        '<span style="font-size:24px;">\u{1F50D}</span>' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:700;color:#333;">' + 'Поиск: \u00AB' + searchQ.replace(/</g,'&lt;') + '\u00BB</div>' +
+          '<div style="font-size:12px;color:#666;margin-top:2px;">Нажмите ниже, чтобы найти это на настоящем YouTube</div>' +
+        '</div>' +
+        '<a href="' + realYTSearchUrl + '" target="_blank" style="background:#cc0000;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;">' +
+          '\u25BA Искать на YouTube' +
+        '</a>' +
+      '</div>';
+  }
+
+  // Build a single video card with real thumbnail + real link
+  function buildVideoCard(vid) {
+    const ytUrl = 'https://www.youtube.com/watch?v=' + vid.id;
+    const thumbUrl = 'https://i.ytimg.com/vi/' + vid.id + '/hqdefault.jpg';
+    return (
+      '<div onclick="window.open(\'' + ytUrl + '\', \'_blank\')" ' +
+        'style="cursor:pointer;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #e0e0e0;' +
+               'transition:transform .15s,box-shadow .15s;" ' +
+        'onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,0.18)\'" ' +
+        'onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'none\'">' +
+        '<div style="position:relative;width:100%;padding-top:56.25%;background:#111;overflow:hidden;">' +
+          '<img src="' + thumbUrl + '" ' +
+               'style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" ' +
+               'loading="lazy">' +
+          '<div style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.85);color:#fff;' +
+               'font-size:11px;padding:2px 6px;border-radius:4px;font-weight:700;">' + vid.dur + '</div>' +
+          '<div style="position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;' +
+               'justify-content:center;transition:background .2s;" ' +
+               'onmouseover="this.style.background=\'rgba(0,0,0,0.4)\'" ' +
+               'onmouseout="this.style.background=\'rgba(0,0,0,0)\'">' +
+            '<div style="width:52px;height:52px;background:rgba(204,0,0,0.92);border-radius:50%;' +
+                 'display:flex;align-items:center;justify-content:center;">' +
+              '<span style="color:white;font-size:22px;margin-left:4px;">\u25BA</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:10px 12px;">' +
+          '<div style="font-size:13px;font-weight:600;color:#0f0f0f;line-height:1.4;margin-bottom:4px;' +
+               'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + vid.title + '</div>' +
+          '<div style="font-size:11px;color:#606060;">' + vid.ch + '</div>' +
+          '<div style="font-size:11px;color:#606060;margin-top:2px;">' + vid.views + ' \u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u043E\u0432</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  // Build category sections HTML
+  let catHtml = '';
+  categories.forEach(cat => {
+    catHtml += (
+      '<div style="margin-bottom:28px;">' +
+        '<div style="font-size:16px;font-weight:700;color:#0f0f0f;margin-bottom:12px;">' + cat.label + '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">' +
+          cat.vids.map(buildVideoCard).join('') +
+        '</div>' +
+      '</div>'
+    );
+  });
+
+  // Quick links helper
+  function ytQuickLink(label, url, emoji) {
+    return (
+      '<a href="' + url + '" target="_blank" ' +
+         'style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;' +
+                'background:#f2f2f2;border:1px solid #e0e0e0;border-radius:20px;' +
+                'font-size:12px;color:#333;text-decoration:none;font-weight:500;" ' +
+         'onmouseover="this.style.background=\'#e0e0e0\'" ' +
+         'onmouseout="this.style.background=\'#f2f2f2\'">' +
+        emoji + ' ' + label +
+      '</a>'
+    );
+  }
+
+  // Full page HTML
+  return (
+    '<div style="background:#f9f9f9;min-height:100%;color:#0f0f0f;font-family:Roboto,Arial,sans-serif;">' +
+
+    // HEADER
+    '<div style="background:#fff;padding:10px 16px;border-bottom:1px solid #e0e0e0;' +
+         'display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;' +
+         'box-shadow:0 2px 8px rgba(0,0,0,0.08);">' +
+
+      '<a href="https://www.youtube.com" target="_blank" ' +
+         'style="display:flex;align-items:center;gap:6px;text-decoration:none;flex-shrink:0;">' +
+        '<div style="background:#cc0000;color:#fff;font-size:20px;width:36px;height:25px;border-radius:6px;' +
+             'display:flex;align-items:center;justify-content:center;font-weight:bold;">\u25BA</div>' +
+        '<span style="font-size:18px;font-weight:700;color:#0f0f0f;letter-spacing:-0.5px;">YouTube</span>' +
+      '</a>' +
+
+      '<div style="flex:1;display:flex;max-width:600px;margin:0 8px;">' +
+        '<input id="yt-search-input" type="text" value="' + (searchQ||'').replace(/"/g,'&quot;') + '" ' +
+               'placeholder="\u041D\u0430\u0439\u0442\u0438 \u043D\u0430 YouTube..." ' +
+               'style="flex:1;border:1px solid #ccc;border-right:none;border-radius:20px 0 0 20px;' +
+                      'padding:9px 18px;font-size:14px;outline:none;color:#0f0f0f;background:#fff;">' +
+        '<button onclick="(function(){' +
+                  'var q=document.getElementById(\'yt-search-input\').value.trim();' +
+                  'if(q){browserNavigate(\'youtube.com/results?search_query=\'+encodeURIComponent(q));}})()" ' +
+                'style="background:#f8f8f8;border:1px solid #ccc;border-left:none;' +
+                       'border-radius:0 20px 20px 0;padding:9px 18px;cursor:pointer;font-size:16px;">' +
+          '\u{1F50D}' +
+        '</button>' +
+      '</div>' +
+
+      '<a href="https://www.youtube.com" target="_blank" ' +
+         'style="flex-shrink:0;background:#cc0000;color:#fff;padding:9px 14px;border-radius:8px;' +
+                'font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">' +
+        '\u25BA \u041E\u0442\u043A\u0440\u044B\u0442\u044C YouTube' +
+      '</a>' +
+    '</div>' +
+
+    // CONTENT
+    '<div style="padding:16px 16px 28px;">' +
+
+      '<div style="background:#e8f5e9;border:1px solid #a5d6a7;' +
+           'border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#333;' +
+           'display:flex;align-items:center;gap:12px;">' +
+        '<span style="font-size:22px;">\u2705</span>' +
+        '<span>\u041D\u0430\u0436\u043C\u0438\u0442\u0435 \u043D\u0430 \u043B\u044E\u0431\u043E\u0435 \u0432\u0438\u0434\u0435\u043E \u2014 \u043E\u043D\u043E \u0441\u0440\u0430\u0437\u0443 \u043E\u0442\u043A\u0440\u043E\u0435\u0442\u0441\u044F \u043D\u0430 <b>\u043D\u0430\u0441\u0442\u043E\u044F\u0449\u0435\u043C YouTube</b>! ' +
+              '\u041F\u043E\u0438\u0441\u043A \u0442\u043E\u0436\u0435 \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0447\u0435\u0440\u0435\u0437 \u043D\u0430\u0441\u0442\u043E\u044F\u0449\u0438\u0439 YouTube. \u041F\u0440\u0435\u0432\u044C\u044E \u0432\u0438\u0434\u0435\u043E \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u044E\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438.</span>' +
+      '</div>' +
+
+      searchResultsHtml +
+      catHtml +
+
+      '<div style="padding:14px;background:#fff;border-radius:12px;border:1px solid #e0e0e0;margin-top:10px;">' +
+        '<div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">\u{1F517} \u0411\u044B\u0441\u0442\u0440\u044B\u0435 \u0441\u0441\u044B\u043B\u043A\u0438 \u043D\u0430 YouTube</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          ytQuickLink('\u0413\u043B\u0430\u0432\u043D\u0430\u044F', 'https://www.youtube.com', '\u{1F3E0}') +
+          ytQuickLink('\u0422\u0440\u0435\u043D\u0434\u044B', 'https://www.youtube.com/feed/trending', '\u{1F525}') +
+          ytQuickLink('Python', 'https://www.youtube.com/results?search_query=python+tutorial', '\u{1F40D}') +
+          ytQuickLink('Kali Linux', 'https://www.youtube.com/results?search_query=kali+linux+tutorial', '\u{1F409}') +
+          ytQuickLink('\u0425\u0430\u043A\u0438\u043D\u0433', 'https://www.youtube.com/results?search_query=ethical+hacking', '\u{1F512}') +
+          ytQuickLink('Linux', 'https://www.youtube.com/results?search_query=linux+terminal+commands', '\u{1F5A5}') +
+          ytQuickLink('Bitcoin', 'https://www.youtube.com/results?search_query=bitcoin+blockchain+explained', '\u20BF') +
+          ytQuickLink('NetworkChuck', 'https://www.youtube.com/@NetworkChuck', '\u{1F4E1}') +
+          ytQuickLink('freeCodeCamp', 'https://www.youtube.com/@freecodecamp', '\u{1F393}') +
+          ytQuickLink('\u{1F3A7} \u041C\u0443\u0437\u044B\u043A\u0430', 'https://www.youtube.com/results?search_query=lofi+hip+hop+study', '\u{1F3B5}') +
+        '</div>' +
+      '</div>' +
+
+    '</div>' +
+    '</div>'
+  );
+}
+
+// ---- 404 ----
+function page404(url) {
+  return '<div style="padding:50px 20px; text-align:center; color:#555;">' +
+    '<div style="font-size:60px;">🤖</div>' +
+    '<div style="font-size:22px; font-weight:bold; color:#222; margin:10px 0;">Ошибка 404</div>' +
+    '<div style="font-size:14px; margin-bottom:6px;">Сайт <b>' + url + '</b> не найден в игровом интернете.</div>' +
+    '<div style="font-size:12px; color:#999;">Проверьте адрес или вернитесь на главную.</div>' +
+    '<div style="margin-top:18px;"><button class="btn" onclick="browserHome()">🏠 На главную Googie</button></div>' +
+    '</div>';
+}
+
+// ---- Freelance страница (биржа заказов) ----
+function getFreelanceListings() {
+  return [
     {title:'Антивирус для банка', type:'antivirus', pay:Math.floor(350*diffCfg.rewardMult), diff:'Средне', from:'BankSys'},
     {title:'Landing page', type:'web', pay:Math.floor(200*diffCfg.rewardMult), diff:'Легко', from:'GlobalTech'},
     {title:'Мобильная игра', type:'game', pay:Math.floor(280*diffCfg.rewardMult), diff:'Средне', from:'Nexus'},
@@ -4338,7 +5232,14 @@ function renderBrowser() {
     {title:'Защита серверов', type:'antivirus', pay:Math.floor(300*diffCfg.rewardMult), diff:'Средне', from:'E-Corp'},
     {title:'Веб-приложение', type:'web', pay:Math.floor(220*diffCfg.rewardMult), diff:'Легко', from:'OmniCorp'}
   ];
-  let html = '<div style="display:grid; gap:8px;">';
+}
+
+function pageFreelance() {
+  const listings = getFreelanceListings();
+  let html = '<div style="padding:6px;">';
+  html += '<div style="display:flex; align-items:center; gap:8px; border-bottom:2px solid #4285f4; padding-bottom:10px; margin-bottom:8px;"><span style="font-size:24px;">💼</span><h2 style="color:#ea4335; margin:0;">Googie Freelance</h2></div>';
+  html += '<p style="color:#666; margin-bottom:12px; font-size:13px;">Биржа заказов. Выбирайте и начинайте прямо здесь!</p>';
+  html += '<div style="display:grid; gap:8px;">';
   listings.forEach((l, idx) => {
     html += `
       <div style="background:white; border:1px solid #ddd; border-radius:6px; padding:12px;">
@@ -4348,19 +5249,12 @@ function renderBrowser() {
       </div>
     `;
   });
-  html += '</div>';
-  el.innerHTML = html;
+  html += '</div></div>';
+  return html;
 }
 
 function takeBrowserJob(idx) {
-  const listings = [
-    {title:'Антивирус для банка', type:'antivirus', pay:Math.floor(350*diffCfg.rewardMult), from:'BankSys'},
-    {title:'Landing page', type:'web', pay:Math.floor(200*diffCfg.rewardMult), from:'GlobalTech'},
-    {title:'Мобильная игра', type:'game', pay:Math.floor(280*diffCfg.rewardMult), from:'Nexus'},
-    {title:'Корпоративный пентест', type:'virus', pay:Math.floor(400*diffCfg.rewardMult), from:'ShadowNet'},
-    {title:'Защита серверов', type:'antivirus', pay:Math.floor(300*diffCfg.rewardMult), from:'E-Corp'},
-    {title:'Веб-приложение', type:'web', pay:Math.floor(220*diffCfg.rewardMult), from:'OmniCorp'}
-  ];
+  const listings = getFreelanceListings();
   const l = listings[idx];
   const msg = {
     id: state.nextMsgId++,
@@ -4427,11 +5321,12 @@ function tick() {
 
   // Auto-progress active projects with editor bonus
   const editorMult = getEditorBonus();
+  const overclockMult = state.biosOverclock ? 1.10 : 1.0;
   state.projects.forEach(p => {
     if (p.completed || p.failed) return;
     const isActive = (state.activeTask && state.activeTask.id === p.id) || (state.activeTask2 && state.activeTask2.id === p.id);
     if (!isActive) {
-      p.progress = Math.min(p.code.length, p.progress + diffCfg.autoProgress * state.hw * editorMult);
+      p.progress = Math.min(p.code.length, p.progress + diffCfg.autoProgress * state.hw * editorMult * overclockMult);
     }
     if (p.progress >= p.code.length && !p.completed) {
       p.completed = true;
@@ -4475,11 +5370,22 @@ function tick() {
 
   // FBI decay
   if (state.fbi > 0) state.fbi = Math.max(0, state.fbi - 0.03);
+  
+  // FBI overclocking penalty
+  if (state.biosOverclock && Math.random() < 0.05) {
+    state.fbi = Math.min(100, state.fbi + 0.1);
+  }
+  
+  // Secure boot risk
+  if (!state.biosSecureBoot && Math.random() < 0.02) {
+    state.fbi = Math.min(100, state.fbi + 0.1);
+  }
 
   if (state.virusActive) {
     state.virusTicks = (state.virusTicks || 0) + 1;
     const antivirusInstalled = hasApp('kiwi_antivirus');
-    const pulse = antivirusInstalled ? 0.35 : 0.6;
+    const basePulse = antivirusInstalled ? 0.35 : 0.6;
+    const pulse = state.biosSecureBoot ? basePulse : Math.min(0.95, basePulse * 1.3);
     if (Math.random() < pulse) {
       const effects = [
         () => { log('☣️ Вирус меняет обои.', 'danger'); if (state.wallpaper !== undefined) setWallpaper((state.wallpaper + 1) % WALLPAPERS.length); },
@@ -4584,7 +5490,10 @@ function serializeState() {
       virusLevel: state.virusLevel || 0,
       virusSource: state.virusSource || '',
       virusTicks: state.virusTicks || 0,
-      virusQuarantined: !!state.virusQuarantined
+      virusQuarantined: !!state.virusQuarantined,
+      biosSecureBoot: state.biosSecureBoot !== undefined ? state.biosSecureBoot : true,
+      biosOverclock: !!state.biosOverclock,
+      biosSataMode: state.biosSataMode || 'AHCI'
     };
     return JSON.stringify(saveObj, function(k, v) {
       if ((k === 'deadline' || k === 'date' || k === 'gameTime') && v && typeof v === 'object' && typeof v.toISOString === 'function') return v.toISOString();
@@ -4780,6 +5689,9 @@ function migrateSave(data) {
     if (typeof data.crypto.totalSold !== 'number') data.crypto.totalSold = 0;
     if (typeof data.crypto.totalBought !== 'number') data.crypto.totalBought = 0;
   }
+  if (typeof data.biosSecureBoot === 'undefined') data.biosSecureBoot = true;
+  if (typeof data.biosOverclock === 'undefined') data.biosOverclock = false;
+  if (typeof data.biosSataMode === 'undefined') data.biosSataMode = 'AHCI';
   return data;
 }
 
@@ -7799,5 +8711,5 @@ window.addEventListener('load', () => {
   <div class="icon-context-sep"></div>
   <div class="icon-context-item danger" onclick="ctxHide()">🗑️ Убрать с рабочего стола</div>
 </div>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a03f864deb872646',t:'MTc4MDE2MjgzMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
