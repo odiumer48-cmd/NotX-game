@@ -6,6 +6,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Linux Dev OS</title>
+
+<!-- Firebase SDK v9 Compat (для простоты использования в одном файле) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
 <style>
 /* Отключаем контекстное меню во всей игре */
 * {
@@ -1023,6 +1029,137 @@ body {
     font-weight: bold;
     border: 1px solid #ffffff;
   }
+
+
+/* ===== YOUTUBE PLAYER STYLES ===== */
+#yt-player-container {
+  background: #000;
+  min-height: 240px;
+}
+
+.yt-video-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.yt-video-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.yt-video-card .yt-thumb {
+  position: relative;
+  padding-bottom: 56.25%;
+  background: #1a1a1a;
+  overflow: hidden;
+}
+
+.yt-video-card .yt-thumb img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.yt-video-card .yt-duration {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.yt-video-card .yt-info {
+  padding: 8px 10px;
+}
+
+.yt-video-card .yt-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.yt-video-card .yt-channel {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.yt-history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.yt-history-item:hover {
+  background: rgba(255,255,255,0.07);
+}
+
+.yt-history-item img {
+  width: 80px;
+  height: 45px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.yt-history-item .yt-h-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.yt-history-item .yt-h-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.yt-history-item .yt-h-time {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+#yt-volume {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  outline: none;
+}
+
+#yt-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
 </style>
 <base target="_blank">
 </head>
@@ -1617,6 +1754,73 @@ body {
   </div>
   <div class="window-content" style="padding:12px; overflow-y:auto;"></div>
 </div>
+
+
+<!-- YouTube Player Window -->
+<div class="window" id="win-youtube" style="width:800px; height:600px; top:40px; left:100px;">
+  <div class="window-titlebar" onmousedown="startDrag(event,'win-youtube')">
+    <span class="window-title">📺 YouTube Player</span>
+    <button class="window-btn btn-min" onclick="minWindow('youtube')">−</button>
+    <button class="window-btn btn-max" onclick="toggleWindowFullscreen('youtube')">□</button>
+    <button class="window-btn btn-close" onclick="closeWindow('youtube')">×</button>
+  </div>
+  <div class="window-content" id="youtube-content" style="padding:0; display:flex; flex-direction:column;">
+    <!-- Player Area -->
+    <div id="yt-player-container" style="position:relative; padding-bottom:56.25%; height:0; background:#000;">
+      <div id="yt-player-placeholder" style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#1a1a2e,#2c001e); color:var(--text); flex-direction:column; gap:12px;">
+        <div style="font-size:48px;">📺</div>
+        <div style="font-size:14px; color:var(--text-dim);">Выберите видео из плейлиста</div>
+      </div>
+      <iframe id="yt-player-frame" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none;" 
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowfullscreen>
+      </iframe>
+    </div>
+
+    <!-- Controls Bar -->
+    <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--panel); border-bottom:1px solid var(--border);">
+      <button class="btn btn-small" onclick="ytPlayPause()" id="yt-play-btn">▶</button>
+      <button class="btn btn-small" onclick="ytStop()">⏹</button>
+      <div style="flex:1; display:flex; align-items:center; gap:6px;">
+        <span style="font-size:11px; color:var(--text-dim);">🔊</span>
+        <input type="range" id="yt-volume" min="0" max="100" value="70" style="flex:1; height:4px;" oninput="ytSetVolume(this.value)">
+        <span id="yt-volume-val" style="font-size:11px; color:var(--text-dim); min-width:28px;">70%</span>
+      </div>
+      <button class="btn btn-small btn-secondary" onclick="ytToggleFullscreen()">⛶</button>
+      <button class="btn btn-small btn-secondary" onclick="ytAddToFavorites()">⭐</button>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex; border-bottom:1px solid var(--border); background:var(--panel);">
+      <div class="app-tab active" id="yt-tab-playlist" onclick="switchYTTab('playlist')" style="padding:8px 14px; font-size:12px; cursor:pointer;">📋 Плейлист</div>
+      <div class="app-tab" id="yt-tab-favorites" onclick="switchYTTab('favorites')" style="padding:8px 14px; font-size:12px; cursor:pointer;">⭐ Избранное</div>
+      <div class="app-tab" id="yt-tab-history" onclick="switchYTTab('history')" style="padding:8px 14px; font-size:12px; cursor:pointer;">🕐 История</div>
+      <div class="app-tab" id="yt-tab-search" onclick="switchYTTab('search')" style="padding:8px 14px; font-size:12px; cursor:pointer;">🔍 Поиск</div>
+    </div>
+
+    <!-- Tab Content -->
+    <div style="flex:1; overflow-y:auto; padding:10px;">
+      <div class="app-tab-content active" id="yt-content-playlist">
+        <div id="yt-playlist-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:10px;"></div>
+      </div>
+      <div class="app-tab-content" id="yt-content-favorites" style="display:none;">
+        <div id="yt-favorites-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:10px;"></div>
+      </div>
+      <div class="app-tab-content" id="yt-content-history" style="display:none;">
+        <div id="yt-history-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+      </div>
+      <div class="app-tab-content" id="yt-content-search" style="display:none;">
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+          <input type="text" id="yt-search-input" placeholder="Поиск на YouTube..." style="flex:1; background:#2a2a2a; border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:6px; font-size:13px;" onkeydown="if(event.key==='Enter')ytSearch()">
+          <button class="btn" onclick="ytSearch()">🔍</button>
+        </div>
+        <div id="yt-search-results" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:10px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /desktop-layer -->
 
 <!-- Overlay Dialog -->
@@ -8711,5 +8915,689 @@ window.addEventListener('load', () => {
   <div class="icon-context-sep"></div>
   <div class="icon-context-item danger" onclick="ctxHide()">🗑️ Убрать с рабочего стола</div>
 </div>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a03f864deb872646',t:'MTc4MDE2MjgzMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a03f864deb872646',t:'MTc4MDE2MjgzMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+
+// ===================== FIREBASE + YOUTUBE INTEGRATION =====================
+// Используем Firebase v9 Compat для простоты интеграции в один файл
+
+// ===== FIREBASE CONFIG (ЗАПОЛНИТЕ СВОИ ДАННЫЕ) =====
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDZztxoqudz1GtIVwpfqDglmszbThDV6gg",
+  authDomain: "linux-dev-os.firebaseapp.com",
+  projectId: "linux-dev-os",
+  storageBucket: "linux-dev-os.firebasestorage.app",
+  messagingSenderId: "286068973616",
+  appId: "1:286068973616:web:fdad2424e6221ee5f40df5"
+};
+
+// Глобальные переменные Firebase
+let firebaseApp = null;
+let firebaseDb = null;
+let firebaseAuth = null;
+let currentUser = null;
+let isFirebaseReady = false;
+
+// Текущее состояние плеера
+let ytPlayerState = {
+  currentVideoId: null,
+  isPlaying: false,
+  volume: 70,
+  currentPlaylist: 'default',
+  favorites: [],
+  history: []
+};
+
+// ===== ИНИЦИАЛИЗАЦИЯ FIREBASE =====
+function initFirebase() {
+  try {
+    // Проверяем, загружен ли Firebase SDK
+    if (typeof firebase === 'undefined') {
+      console.warn('Firebase SDK не загружен. YouTube интеграция работает в offline режиме.');
+      isFirebaseReady = false;
+      return false;
+    }
+
+    // Проверяем, заполнена ли конфигурация
+    if (FIREBASE_CONFIG.apiKey === 'ВАШ_API_KEY') {
+      console.warn('Firebase конфигурация не заполнена. Работаем в offline режиме.');
+      isFirebaseReady = false;
+      return false;
+    }
+
+    // Инициализируем Firebase
+    firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
+    firebaseDb = firebase.firestore();
+    firebaseAuth = firebase.auth();
+
+    // Анонимная авторизация (не требует входа пользователя)
+    firebaseAuth.signInAnonymously()
+      .then((userCredential) => {
+        currentUser = userCredential.user;
+        console.log('Firebase анонимный вход:', currentUser.uid);
+        isFirebaseReady = true;
+
+        // Загружаем данные пользователя
+        loadUserData();
+
+        // Загружаем плейлисты из Firestore
+        loadPlaylistsFromFirestore();
+      })
+      .catch((error) => {
+        console.error('Firebase auth error:', error);
+        isFirebaseReady = false;
+        // Работаем в offline режиме
+        loadOfflinePlaylists();
+      });
+
+    return true;
+  } catch (e) {
+    console.error('Firebase init error:', e);
+    isFirebaseReady = false;
+    loadOfflinePlaylists();
+    return false;
+  }
+}
+
+// ===== ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ =====
+async function loadUserData() {
+  if (!isFirebaseReady || !currentUser) return;
+
+  try {
+    const userDoc = await firebaseDb.collection('users').doc(currentUser.uid).get();
+    if (userDoc.exists) {
+      const data = userDoc.data();
+      ytPlayerState.favorites = data.favorites || [];
+      ytPlayerState.history = data.history || [];
+      ytPlayerState.volume = data.volume || 70;
+
+      // Обновляем UI
+      document.getElementById('yt-volume').value = ytPlayerState.volume;
+      document.getElementById('yt-volume-val').textContent = ytPlayerState.volume + '%';
+      renderYTHistory();
+      renderYTFavorites();
+    }
+  } catch (e) {
+    console.error('Load user data error:', e);
+  }
+}
+
+// ===== СОХРАНЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ =====
+async function saveUserData() {
+  if (!isFirebaseReady || !currentUser) return;
+
+  try {
+    await firebaseDb.collection('users').doc(currentUser.uid).set({
+      favorites: ytPlayerState.favorites,
+      history: ytPlayerState.history.slice(0, 50), // Храним последние 50
+      volume: ytPlayerState.volume,
+      lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (e) {
+    console.error('Save user data error:', e);
+  }
+}
+
+// ===== ЗАГРУЗКА ПЛЕЙЛИСТОВ ИЗ FIRESTORE =====
+async function loadPlaylistsFromFirestore() {
+  if (!isFirebaseReady) {
+    loadOfflinePlaylists();
+    return;
+  }
+
+  try {
+    const snapshot = await firebaseDb.collection('playlists')
+      .orderBy('order')
+      .get();
+
+    const playlists = [];
+    snapshot.forEach((doc) => {
+      playlists.push({ id: doc.id, ...doc.data() });
+    });
+
+    if (playlists.length > 0) {
+      renderYTPlaylist(playlists);
+    } else {
+      // Если в Firestore пусто, загружаем дефолтные
+      loadOfflinePlaylists();
+    }
+  } catch (e) {
+    console.error('Load playlists error:', e);
+    loadOfflinePlaylists();
+  }
+}
+
+// ===== ОФФЛАЙН ПЛЕЙЛИСТЫ (дефолтные) =====
+const DEFAULT_PLAYLISTS = [
+  {
+    id: 'programming',
+    name: 'Программирование',
+    videos: [
+      { id: '_uQrJ0TkZlc', title: 'Python Tutorial – Full Course for Beginners', channel: 'Programming with Mosh', duration: '6:14:07', thumb: 'https://i.ytimg.com/vi/_uQrJ0TkZlc/mqdefault.jpg' },
+      { id: 'PkZNo7MFNFg', title: 'Learn JavaScript - Full Course', channel: 'freeCodeCamp', duration: '3:26:42', thumb: 'https://i.ytimg.com/vi/PkZNo7MFNFg/mqdefault.jpg' },
+      { id: 'rfscVS0vtbw', title: 'Learn to Code – For Beginners', channel: 'freeCodeCamp', duration: '1:41:32', thumb: 'https://i.ytimg.com/vi/rfscVS0vtbw/mqdefault.jpg' },
+      { id: 'Oe421EPjeBE', title: 'Node.js and Express.js – Full Course', channel: 'freeCodeCamp', duration: '8:16:48', thumb: 'https://i.ytimg.com/vi/Oe421EPjeBE/mqdefault.jpg' },
+      { id: 'ZtqBQ68cfJc', title: 'The Linux Command Line Full Course', channel: 'freeCodeCamp', duration: '4:18:44', thumb: 'https://i.ytimg.com/vi/ZtqBQ68cfJc/mqdefault.jpg' },
+      { id: 'qz0aGYrrlhU', title: 'HTML Tutorial for Beginners', channel: 'Programming with Mosh', duration: '1:09:29', thumb: 'https://i.ytimg.com/vi/qz0aGYrrlhU/mqdefault.jpg' }
+    ]
+  },
+  {
+    id: 'hacking',
+    name: 'Кибербезопасность',
+    videos: [
+      { id: '3Kq1MIfTWCE', title: 'Ethical Hacking Full Course – 15 Hours', channel: 'freeCodeCamp', duration: '15:28:46', thumb: 'https://i.ytimg.com/vi/3Kq1MIfTWCE/mqdefault.jpg' },
+      { id: 'hDd3-KnVxCM', title: 'Kali Linux Tutorial for Beginners', channel: 'NetworkChuck', duration: '2:12:05', thumb: 'https://i.ytimg.com/vi/hDd3-KnVxCM/mqdefault.jpg' },
+      { id: 'O4O-x8JjFUg', title: 'Nmap Tutorial – Find Network Vulnerabilities', channel: 'NetworkChuck', duration: '17:22', thumb: 'https://i.ytimg.com/vi/O4O-x8JjFUg/mqdefault.jpg' },
+      { id: 'a83ASGn_V_s', title: 'How I Would Learn Cybersecurity', channel: 'NetworkChuck', duration: '13:42', thumb: 'https://i.ytimg.com/vi/a83ASGn_V_s/mqdefault.jpg' },
+      { id: 'fHhNWX2BKLE', title: 'SQL Injection – Computerphile', channel: 'Computerphile', duration: '7:24', thumb: 'https://i.ytimg.com/vi/fHhNWX2BKLE/mqdefault.jpg' },
+      { id: 'HIbBDWdAqxs', title: 'Linux for Hackers – Getting Started with Kali', channel: 'NetworkChuck', duration: '22:08', thumb: 'https://i.ytimg.com/vi/HIbBDWdAqxs/mqdefault.jpg' }
+    ]
+  },
+  {
+    id: 'crypto',
+    name: 'Крипта и Блокчейн',
+    videos: [
+      { id: 'SSo_EIwHSd4', title: 'Bitcoin Explained Simply for Dummies', channel: '99Bitcoins', duration: '7:55', thumb: 'https://i.ytimg.com/vi/SSo_EIwHSd4/mqdefault.jpg' },
+      { id: 'Lx9zgZCMqXE', title: 'Blockchain Technology Explained (2 min)', channel: 'Simply Explained', duration: '6:12', thumb: 'https://i.ytimg.com/vi/Lx9zgZCMqXE/mqdefault.jpg' },
+      { id: 'wVyu8gkMD5g', title: 'Web3 Explained – What is Web3?', channel: 'Fireship', duration: '12:38', thumb: 'https://i.ytimg.com/vi/wVyu8gkMD5g/mqdefault.jpg' },
+      { id: 'M576WGiDBdQ', title: 'What is ChatGPT and How Does It Work?', channel: 'AI Explained', duration: '18:21', thumb: 'https://i.ytimg.com/vi/M576WGiDBdQ/mqdefault.jpg' },
+      { id: 'aircAruvnKk', title: 'But what is a neural network? | Deep learning', channel: '3Blue1Brown', duration: '19:13', thumb: 'https://i.ytimg.com/vi/aircAruvnKk/mqdefault.jpg' },
+      { id: 'DWcJFNfaw9c', title: 'Chill Synthwave & Retro Mix', channel: 'Asthenic', duration: '2:04:32', thumb: 'https://i.ytimg.com/vi/DWcJFNfaw9c/mqdefault.jpg' }
+    ]
+  },
+  {
+    id: 'windy31',
+    name: 'Windy31 — Хорроры и Игры',
+    videos: [
+      { id: 'OmZs_p7GLPQ', title: 'THIS FNAF IS A VIRUS AND IT HACKS ITSELF', channel: 'windy31', duration: '28:24', thumb: 'https://i.ytimg.com/vi/OmZs_p7GLPQ/mqdefault.jpg' },
+      { id: 'oLoseW66mI8', title: 'HOW I SCREAMED AT BONNIE', channel: 'windy31', duration: '26:15', thumb: 'https://i.ytimg.com/vi/oLoseW66mI8/mqdefault.jpg' },
+      { id: 'RnJ0U_qFxPI', title: 'I Went Hunting (and it's scary...)', channel: 'windy31', duration: '28:24', thumb: 'https://i.ytimg.com/vi/RnJ0U_qFxPI/mqdefault.jpg' },
+      { id: '5Ap2z4RIopA', title: 'СКУЧАЛИ ПО НЕМУ?', channel: 'windy31', duration: '22:06', thumb: 'https://i.ytimg.com/vi/5Ap2z4RIopA/mqdefault.jpg' },
+      { id: '3yP3bXwGH1Y', title: 'МОЙ МИР УНИЧТОЖИЛ СЕБЯ', channel: 'windy31', duration: '24:18', thumb: 'https://i.ytimg.com/vi/3yP3bXwGH1Y/mqdefault.jpg' },
+      { id: 'ZjTx-XhNRAY', title: 'В 4 ЧАСА НОЧИ ОНА ПРЕВРАЩАЕТСЯ В ЭТО...', channel: 'windy31', duration: '31:42', thumb: 'https://i.ytimg.com/vi/ZjTx-XhNRAY/mqdefault.jpg' }
+    ]
+  },
+  {
+    id: 'rabalka68',
+    name: 'Рыбалка 68 — Зимняя Рыбалка',
+    videos: [
+      { id: 'sTuq5qLjOsE', title: 'УДАЧНЫЙ ЭКСПЕРИМЕНТ! Рыбалка на жерлицы', channel: 'Рыбалка 68', duration: '12:33', thumb: 'https://i.ytimg.com/vi/sTuq5qLjOsE/mqdefault.jpg' },
+      { id: 's60QMYcK8lE', title: 'Caught three types of fish on this jig!', channel: 'Рыбалка 68', duration: '20:16', thumb: 'https://i.ytimg.com/vi/s60QMYcK8lE/mqdefault.jpg' },
+      { id: 'K2qea0tWo4c', title: 'THERE'S MOTHER! THE LINE IS CRACKING', channel: 'Рыбалка 68', duration: '31:48', thumb: 'https://i.ytimg.com/vi/K2qea0tWo4c/mqdefault.jpg' },
+      { id: 'Xx7NcunYjS8', title: 'В шоке! ТАКОГО ЖОРА ЩУКИ НЕ БЫЛО МНОГО ЛЕТ!', channel: 'Рыбалка 68', duration: '25:12', thumb: 'https://i.ytimg.com/vi/Xx7NcunYjS8/mqdefault.jpg' },
+      { id: 's60QMYcK8lE', title: 'ПЛОТВА КРУПНЕЕ ЩУКИ! Рыбалка на лесном озере', channel: 'Рыбалка 68', duration: '32:48', thumb: 'https://i.ytimg.com/vi/s60QMYcK8lE/mqdefault.jpg' },
+      { id: 'Xx7NcunYjS8', title: 'Зимняя рыбалка на балансир', channel: 'Рыбалка 68', duration: '25:12', thumb: 'https://i.ytimg.com/vi/Xx7NcunYjS8/mqdefault.jpg' }
+    ]
+  },
+  {
+    id: 'marmok',
+    name: 'Marmok — CS:GO и Игры',
+    videos: [
+      { id: 'B4iMH7aN8fg', title: 'БЕРЕГИСЬ ПАУКА! 🕷️ (Fever Meme)', channel: 'Marmok', duration: '10:24', thumb: 'https://i.ytimg.com/vi/B4iMH7aN8fg/mqdefault.jpg' },
+      { id: 'Lx9zgZCMqXE', title: 'CS:GO — Лучшие моменты', channel: 'Marmok', duration: '15:36', thumb: 'https://i.ytimg.com/vi/Lx9zgZCMqXE/mqdefault.jpg' },
+      { id: '5qap5aO4i9A', title: 'Marmok Стрим — Подборка', channel: 'Marmok', duration: '2:15:42', thumb: 'https://i.ytimg.com/vi/5qap5aO4i9A/mqdefault.jpg' }
+    ]
+  },
+  {
+    id: 'utopia',
+    name: 'Utopia Show — Топ Сикрет',
+    videos: [
+      { id: 'Lx9zgZCMqXE', title: 'ЭКСТРАСЕНСЫ на службе ЦРУ [Топ Сикрет]', channel: 'Utopia Show', duration: '42:18', thumb: 'https://i.ytimg.com/vi/Lx9zgZCMqXE/mqdefault.jpg' },
+      { id: 'DWcJFNfaw9c', title: 'Тайны мира — Подборка', channel: 'Utopia Show', duration: '1:28:36', thumb: 'https://i.ytimg.com/vi/DWcJFNfaw9c/mqdefault.jpg' }
+    ]
+  },
+  {
+    id: 'games',
+    name: 'Игры и Развлечения',
+    videos: [
+      { id: 'pCJXSrOg5oM', title: 'GTA VI – Official Trailer', channel: 'Rockstar Games', duration: '1:31', thumb: 'https://i.ytimg.com/vi/pCJXSrOg5oM/mqdefault.jpg' },
+      { id: 'QSPGH4dJ0rk', title: 'World Record Speedrun – The Untold Story', channel: 'Summoning Salt', duration: '29:43', thumb: 'https://i.ytimg.com/vi/QSPGH4dJ0rk/mqdefault.jpg' },
+      { id: 'U0S9HkKFCNI', title: 'Game Development Explained in 2 Minutes', channel: 'Fireship', duration: '2:15', thumb: 'https://i.ytimg.com/vi/U0S9HkKFCNI/mqdefault.jpg' },
+      { id: '8X2kIfS6fb8', title: 'Top 10 Most SATISFYING Games Ever Made', channel: 'GoodTimesWithScar', duration: '14:55', thumb: 'https://i.ytimg.com/vi/8X2kIfS6fb8/mqdefault.jpg' },
+      { id: 'bVdOY3YBonY', title: 'История CS:GO – от начала до конца', channel: 'TheWarOwl', duration: '47:22', thumb: 'https://i.ytimg.com/vi/bVdOY3YBonY/mqdefault.jpg' },
+      { id: '09R8_2nJtjg', title: 'Every Console Generation Explained', channel: 'Scott The Woz', duration: '42:11', thumb: 'https://i.ytimg.com/vi/09R8_2nJtjg/mqdefault.jpg' }
+    ]
+  },
+  {
+    id: 'music',
+    name: 'Музыка для Кодинга',
+    videos: [
+      { id: '5qap5aO4i9A', title: 'lofi hip hop radio - beats to relax/study to', channel: 'Lofi Girl', duration: '🔴 LIVE', thumb: 'https://i.ytimg.com/vi/5qap5aO4i9A/mqdefault.jpg' },
+      { id: 'DWcJFNfaw9c', title: 'Chill Synthwave & Retro Mix', channel: 'Asthenic', duration: '2:04:32', thumb: 'https://i.ytimg.com/vi/DWcJFNfaw9c/mqdefault.jpg' },
+      { id: 'lTRiuFIWV54', title: '1 A.M Study Session 📚', channel: 'Lofi Girl', duration: '1:01:43', thumb: 'https://i.ytimg.com/vi/lTRiuFIWV54/mqdefault.jpg' }
+    ]
+  }
+];
+
+function loadOfflinePlaylists() {
+  renderYTPlaylist(DEFAULT_PLAYLISTS);
+}
+
+// ===== РЕНДЕРИНГ ПЛЕЙЛИСТА =====
+function renderYTPlaylist(playlists) {
+  const container = document.getElementById('yt-playlist-grid');
+  if (!container) return;
+
+  let html = '';
+  playlists.forEach(pl => {
+    html += '<div style="margin-bottom:16px; grid-column:1/-1;">';
+    html += '<div style="font-size:14px; font-weight:bold; color:var(--accent); margin-bottom:8px; display:flex; align-items:center; gap:8px;">';
+    html += '<span>📁</span>' + pl.name;
+    html += '</div>';
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:8px;">';
+
+    pl.videos.forEach(v => {
+      html += createVideoCardHTML(v);
+    });
+
+    html += '</div></div>';
+  });
+
+  container.innerHTML = html;
+}
+
+// ===== HTML КАРТОЧКИ ВИДЕО =====
+function createVideoCardHTML(video, isSearch = false) {
+  const isFav = ytPlayerState.favorites.includes(video.id);
+  return `
+    <div class="yt-video-card" onclick="ytPlayVideo('${video.id}', '${escapeHtml(video.title)}', '${escapeHtml(video.channel)}')">
+      <div class="yt-thumb">
+        <img src="${video.thumb || 'https://i.ytimg.com/vi/' + video.id + '/mqdefault.jpg'}" 
+             alt="${escapeHtml(video.title)}" 
+             loading="lazy"
+             onerror="this.src='https://via.placeholder.com/320x180/1a1a2e/e95420?text=YouTube'">
+        <div class="yt-duration">${video.duration || '??'}</div>
+        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); opacity:0; transition:opacity 0.15s;" 
+             onmouseover="this.style.opacity='1'" 
+             onmouseout="this.style.opacity='0'">
+          <div style="width:48px; height:48px; background:rgba(204,0,0,0.9); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+            <span style="color:white; font-size:20px; margin-left:4px;">▶</span>
+          </div>
+        </div>
+      </div>
+      <div class="yt-info">
+        <div class="yt-title">${escapeHtml(video.title)}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="yt-channel">${escapeHtml(video.channel || 'YouTube')}</div>
+          ${isFav ? '<span style="color:var(--warning); font-size:12px;">⭐</span>' : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ===== ВОСПРОИЗВЕДЕНИЕ ВИДЕО =====
+function ytPlayVideo(videoId, title, channel) {
+  ytPlayerState.currentVideoId = videoId;
+  ytPlayerState.isPlaying = true;
+
+  // Скрываем placeholder, показываем iframe
+  document.getElementById('yt-player-placeholder').style.display = 'none';
+  const frame = document.getElementById('yt-player-frame');
+  frame.style.display = 'block';
+
+  // Формируем URL с параметрами для чистого интерфейса
+  const params = new URLSearchParams({
+    autoplay: '1',
+    modestbranding: '1',
+    rel: '0',
+    iv_load_policy: '3',
+    fs: '1',
+    controls: '1',
+    mute: '0',
+    start: '0',
+    origin: window.location.origin
+  });
+
+  frame.src = `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+
+  // Обновляем кнопку play
+  document.getElementById('yt-play-btn').textContent = '⏸';
+
+  // Добавляем в историю
+  addToHistory({
+    id: videoId,
+    title: title || 'Unknown',
+    channel: channel || 'YouTube',
+    thumb: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+    watchedAt: new Date().toISOString()
+  });
+
+  // Сохраняем в Firebase
+  saveUserData();
+
+  log(`📺 Воспроизведение: ${title || videoId}`, 'info');
+}
+
+// ===== УПРАВЛЕНИЕ ПЛЕЕРОМ =====
+function ytPlayPause() {
+  const frame = document.getElementById('yt-player-frame');
+  const btn = document.getElementById('yt-play-btn');
+
+  if (!ytPlayerState.currentVideoId) {
+    log('Сначала выберите видео из плейлиста', 'warning');
+    return;
+  }
+
+  // YouTube iframe API не позволяет программно управлять без postMessage
+  // Перезагружаем с autoplay или без
+  if (ytPlayerState.isPlaying) {
+    // Пауза - перезагружаем без autoplay
+    const params = new URLSearchParams({
+      autoplay: '0',
+      modestbranding: '1',
+      rel: '0',
+      iv_load_policy: '3',
+      fs: '1',
+      controls: '1',
+      start: '0',
+      origin: window.location.origin
+    });
+    frame.src = `https://www.youtube.com/embed/${ytPlayerState.currentVideoId}?${params.toString()}`;
+    ytPlayerState.isPlaying = false;
+    btn.textContent = '▶';
+  } else {
+    // Play
+    const params = new URLSearchParams({
+      autoplay: '1',
+      modestbranding: '1',
+      rel: '0',
+      iv_load_policy: '3',
+      fs: '1',
+      controls: '1',
+      start: '0',
+      origin: window.location.origin
+    });
+    frame.src = `https://www.youtube.com/embed/${ytPlayerState.currentVideoId}?${params.toString()}`;
+    ytPlayerState.isPlaying = true;
+    btn.textContent = '⏸';
+  }
+}
+
+function ytStop() {
+  const frame = document.getElementById('yt-player-frame');
+  frame.src = '';
+  frame.style.display = 'none';
+  document.getElementById('yt-player-placeholder').style.display = 'flex';
+  ytPlayerState.currentVideoId = null;
+  ytPlayerState.isPlaying = false;
+  document.getElementById('yt-play-btn').textContent = '▶';
+}
+
+function ytSetVolume(val) {
+  ytPlayerState.volume = parseInt(val);
+  document.getElementById('yt-volume-val').textContent = val + '%';
+  // YouTube iframe не поддерживает программное управление громкостью без API
+  // Громкость регулируется пользователем в самом плеере
+  saveUserData();
+}
+
+function ytToggleFullscreen() {
+  const container = document.getElementById('win-youtube');
+  if (!container) return;
+
+  if (container.classList.contains('fullscreen')) {
+    // Выход из полноэкранного
+    const s = windowStates['youtube'];
+    if (s) {
+      container.classList.remove('fullscreen');
+      container.style.width = s.width;
+      container.style.height = s.height;
+      container.style.top = s.top;
+      container.style.left = s.left;
+    }
+  } else {
+    // Вход в полноэкранный
+    windowStates['youtube'] = {
+      width: container.style.width,
+      height: container.style.height,
+      top: container.style.top,
+      left: container.style.left
+    };
+    container.classList.add('fullscreen');
+  }
+}
+
+function ytAddToFavorites() {
+  if (!ytPlayerState.currentVideoId) {
+    log('Сначала выберите видео', 'warning');
+    return;
+  }
+
+  const idx = ytPlayerState.favorites.indexOf(ytPlayerState.currentVideoId);
+  if (idx === -1) {
+    ytPlayerState.favorites.push(ytPlayerState.currentVideoId);
+    log('⭐ Добавлено в избранное', 'success');
+    pushNotification('YouTube', 'Видео добавлено в избранное');
+  } else {
+    ytPlayerState.favorites.splice(idx, 1);
+    log('⭐ Удалено из избранного', 'info');
+  }
+
+  saveUserData();
+  renderYTFavorites();
+
+  // Обновляем отображение в плейлисте
+  const activeTab = document.querySelector('.app-tab.active[id^="yt-tab-"]');
+  if (activeTab && activeTab.id === 'yt-tab-playlist') {
+    loadOfflinePlaylists(); // Перезагружаем для обновления звёздочек
+  }
+}
+
+// ===== ИСТОРИЯ =====
+function addToHistory(video) {
+  // Убираем дубликаты
+  ytPlayerState.history = ytPlayerState.history.filter(v => v.id !== video.id);
+  // Добавляем в начало
+  ytPlayerState.history.unshift(video);
+  // Ограничиваем 50 элементами
+  if (ytPlayerState.history.length > 50) {
+    ytPlayerState.history = ytPlayerState.history.slice(0, 50);
+  }
+  renderYTHistory();
+}
+
+function renderYTHistory() {
+  const container = document.getElementById('yt-history-list');
+  if (!container) return;
+
+  if (ytPlayerState.history.length === 0) {
+    container.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:20px;">История пуста</div>';
+    return;
+  }
+
+  let html = '';
+  ytPlayerState.history.forEach(v => {
+    const time = new Date(v.watchedAt).toLocaleString('ru-RU', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      day: 'numeric',
+      month: 'short'
+    });
+    html += `
+      <div class="yt-history-item" onclick="ytPlayVideo('${v.id}', '${escapeHtml(v.title)}', '${escapeHtml(v.channel)}')">
+        <img src="${v.thumb}" alt="" loading="lazy" onerror="this.style.display='none'">
+        <div class="yt-h-info">
+          <div class="yt-h-title">${escapeHtml(v.title)}</div>
+          <div class="yt-h-time">${escapeHtml(v.channel)} • ${time}</div>
+        </div>
+        <button class="btn btn-small btn-red" onclick="event.stopPropagation(); ytRemoveFromHistory('${v.id}')">🗑️</button>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function ytRemoveFromHistory(videoId) {
+  ytPlayerState.history = ytPlayerState.history.filter(v => v.id !== videoId);
+  renderYTHistory();
+  saveUserData();
+}
+
+// ===== ИЗБРАННОЕ =====
+function renderYTFavorites() {
+  const container = document.getElementById('yt-favorites-grid');
+  if (!container) return;
+
+  if (ytPlayerState.favorites.length === 0) {
+    container.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:20px;">Нет избранных видео</div>';
+    return;
+  }
+
+  // Собираем полные данные из всех плейлистов
+  const allVideos = [];
+  DEFAULT_PLAYLISTS.forEach(pl => allVideos.push(...pl.videos));
+
+  let html = '';
+  ytPlayerState.favorites.forEach(favId => {
+    const video = allVideos.find(v => v.id === favId);
+    if (video) {
+      html += createVideoCardHTML(video);
+    }
+  });
+
+  container.innerHTML = html || '<div style="text-align:center; color:var(--text-dim); padding:20px;">Видео не найдены в базе</div>';
+}
+
+// ===== ПОИСК =====
+async function ytSearch() {
+  const query = document.getElementById('yt-search-input').value.trim();
+  if (!query) return;
+
+  const resultsContainer = document.getElementById('yt-search-results');
+  resultsContainer.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-dim);">🔍 Поиск...</div>';
+
+  // Используем YouTube Data API или поиск по дефолтным плейлистам
+  // Для простоты делаем локальный поиск + предлагаем открыть настоящий YouTube
+  const allVideos = [];
+  DEFAULT_PLAYLISTS.forEach(pl => allVideos.push(...pl.videos));
+
+  const localResults = allVideos.filter(v => 
+    v.title.toLowerCase().includes(query.toLowerCase()) ||
+    v.channel.toLowerCase().includes(query.toLowerCase())
+  );
+
+  let html = '';
+
+  if (localResults.length > 0) {
+    html += '<div style="grid-column:1/-1; font-size:12px; color:var(--accent); margin-bottom:8px;">📁 Найдено в плейлистах:</div>';
+    localResults.forEach(v => {
+      html += createVideoCardHTML(v);
+    });
+  }
+
+  // Ссылка на поиск в настоящем YouTube
+  html += `
+    <div style="grid-column:1/-1; margin-top:12px; padding:12px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid var(--border);">
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">🔍 Не нашли что искали?</div>
+      <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(query)}" 
+         target="_blank" 
+         style="display:inline-flex; align-items:center; gap:6px; background:#cc0000; color:white; padding:8px 16px; border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">
+        <span>▶</span> Искать на YouTube
+      </a>
+    </div>
+  `;
+
+  resultsContainer.innerHTML = html;
+}
+
+// ===== ТАБЫ =====
+function switchYTTab(tab) {
+  document.querySelectorAll('[id^="yt-tab-"]').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('[id^="yt-content-"]').forEach(c => c.style.display = 'none');
+
+  document.getElementById('yt-tab-' + tab).classList.add('active');
+  document.getElementById('yt-content-' + tab).style.display = 'block';
+
+  if (tab === 'favorites') renderYTFavorites();
+  if (tab === 'history') renderYTHistory();
+}
+
+// ===== УТИЛИТЫ =====
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ===== ИНИЦИАЛИЗАЦИЯ =====
+function initYouTubeIntegration() {
+  // Инициализируем Firebase
+  initFirebase();
+
+  // Если Firebase не удался, загружаем оффлайн плейлисты
+  if (!isFirebaseReady) {
+    loadOfflinePlaylists();
+  }
+
+  // Добавляем иконку на рабочий стол
+  createDesktopIcon('youtube', '📺', 'YouTube', 'linear-gradient(135deg,#cc0000,#ff0000)', 'youtube');
+
+  // Добавляем в старт-меню
+  const menuList = document.getElementById('start-menu-apps-list');
+  if (menuList) {
+    const btn = document.createElement('button');
+    btn.className = 'start-menu-item';
+    btn.innerHTML = '<span class="emoji">📺</span>YouTube Player';
+    btn.onclick = function() { menuOpen('youtube'); };
+    menuList.appendChild(btn);
+  }
+}
+
+// ===== ДОБАВЛЕНИЕ В МЕНЮ БРАУЗЕРА =====
+function addYouTubeToBrowser() {
+  // Добавляем YouTube в закладки браузера
+  const ytSite = { 
+    url: 'youtube-player', 
+    title: 'YouTube Player', 
+    fav: '📺', 
+    cat: 'Видео' 
+  };
+
+  // Добавляем обработчик навигации для youtube-player
+  const originalRenderBrowser = renderBrowser;
+  renderBrowser = function() {
+    const url = browserHistory[browserHistIdx] || 'googie.com';
+
+    if (url === 'youtube-player') {
+      // Открываем встроенный плеер
+      openWindow('youtube');
+      focusWindow('youtube');
+      // Возвращаемся на предыдущую страницу в истории браузера
+      browserBack();
+      return;
+    }
+
+    // Иначе стандартный рендер
+    originalRenderBrowser();
+  };
+
+  // Добавляем в список сайтов для поиска
+  const ytSearchResult = {
+    t: 'YouTube Player – встроенный просмотр видео',
+    u: 'youtube-player',
+    d: 'Смотрите YouTube видео прямо в Linux Dev OS. Плейлисты, избранное, история просмотров.',
+    k: ['youtube', 'видео', 'video', 'музыка', 'music', 'плеер', 'player']
+  };
+
+  // Добавляем в RESULTS массив (если он доступен глобально)
+  if (typeof RESULTS !== 'undefined') {
+    RESULTS.push(ytSearchResult);
+  }
+}
+
+
+// ===== ИНИЦИАЛИЗАЦИЯ YOUTUBE ИНТЕГРАЦИИ =====
+// Вызывается при старте игры
+if (typeof initGame === 'function') {
+  const originalInitGame = initGame;
+  initGame = function() {
+    originalInitGame();
+    initYouTubeIntegration();
+    addYouTubeToBrowser();
+  };
+}
+
+</script></body>
 </html>
